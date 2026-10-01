@@ -1,0 +1,72 @@
+---
+name: design-w40k
+description: Art direction and asset recipes for Warhammer 40,000 Adeptus Mechanicus scenes in the funcraft banners (w40k-mechanicum) - the grimdark gothic grade, distressed materials, shiny gold against absorbent crimson velvet, embroidered banners and altar cloths, the Cog Mechanicum, purity seals and Latin, figurative stained glass, candlelit shadowplay, figures painted by part, textures generated with Z-Image-Turbo and reference images turned into 3D with MoGe-2. Use when building, dressing, texturing, lighting or reviewing any W40k, Mechanicus or techno-gothic scene, when a render looks clean, flat, pale, washed out, plastic, waxy or "not W40k", or when asked for embroidery, drapes, banners, seals, Latin, stained glass, skulls, cogs, servitors, tech-priests or "more detail".
+---
+
+# Design W40k
+
+Rules for the Adeptus Mechanicus look, each learned from a render the Star Colonel rejected. Paths are relative to `~/workspace/funcraft/w40k-mechanicum/`. Blender mechanics (running, rigs, volumes, API traps): `design-blender`. Loops and GIFs: `design-gif`.
+
+## References
+- `references/*.png` - the Star Colonel's target images: altar shrine, priests offering the Sacred A5000, crimson drapery, banners, stained glass. Crop and compare against them before sending anything
+- `references/rogue-trader/` - Steam screenshots of Warhammer 40,000: Rogue Trader (Owlcat) and its DLC; `SOURCE.txt` lists URLs. Visual reference only
+- What they share: low key, rust-umber-black mass with one or two accents; blackened iron and pewter structure with gold trims; crimson velvet everywhere; every surface carved, embroidered or written on; hundreds of dripping candles; smoke; light shafts against candle warmth
+
+## Grade
+- Measure, do not guess: luminance percentiles, saturation, share and value of red-hued pixels, on the reference and on the render. Reference 11:10 - L p25 0.05, p50 0.12, p75 0.27, p95 0.50; crimson 43 % of pixels at value 0.18
+- Sweep before settling: save the scene (`-- shot=altar blend`), render a grid of haze density × exposure × look at half size, measure each
+- Close-ups: AgX Punchy, exposure -0.15 (the Star Colonel asked brighter than the reference numbers), haze 0.005. Denser haze under a strong shaft turns into a pale veil; AgX turns bright saturated red pink - keep reds dark and lit by candles, not floods
+- The nave (`SHOT = None`) keeps its v2 grade; close-up changes live under `if SHOT:` in `materials()`, `lights()`, `atmosphere()`, `render_setup()`
+
+## Materials
+- **Gold must gleam**: base (0.95, 0.66, 0.24), `distressed_gold(..., polish=1.0)`, grime only in crevices, `weather(amount=0.3, rough_gain=0.08)`. It needs something bright to reflect: a soft warm area light out of frame (`glint`)
+- **Cloth absorbs**: velvet and robes roughness 1.0, Specular IOR Level 0, crimson sheen tint; embroidered thread alone is metallic and glossy (`embroidered(..., matte=True)`)
+- **Structure is blackened pewter** (`MAT["pewter"]`), not brass; gold is for trims, halos, cogs, frames
+- **Everything is old**: `weather()` wraps any material with grime blotches, soot streaks down, dust on upward faces. Only light on gold
+- **Skin** is warm and mottled (`skin_mat`: bruise and jaundice noise, subsurface), never grey
+
+## Textures
+Hand-drawn PIL textures read flat, pale and "unembroidered". Generate them: `src/gentextures.py` with Z-Image-Turbo (Tongyi-MAI, Apache-2.0, 9 steps, ~4 s per image on the RTX PRO 6000).
+
+- Prompts end with `STYLE` (fabric), `METAL` (iron) or `GLASS`: centuries-old wear spelled out (threadbare pile, moth holes, soot, wax, tarnished thread), "flat frontal orthographic, evenly lit, fills the frame"
+- Draft 3+ seeds per texture, look at every one, pick in `CHOICES`. **Check every Latin word letter by letter** - it wrote CALCILUM for CALCULUM nine times, LAUDETTUR, SALVATO, COMBUTAT, FIES. Change the motto to words it spells (AVE OMNISSIAH, DEUS IN MACHINA, OMNISSIAH VULT, MACHINA VULT) rather than accept a misspelling
+- `apply all`: cuts the studio backdrop to alpha (fringes and tabs hang free), writes `<stem>.png` + `<stem>_gold.png` (gold-hue mask → metallic, glossy, raised in `embroidered()`)
+- Exact Latin that must be long (parchment prayers, plaques' fallback) stays in PIL (`src/textures.py`) - fill the whole surface, no blank areas
+- Relief panels (`relief_*`: niches with statues, quatrefoils with cogs, skull friezes) go on any flat iron via `relief_mat()` - box projection in object coordinates, brightness as bump
+
+## Iconography
+- **No blank slates**: every flat surface carries relief, embroidery, Latin, binary or seals. A bare parchment strip or plain cloth was the first thing noticed
+- **Cog Mechanicum**: the `medallion` model (con-f-use, CC BY-SA) - loaded half a turn about Y, it arrives upside down. `cog_mechanicum()` paints its 155 loose pieces: brass cog, red field behind the machine half, black behind the bone half, bone and gunmetal skull halves, dark hoses, glowing red eye. `emblem.png` renders it upright in gold for embroidery. A skull in a plain gear is "not W40k"
+- **Purity seals**: domed dark wax stamped with a cog, parchment strip written top to bottom with red rubrics, foxed and torn (`seal()`, `parchment()`); pin them in rows over cloths and hems
+- **Skulls** are aged, grimy, set in cogs, niches or reliefs - never a row of clean white skulls
+- Latin in use: OMNISSIAH VULT, AVE OMNISSIAH, DEUS IN MACHINA, IN CALCULO SALVATIO, SCIENTIA AD ASTRA, LABOR FIDES MACHINA AETERNA, SPIRITUS MACHINAE, MACHINA VULT, MEMORIA AETERNA, PRO OMNISSIAH; litany lines in `LITANY`
+
+## Drapery and glass
+- Crimson must fill a large share of the frame (the reference: 43 %): curtains tied back beside the relic (`curtain()`), hangings over the table ends, banners lowered into shot to frame it, fringed
+- Stained glass is figurative - a tech-priest saint with a skull face under a cog sunburst, the Machine God, a Magos holding a card - lead-lined jewel colours, one window per bay and storey (`window_mat`). Random Voronoi cells in rainbow or amber are "very not w40k"
+
+## Light and shadowplay
+- Low key: candles (clusters with wax pools and drips, one point light each), the relic, cyan coolant as the one cold accent. No front fill
+- Shadowplay: spots shining through a leaded window pattern made in the light's own node tree (`window_light`: pointed arch, mullion, transom, diamond cames). Window geometry in front of a spot ends up in frame - do not build it
+- Rim-light figures from behind; backlight the relic so it stands dark against a glowing lancet
+- Name lights distinctly: `bpy.data.objects["shaft"]` returned a pillar cylinder called `shaft`
+
+## Figures
+- One material on a sculpt reads as wax or plastic. Paint by part per `design-blender`: loose pieces when the STL has them, region rules otherwise
+- Region rules live in `src/paintfig.py`: measure on orthographic clay views with a height grid, write predicates on face centre and normal, render the views coloured by class, fix overreach (belt bands across arms, cloak rules catching heels), repeat
+- Classes: skin, cloth, machine, leather; machine = worn gunmetal with brass fittings; cloth = absorbent crimson or oxblood
+
+## Reference image to 3D
+- MoGe-2 (`src/img2geometry.py`, venv `.venv-moge`, GPU 1): metric point map, normals, mask, intrinsics, plus a fill layer (depth pushed out from breaks, inpainted colour) for what a moving camera uncovers
+- `src/backdrop.py` builds the textured mesh and a matching camera; from its own viewpoint it reproduces the image, moves up to ~8 cm show clean parallax, 25 cm and more smear
+- Scene-level alternatives: Mira-Scene (VAST-AI, MIT, per-object meshes; eight separate environments, SAM 3D weights gated), WorldCrafter (TencentARC, image to camera-controlled video), GAE (TencentARC, research)
+
+## Motion
+The Star Colonel asked for less and subtler movement: fans a ninth of a turn per loop (the fan model has nine identical blades), lights and screen change every 8 frames, coolant rings one spacing per loop, banners sway 0.6°, the near servitor rises 1 cm once per loop. Loop rules: `design-gif`.
+
+## Before sending
+- Render `-- shot=<name> preview` (24 samples, ~40 s); looking at GIF size and 2× crops per `design-blender`
+- Compare side by side with the reference crop the Star Colonel sent; measure the grade
+- Previews before any animation render
+
+<!-- improved 2026-09-30 | body 0→1187w / 0→66L | benchmark n/a (declined) | via improve-skill -->

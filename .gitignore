@@ -1,0 +1,14 @@
+# git tracks source and documents; data stays on the workstation
+*/in/
+*/resources/
+*/wip/
+*/out/
+*/references/**
+!*/references/**/
+!*/references/**/*.txt
+!*/references/**/*.md
+.venv-*/
+__pycache__/
+.ipynb_checkpoints/
+*/src/_probe.py
+!*/src/*.sh
