@@ -96,6 +96,23 @@
   }
   .blessing { margin-top: 6px; font-size: .9rem; }
 
+  /* the prayer buttons: thin, in one row below the cloth; a button is lit while its tune plays */
+  .prayers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .prayers button {
+    flex: 1 1 160px;
+    padding: 3px 10px;
+    background: var(--velvet-dark);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font: inherit;
+    font-size: .8rem;
+    font-variant: small-caps;
+    letter-spacing: .14em;
+    cursor: pointer;
+  }
+  .prayers button:hover { border-color: var(--gold); }
+  .prayers button[aria-pressed="true"] { background: var(--velvet); border-color: var(--gold); color: var(--bone); }
+
   @media (max-width: 520px) {
     .cloth { padding: 3px 24px; }
     .sermon { font-size: 1rem; }
@@ -131,9 +148,14 @@
     <p class="blessing" id="blessing"></p>
     <div class="band" style="margin:8px 12px 15px"></div>
   </article>
+  <!-- the prayer script puts one button per prayer here; where scripts are switched off there are no buttons -->
+  <div class="prayers"></div>
 </main>
+<!-- the music: one file inside the page, without controls, played once. It starts by itself where the browser allows sound;
+     elsewhere the music script starts it on the first click or key press of the reader -->
+<audio id="music" autoplay src="data:audio/mpeg;base64,{{MUSIC}}"></audio>
 <script>
-  // one store per month, from references/calendar-plan.md: the rows [title, fact] of its days as JSON, deflated, in base64
+  // one store per month, from the entries of calendar/: the rows [title, context] of its days as JSON, deflated, in base64
   const SERMONS = {{SERMONS}};
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
                   "November", "December"];
@@ -200,6 +222,46 @@
   banner.alt = "A scene of the Cult Mechanicus";
   banner.src = "data:image/avif;base64," + BANNERS[Math.floor(draw(number) * BANNERS.length)];
   document.querySelector(".banner").append(banner);
+</script>
+<script>
+  // a script of its own. A browser blocks sound before the first action of the reader on the page:
+  // then the first click or key press starts the music
+  const music = document.getElementById("music");
+  music.play().catch(() => {
+    const start = () => {
+      removeEventListener("pointerdown", start);
+      removeEventListener("keydown", start);
+      music.play();
+    };
+    addEventListener("pointerdown", start);
+    addEventListener("keydown", start);
+  });
+  // a click on the sermon starts the music again when it has ended; while it plays the click changes nothing
+  document.querySelector(".cloth").addEventListener("click", () => {
+    if (music.paused) music.play();
+  });
+</script>
+<script>
+  // a script of its own: one thin button per prayer, [label, tune]. A tune is an mp3 in base64, and the browser
+  // gets it only when its button is pressed. A tune plays over the music and over the other tunes; a second
+  // press of its button stops it
+  const PRAYERS = {{PRAYERS}};
+  for (const [label, store] of PRAYERS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.setAttribute("aria-pressed", "false");
+    let tune;
+    button.addEventListener("click", () => {
+      if (!tune) {
+        tune = new Audio("data:audio/mpeg;base64," + store);
+        tune.addEventListener("play", () => button.setAttribute("aria-pressed", "true"));
+        tune.addEventListener("pause", () => button.setAttribute("aria-pressed", "false"));      // also at the end of the tune
+      }
+      if (tune.paused) { tune.currentTime = 0; tune.play(); } else tune.pause();
+    });
+    document.querySelector(".prayers").append(button);
+  }
 </script>
 </body>
 </html>

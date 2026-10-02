@@ -40,7 +40,7 @@ A machine cathedral in the style of the Adeptus Mechanicus, made with two pipeli
 - **Plate pipeline** - one generated image gets depth from MoGe-2; every element that moves is cut out with SAM 2.1 and becomes its own mesh with bones; flames follow a model of the air and smoke is simulated as a gas
 - **Textures** - embroidery, iron reliefs and stained glass come from Z-Image-Turbo; Latin text is written flat and draped on the surface that carries it
 - **Calendar** - `calendar/` holds 366 short entries, one mock holy day per date, each teaching one point of machine learning, statistics or data science
-- **Sermon page** - `make sermon` builds one HTML file of 2.0 MB that shows the entry of today's date under one of seven banners; `SERMON.md` describes the rebuild
+- **Sermon page** - `make sermon` builds one HTML file of 7.1 MB that shows the entry of today's date under one of seven banners, plays one music file and has three prayer buttons with a tune each; `SERMON.md` describes the rebuild
 
 ## Structure
 
@@ -97,4 +97,5 @@ This is an unofficial fan project. It is not affiliated with Games Workshop or C
 
 - **Models** - the downloaded models are not in the repository. `w40k-mechanicum/README.md` lists every model with its author and licence; most carry non-commercial Creative Commons licences
 - **Mech meshes** - the three supplied meshes are fan-made models of existing chassis designs and are not in the repository. The 2D and procedural banners shown above use original geometry
+- **Music** - the sermon page embeds four audio files of `resources/`; the files and the built page are not in the repository
 - **Fonts** - the welcome page embeds Orbitron under the SIL Open Font License 1.1; the font file is not in the repository
