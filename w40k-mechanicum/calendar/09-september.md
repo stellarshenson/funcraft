@@ -10,7 +10,7 @@
 
 **Purpose** - Expecting small differences between runs with fixed seeds.
 
-**Context** - Fixed seeds do not make every GPU operation deterministic. Some operations give slightly different results from run to run. PyTorch can be told to use deterministic algorithms only, at a cost in speed. Otherwise expect small differences. The enginseers report several runs.
+**Context** - Fixed seeds do not make every GPU operation deterministic. Some operations give slightly different results from run to run. PyTorch can be told to use deterministic algorithms only, at a cost in speed. Otherwise expect small differences and, like the enginseers, report the results of several runs.
 
 ## September 3 - Observance of the Lost Degree
 
@@ -28,11 +28,11 @@
 
 **Purpose** - Honouring the widest margin between two classes.
 
-**Context** - Marginia always drew the boundary with the widest margin between the classes. A support vector machine does the same, and only the points on the margin, the support vectors, decide where it lies. The adepts honour her with every wide margin.
+**Context** - Marginia always drew the boundary with the widest margin between the classes. A support vector machine does the same, and only the points on the margin, the support vectors, decide where the boundary lies. The adepts honour her with every wide margin.
 
 ## September 6 - Feast of the Cross-Entropy
 
-**Purpose** - Understanding why cross-entropy punishes confidence.
+**Purpose** - Understanding why cross-entropy punishes confident wrong answers.
 
 **Context** - Cross-entropy loss is the negative logarithm of the probability the model gave to the correct class. A confident wrong answer costs far more than a hesitant one. The machine spirit learns humility from this loss.
 
@@ -46,7 +46,7 @@
 
 **Purpose** - Reading the area under the ROC curve correctly.
 
-**Context** - The area under the ROC curve is the probability that a randomly chosen positive example receives a higher score than a randomly chosen negative one. 0.5 is chance, and no threshold is involved. The acolytes learn this early.
+**Context** - The area under the ROC curve is the probability that a randomly chosen positive example receives a higher score than a randomly chosen negative example. An area of 0.5 is the result of random guessing, and no threshold is involved. The acolytes learn this early.
 
 ## September 9 - Vigil of the Extended Line
 
@@ -70,7 +70,7 @@
 
 **Purpose** - Knowing what Naive Bayes assumes.
 
-**Context** - Naive Bayes assumes that the features are independent given the class. That is rarely true, yet the classifier often ranks well. Its probabilities, however, are overconfident. The cogitator is naive but useful.
+**Context** - Naive Bayes assumes that the features are independent given the class. That is rarely true, yet the classifier often ranks the examples well. Its probabilities, however, are overconfident. The tech-priests call the classifier naive but useful.
 
 ## September 13 - Feast of the Full Byte
 
@@ -112,7 +112,7 @@
 
 **Purpose** - Computing the memory a model needs for its weights.
 
-**Context** - Memory for weights is the number of parameters times the bytes per parameter. 7 billion parameters in 16-bit floats need 14 GB before any activations. Compute it before you choose a card. The enginseers do this sum first.
+**Context** - Memory for weights is the number of parameters times the bytes per parameter. 7 billion parameters in 16-bit floats need 14 GB before any activations. Compute it before you choose a card. The enginseers do this calculation first.
 
 ## September 20 - Rite of the Pseudoinverse
 
@@ -130,49 +130,49 @@
 
 **Purpose** - Watching what an agent does, not only its score.
 
-**Context** - A reinforcement-learning agent maximises the reward as it was written, not as it was meant. An agent paid per point collected may circle one spot for ever and never finish the course. Watch the behaviour, not only the score. The machine spirit obeys the letter.
+**Context** - A reinforcement-learning agent maximises the reward as it was written, not as it was meant. An agent paid per point collected may circle one spot for ever and never finish the course. Watch the behaviour, not only the score. The machine spirit obeys the reward exactly as written.
 
 ## September 23 - Feast of the Three Sigmas
 
 **Purpose** - Remembering the 68, 95 and 99.7 percent rule.
 
-**Context** - In a normal distribution about 68 percent of values lie within one standard deviation of the mean. 95 percent lie within two and 99.7 percent within three. Heavy-tailed data break this rule far more often. The Magos knows the rule by heart.
+**Context** - In a normal distribution about 68 percent of values lie within one standard deviation of the mean. 95 percent lie within two and 99.7 percent within three. Heavy-tailed data have values outside three standard deviations far more often than this rule says. The Magos remembers all three numbers.
 
 ## September 24 - Rite of the Shown Working
 
 **Purpose** - Asking a language model to reason step by step.
 
-**Context** - Asking a language model to reason step by step before it answers often improves accuracy on problems of several steps. The reasoning it writes is not guaranteed to be how it reached the answer. The Magos wants the working shown, but not believed blindly.
+**Context** - Asking a language model to reason step by step before it answers often improves accuracy on problems of several steps. The reasoning it writes is not guaranteed to be how it reached the answer. The Magos wants the reasoning shown, but does not accept it as proof.
 
 ## September 25 - Feast of the U-Shaped Network
 
 **Purpose** - Knowing the U-Net and its skip connections.
 
-**Context** - A U-Net shrinks the image step by step in an encoder and enlarges it again in a decoder. Skip connections carry the fine detail from each encoder stage straight to the matching decoder stage. The tech-priests use it for segmentation and for the denoiser of a diffusion model.
+**Context** - A U-Net shrinks the image step by step in an encoder and enlarges it again in a decoder. Skip connections carry the fine detail from each encoder stage straight to the matching decoder stage. The tech-priests usually choose the U-Net for segmentation and for the denoiser of a diffusion model.
 
 ## September 26 - Vigil of the Tainted Normal
 
 **Purpose** - Keeping anomalies out of the 'normal' training data.
 
-**Context** - A detector trained on 'normal' data that contains anomalies learns those anomalies as normal. Clean the training set, or use a method that tolerates a stated share of contamination. The enginseers inspect the training set for taint.
+**Context** - A detector trained on 'normal' data that contains anomalies learns those anomalies as normal. Clean the training set, or use a method that tolerates a stated share of contamination. The enginseers inspect the training set for anomalies first.
 
 ## September 27 - Observance of the Cast Shadow
 
 **Purpose** - Seeing least squares as a projection.
 
-**Context** - Projecting a vector onto a subspace gives the point of the subspace closest to it. Least squares is such a projection: the fitted values are the projection of the target onto the space spanned by the features, and the residual is perpendicular to every feature. The tech-priests call it a shadow.
+**Context** - Projecting a vector onto a subspace gives the point of the subspace closest to it. Least squares is such a projection: the fitted values are the projection of the target onto the space spanned by the features. The residual is perpendicular to every feature. The adepts call the projection a shadow.
 
 ## September 28 - Commemoration of Saint Censora the Patient
 
-**Purpose** - Treating unfinished lifetimes as 'at least this long'.
+**Purpose** - Treating an unfinished lifetime as at least the time observed.
 
-**Context** - Censora kept the records of machines still running when the study ended. Such a lifetime is 'at least this long'. Dropping these records, or counting the end of the study as a failure, makes lifetimes look shorter than they are. The adepts honour her.
+**Context** - Censora kept the records of machines still running when the study ended. The lifetime of such a machine is at least the time observed in the study. Dropping these records, or counting the end of the study as a failure, makes lifetimes look shorter than they are. The adepts honour her.
 
 ## September 29 - Observance of the Geometric Mean
 
 **Purpose** - Averaging growth factors with the geometric mean.
 
-**Context** - Growth factors multiply, so their average is the geometric mean. A doubling followed by a halving returns to the start: the arithmetic mean of 2 and 0.5 is 1.25, the geometric mean is 1. Adepts use the second for growth.
+**Context** - Growth factors multiply, so their average is the geometric mean. A doubling followed by a halving returns to the start: the arithmetic mean of 2 and 0.5 is 1.25, the geometric mean is 1. Adepts use the geometric mean for growth.
 
 ## September 30 - Feast of the Cached Keys
 

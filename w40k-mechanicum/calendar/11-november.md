@@ -34,17 +34,17 @@
 
 **Purpose** - Following messages between the nodes of a graph.
 
-**Context** - In a graph neural network each node updates its state from the messages of its neighbours. After k rounds a node has heard from nodes up to k steps away. The servo-skulls carry one message a step.
+**Context** - In a graph neural network each node updates its state from the messages of its neighbours. After k rounds a node has heard from nodes up to k steps away. The servo-skulls carry each message one step per round.
 
 ## November 7 - Rite of the Recomputed Activation
 
 **Purpose** - Trading time for memory with gradient checkpointing.
 
-**Context** - Gradient checkpointing discards some activations in the forward pass and computes them again in the backward pass. It uses less memory and more time. It can fit a model the card could not otherwise hold. The enginseers try it first.
+**Context** - Gradient checkpointing discards some activations in the forward pass and computes them again in the backward pass. It uses less memory and more time. It can fit a model the card could not otherwise hold. The enginseers try gradient checkpointing before they ask for a bigger card.
 
 ## November 8 - Observance of the Two Intervals
 
-**Purpose** - Telling a confidence interval from a prediction interval.
+**Purpose** - Distinguishing a confidence interval from a prediction interval.
 
 **Context** - A confidence interval concerns the mean. A prediction interval concerns one new observation. The prediction interval is wider, and more data does not shrink it to nothing. The Magos asks which one you mean.
 
@@ -64,7 +64,7 @@
 
 **Purpose** - Reading 1111 as binary and as hexadecimal.
 
-**Context** - The date written 1111 and read as binary is fifteen, F in hexadecimal. That is four bits, all set. Two hexadecimal digits write one byte. The cogitator keeps this feast with a binary chant.
+**Context** - The date written 1111 and read as binary is fifteen, F in hexadecimal. That is four bits, all set to 1. Two hexadecimal digits write one byte. The cogitator celebrates this feast with a binary chant.
 
 ## November 12 - Commemoration of Saint Steadia the Stationary
 
@@ -76,7 +76,7 @@
 
 **Purpose** - Remembering that a Markov chain forgets the past.
 
-**Context** - In a Markov chain the next state depends on the present state alone. An n-gram language model is one. It predicts the next word from the last n minus 1 words and nothing earlier. The machine spirit keeps no older memory.
+**Context** - In a Markov chain the next state depends on the present state alone. An n-gram language model is a Markov chain. It predicts the next word from the last n minus 1 words and nothing earlier. The machine spirit remembers no earlier words.
 
 ## November 14 - Vigil of the Lossy Image
 
@@ -100,13 +100,13 @@
 
 **Purpose** - Writing the explained variance on a PCA plot.
 
-**Context** - A plot of the first two principal components shows only the share of the variance those two explain. If that share is 30 percent, 70 percent of the structure is not on the plot. Write the share on the axes. The tech-priests mistrust a shadow without its share.
+**Context** - A plot of the first two principal components shows only the share of the variance those two explain. If that share is 30 percent, 70 percent of the structure is not on the plot. Write the share on the axes. The tech-priests mistrust a plot that does not state the share.
 
 ## November 18 - Vigil of the Forgotten Task
 
 **Purpose** - Guarding old skills while tuning a model for a new task.
 
-**Context** - Fine-tuning a model on a new task can erase its skill on the old ones (catastrophic forgetting). Test the old tasks after tuning. Mix in old data, or train an adapter and leave the base weights frozen. The Magos tests the old tasks first.
+**Context** - Fine-tuning a model on a new task can erase its skill on the old ones (catastrophic forgetting). Test the old tasks after tuning. To keep the old skill, mix old data into the new data, or train an adapter and leave the base weights frozen. The Magos demands the test of the old tasks.
 
 ## November 19 - Commemoration of Saint Isotona the Stepwise
 
@@ -118,7 +118,7 @@
 
 **Purpose** - Understanding how dilation widens the receptive field.
 
-**Context** - A dilated convolution leaves gaps between the points of its kernel. Stacking layers whose dilation doubles each time makes the receptive field grow exponentially with depth, with no extra parameters per layer. The enginseers use it on long stretches of audio or of a time series.
+**Context** - A dilated convolution leaves gaps between the points of its kernel. Stacking layers whose dilation doubles each time makes the receptive field grow exponentially with depth, with no extra parameters per layer. The enginseers use it so that one output sees a long span of audio or of a time series.
 
 ## November 21 - Rite of the Guided Hand
 
@@ -134,9 +134,9 @@
 
 ## November 23 - Feast of the Summed Pair
 
-**Purpose** - Remembering how memoisation tames a naive recursion.
+**Purpose** - Remembering how memoisation speeds up a naive recursion.
 
-**Context** - The date 11-23 gives 1, 1, 2, 3: each term is the sum of the two before it. Naive recursion makes the work grow exponentially. Store each term once computed (memoisation) and it grows linearly. The cogitator keeps what it computed.
+**Context** - The date 11-23 gives 1, 1, 2, 3: each term is the sum of the two before it. Naive recursion makes the work grow exponentially. Store each term after it is computed (memoisation) and the work grows linearly. The cogitator keeps what it computed.
 
 ## November 24 - Vigil of the Curved Bowl
 
@@ -152,9 +152,9 @@
 
 ## November 26 - Observance of the Attributed Credit
 
-**Purpose** - Reading feature attributions for what they are.
+**Purpose** - Reading feature attributions as a description of the model.
 
-**Context** - Feature attributions, such as SHAP values, describe what the model relies on, not what causes the outcome in the world. Between correlated features the credit is divided arbitrarily. Adepts do not call it proof of cause.
+**Context** - Feature attributions, such as SHAP values, describe what the model relies on, not what causes the outcome in the world. Between correlated features the credit for a prediction is divided arbitrarily. Adepts do not call an attribution proof of cause.
 
 ## November 27 - Commemoration of Saint Factora the Decomposer
 
@@ -166,16 +166,16 @@
 
 **Purpose** - Avoiding the checkerboard pattern in generated images.
 
-**Context** - A transposed convolution whose kernel size is not divisible by its stride paints some output pixels more often than others, and a checkerboard pattern appears. Use a kernel size divisible by the stride, or resize first and then apply an ordinary convolution. The tech-priests call the pattern scrap-code.
+**Context** - A transposed convolution whose kernel size is not divisible by its stride paints some output pixels more often than others, and a checkerboard pattern appears. Use a kernel size divisible by the stride, or resize the image and then apply an ordinary convolution. Adepts call the pattern scrap-code.
 
 ## November 29 - Feast of the Mean Average Precision
 
 **Purpose** - Stating the overlap threshold with every mAP score.
 
-**Context** - In object detection, average precision is the area under the precision-recall curve of one class. The mean over all classes is mAP. State the overlap threshold with it: mAP at 0.5 is more lenient than mAP averaged from 0.5 to 0.95. The Magos asks for it.
+**Context** - In object detection, average precision is the area under the precision-recall curve of one class. The mean over all classes is mAP. State the overlap threshold with it: mAP at 0.5 is more lenient than mAP averaged from 0.5 to 0.95. The Magos asks how much a predicted box must overlap the true box.
 
 ## November 30 - Rite of the Closed Loop
 
-**Purpose** - Keeping random exposure in a system that ranks.
+**Purpose** - Showing a small share of items at random in a system that ranks.
 
-**Context** - A model that decides what users are shown is later trained on what they chose from what it showed, and so confirms itself. Keep a small share of random exposure to learn about what it never shows. The machine spirit cannot learn about what it hides.
+**Context** - A model that decides what users are shown is later trained on what they chose from what it showed, and so confirms its own choices. Show a small share of items at random, to learn about items the model never chooses. The machine spirit cannot learn about what it hides.

@@ -22,7 +22,7 @@
 
 **Purpose** - Scoring probabilities with the Brier score.
 
-**Context** - The Brier score is the mean squared difference between the predicted probability and the outcome, 0 or 1. Lower is better. A forecast of 0.5 for everything scores 0.25. It rewards probabilities that are both calibrated and decisive. The enginseers use it to judge them.
+**Context** - The Brier score is the mean squared difference between the predicted probability and the outcome, 0 or 1. Lower is better, and a forecast of 0.5 for everything scores 0.25. The score rewards probabilities that are both calibrated and decisive. The enginseers judge every forecast by it.
 
 ## May 5 - Feast of the Five Folds
 
@@ -40,7 +40,7 @@
 
 **Purpose** - Lowering the temperature for precise answers.
 
-**Context** - Temperature divides the logits before sampling. Below one, the model keeps to its likeliest tokens. Above one, it wanders. Keep it low for extraction and code, and the machine spirit stays plain-spoken. Raise it only for invention.
+**Context** - Temperature divides the logits before sampling. Below one, the model keeps to its likeliest tokens, and above one it picks less likely tokens more often. Keep the temperature low for extraction and code. The tech-priests raise it only for invention.
 
 ## May 8 - Observance of the Confounder
 
@@ -74,7 +74,7 @@
 
 ## May 13 - Commemoration of Saint Seasona the Expectant
 
-**Purpose** - Remembering the saint who removed the seasonal pattern first.
+**Purpose** - Remembering the saint who removed the seasonal pattern before looking for anomalies.
 
 **Context** - In a series with a daily or weekly cycle, the peaks are normal. Saint Seasona removed the trend and the seasonal pattern first and looked for anomalies in what remained. Without that step every Monday morning peak raises an alert. The enginseers do the same in her memory.
 
@@ -94,7 +94,7 @@
 
 **Purpose** - Looking for wrong labels in the dataset.
 
-**Context** - Some labels in almost every dataset are simply wrong. Look at the examples where a good model disagrees most confidently with its label. Many of them are errors in the data, not in the model. Send an acolyte to review them.
+**Context** - Some labels in almost every dataset are simply wrong. Look at the examples where a good model disagrees most confidently with their labels. Many of them are errors in the data, not in the model. Send an acolyte to review them.
 
 ## May 17 - Observance of the Floating Point
 
@@ -112,7 +112,7 @@
 
 **Purpose** - Using AdamW when you want weight decay with Adam.
 
-**Context** - In the Adam optimiser an L2 penalty added to the loss is rescaled by the adaptive step and no longer acts as weight decay. AdamW applies the decay to the weights directly, apart from the gradient. The tech-priests use AdamW when they want weight decay with Adam.
+**Context** - In the Adam optimiser an L2 penalty added to the loss is rescaled by the adaptive step and no longer acts as weight decay. AdamW applies the decay to the weights directly, separately from the gradient. The tech-priests use AdamW when they want weight decay with Adam.
 
 ## May 20 - Memorial of Saint Normalia the Steady
 
@@ -154,7 +154,7 @@
 
 **Purpose** - Trying gradient boosting on tabular data.
 
-**Context** - Each new tree in a boosted ensemble is fitted to the errors that the previous trees left behind. On tabular data it remains a strong baseline. Try it before you build anything deeper, as the acolytes learn to do.
+**Context** - Each new tree in a boosted ensemble is fitted to the errors that the previous trees left behind. On tabular data gradient boosting remains a strong baseline. Try it before you build a deep neural network, as the acolytes learn to do.
 
 ## May 27 - Rite of the Causal Mask
 
@@ -184,4 +184,4 @@
 
 **Purpose** - Finding cycles with autocorrelation before forecasting.
 
-**Context** - Autocorrelation is the correlation of a series with a copy of itself shifted by some lag. In daily data a peak at lag 7 shows a weekly cycle. Plot it before choosing a forecasting model. The servo-skulls listen for the echo of the week.
+**Context** - Autocorrelation is the correlation of a series with a copy of itself shifted by some lag. In daily data a peak at lag 7 shows a weekly cycle. Plot the autocorrelation before choosing a forecasting model. The servo-skulls listen for the echo of the week.

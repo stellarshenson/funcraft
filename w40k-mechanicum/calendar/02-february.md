@@ -4,7 +4,7 @@
 
 **Purpose** - Using weight decay to keep model weights small.
 
-**Context** - Weight decay asks every parameter to justify its size. With a little of it the weights stay small, the function stays smooth and the validation loss stays honest. The Magos adds it as a matter of habit.
+**Context** - Weight decay pulls every weight towards zero during training. A weight stays large only when a large value lowers the loss. With a little weight decay the weights stay small, the function stays smooth and the model overfits less. The Magos adds weight decay by habit.
 
 ## February 2 - Rite of the Two-by-Two Table
 
@@ -28,7 +28,7 @@
 
 **Purpose** - Remembering the saint who kept class proportions in every fold.
 
-**Context** - Saint Strata divided the data so that every fold held the rare class in the same proportion as the whole. In her memory the tech-priests stratify their splits. Without it, one fold may contain no positive examples at all.
+**Context** - Saint Strata divided the data so that every fold held the rare class in the same proportion as the whole. In her memory the tech-priests stratify their splits. Without stratification, one fold may contain no positive examples at all.
 
 ## February 6 - Feast of the Warm-Up
 
@@ -40,19 +40,19 @@
 
 **Purpose** - Remembering that e is the base of the natural logarithm.
 
-**Context** - Second month, seventh day: 2.7, the first digits of e. It is usually the base of the logarithm in your cross-entropy loss, and of the exponential in every softmax. The acolytes learn this number by heart.
+**Context** - Second month, seventh day: 2.7, the first digits of e. The number e is usually the base of the logarithm in your cross-entropy loss, and of the exponential in every softmax. The acolytes memorise these digits.
 
 ## February 8 - Observance of the Sampling Bias
 
 **Purpose** - Asking who or what is missing from your sample.
 
-**Context** - The data you could collect is not the data that exists. Ask today who or what never reached the table. A model inherits every blind spot of its sample. The Magos asks this question before every analysis.
+**Context** - The data you could collect is not all the data that exists. Ask today who or what is missing from your data table. A model learns nothing about the cases that its sample lacks. The Magos asks this question before every analysis.
 
 ## February 9 - Feast of the Surrogate Model
 
 **Purpose** - Searching hyperparameters with a cheap surrogate model.
 
-**Context** - Bayesian optimisation of hyperparameters fits a cheap model, the surrogate, to the scores of the trials run so far. The surrogate predicts the score of untried settings and how uncertain that is, and the next trial is chosen from it. It pays off when each trial is expensive, as the tech-priests know.
+**Context** - Bayesian optimisation of hyperparameters fits a cheap model, the surrogate, to the scores of the trials run so far. The surrogate predicts the score of untried settings and how uncertain each prediction is. The next trial is chosen from both. The adepts use the method when each trial is expensive.
 
 ## February 10 - Feast of the Falling Loss
 
@@ -64,7 +64,7 @@
 
 **Purpose** - Correcting the threshold when you run many tests.
 
-**Context** - Test twenty true null hypotheses at the 5 percent level and you expect one false discovery. Count how many comparisons you ran today. Correct the threshold before you announce a result. The Magos calls a discovery found by chance tech-heresy.
+**Context** - Test twenty true null hypotheses at the 5 percent level and you expect one false discovery. Count how many comparisons you ran today. Correct the 5 percent threshold for that count before you announce a result. To the Magos, a discovery found by chance is tech-heresy.
 
 ## February 12 - Rite of the Ranked Pair
 
@@ -74,9 +74,9 @@
 
 ## February 13 - Commemoration of Saint Calibra the Well-Tempered
 
-**Purpose** - Remembering the saint whose 70 percent meant seven in ten.
+**Purpose** - Remembering the saint whose model was well calibrated.
 
-**Context** - Of all the times Saint Calibra's model said 70 percent, it was right seven times in ten. In her memory the tech-priests check their own models with a reliability plot. Accuracy and calibration are different things.
+**Context** - Of all the times Saint Calibra's model stated 70 percent confidence, it was right seven times in ten. This property is calibration, and it is not the same as accuracy. In her memory the tech-priests check their own models with a reliability plot of confidence against the share of correct answers.
 
 ## February 14 - Feast of the Sharpened Prompt
 
@@ -94,7 +94,7 @@
 
 **Purpose** - Measuring calibration with the expected calibration error.
 
-**Context** - Sort the predictions into bins by confidence. In each bin compare the average confidence with the share of correct answers. The expected calibration error is the average gap, weighted by bin size. It depends on the number of bins, so state it. The Magos will ask.
+**Context** - Sort the predictions into bins by confidence. In each bin compare the average confidence with the share of correct answers. The expected calibration error is the average gap, weighted by bin size. Its value depends on the number of bins, so state that number before the Magos asks.
 
 ## February 17 - Observance of the Unseen Class
 
@@ -112,7 +112,7 @@
 
 **Purpose** - Remembering the saint of the reparametrisation trick.
 
-**Context** - A gradient cannot pass through a random draw. Epsilona's reparametrisation trick wrote the sample as the mean plus the standard deviation times standard normal noise. The randomness sits in the noise alone, so the gradient reaches the mean and the standard deviation. The tech-priests use it in her memory.
+**Context** - A gradient cannot pass through a random draw. Epsilona wrote the sample as the mean plus the standard deviation times standard normal noise. The randomness sits in the noise alone, so the gradient reaches the mean and the standard deviation. The tech-priests still use her reparametrisation trick.
 
 ## February 20 - Vigil of the Early Stop
 
@@ -130,7 +130,7 @@
 
 **Purpose** - Removing one component at a time to test its value.
 
-**Context** - An ablation removes one component at a time and measures again. If the score does not fall, that part adds nothing. The table then shows the Magos which of your additions earn their place.
+**Context** - An ablation removes one component at a time and measures again. If the score does not fall, that part adds nothing. A table of these results shows the Magos which of your additions improve the score.
 
 ## February 23 - Feast of the Unturned Vector
 
@@ -158,9 +158,9 @@
 
 ## February 27 - Commemoration of Saint Tempera the Cool-Headed
 
-**Purpose** - Remembering the saint who tamed an overconfident network.
+**Purpose** - Remembering the saint who used temperature scaling.
 
-**Context** - Tempera used temperature scaling: she divided the logits of an overconfident network by one number, the temperature, fitted on held-out data. A temperature above 1 softens the probabilities. The predicted class does not change, so the accuracy stays the same. The tech-priests do likewise in her memory.
+**Context** - Tempera used temperature scaling: she divided the logits of an overconfident network by one number, the temperature, fitted on held-out data. A temperature above 1 softens the probabilities. The predicted class does not change, so accuracy stays the same. The tech-priests do likewise in her memory.
 
 ## February 28 - Feast of the Isolated Point
 
@@ -170,7 +170,7 @@
 
 ## February 29 - Observance of the Intercalary Day
 
-**Purpose** - Testing date code on 29 February.
+**Purpose** - Testing date code with 29 February as input.
 
-**Context** - This day exists only in leap years. Code that assumes 365 days or a 28-day February fails on it. Never do calendar arithmetic by hand: use a date library, and test it on 29 February. The Magos calls hand-made date arithmetic tech-heresy.
+**Context** - This day exists only in leap years. Code that assumes 365 days or a 28-day February fails on this day. Never write your own calendar arithmetic: use a date library, and test your code with 29 February as input. The Magos calls self-written date arithmetic tech-heresy.
 

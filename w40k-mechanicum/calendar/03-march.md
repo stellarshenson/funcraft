@@ -10,7 +10,7 @@
 
 **Purpose** - Choosing the next trial with expected improvement.
 
-**Context** - In Bayesian optimisation an acquisition function chooses the next trial. It weighs settings the surrogate predicts to be good against settings where it is uncertain. Expected improvement, a common choice, is how much better than the best score so far a setting is expected to be. The tech-priests rely on it.
+**Context** - In Bayesian optimisation an acquisition function chooses the next trial. It weighs settings the surrogate model predicts to be good against settings where that model is uncertain. Expected improvement, a common choice in the forge, is the expected gain of a setting over the best score so far.
 
 ## March 3 - Observance of the Sliding Kernel
 
@@ -22,7 +22,7 @@
 
 **Purpose** - Handling a loss that turns to NaN in a single step.
 
-**Context** - A loss that turns to NaN in one step means a gradient grew far too large. Clip the gradient norm, lower the learning rate and inspect the batch that set it off. No litany will repair a NaN.
+**Context** - A loss that turns to NaN in one step means a gradient grew far too large. Clip the gradient norm, lower the learning rate and inspect the batch that caused the NaN. No litany will repair a NaN.
 
 ## March 5 - Commemoration of Saint Laplacia the Connected
 
@@ -76,7 +76,7 @@
 
 **Purpose** - Knowing what the Adam optimiser does with each gradient.
 
-**Context** - Adam keeps a running mean of each gradient and of its square, and scales every step by them. It forgives a poorly chosen learning rate more than plain descent does, but not entirely. The enginseers still tune the rate.
+**Context** - Adam keeps a running mean of each gradient and of its square, and scales every step by them. It tolerates a poorly chosen learning rate better than plain gradient descent does, but not entirely. The enginseers still tune the rate.
 
 ## March 14 - Feast of the Unending Ratio
 
@@ -88,7 +88,7 @@
 
 **Purpose** - Remembering that a pooled trend can reverse the trend in each group.
 
-**Context** - Simpson's paradox: a trend that holds in every subgroup can reverse when the groups are pooled. Look at the strata before you report the total. Ask which grouping the question is about. The Magos distrusts a total that nobody has split.
+**Context** - Simpson's paradox: a trend that holds in every subgroup can reverse when the groups are pooled. Look at the subgroups before you report the total. Ask which grouping the question is about. The Magos distrusts a total that nobody has split.
 
 ## March 16 - Feast of the Multilayer Perceptron
 
@@ -124,13 +124,13 @@
 
 **Purpose** - Finding the balance between bias and variance.
 
-**Context** - A rigid model makes the same error every time: bias. A flexible model makes different errors on every sample: variance. Total error is lowest somewhere between. Find out which side you are on. The Magos will ask.
+**Context** - A rigid model makes the same error every time: bias. A flexible model makes different errors on every sample: variance. Total error is lowest somewhere between these two extremes. Find out whether your model is too rigid or too flexible, because the Magos will ask.
 
 ## March 22 - Feast of Random Silence
 
 **Purpose** - Understanding what dropout does in training and in inference.
 
-**Context** - Dropout silences a random share of activations at each training step, so that no single unit becomes indispensable. At inference every unit is active. The scaling used in training keeps the expected totals equal. The enginseers call the silence a blessing.
+**Context** - Dropout sets a random share of activations to zero at each training step, so that no single unit becomes indispensable. At inference every unit is active. Training scales up the remaining activations, so the expected totals are the same as at inference. The enginseers call the zeros a blessing.
 
 ## March 23 - Rite of the Split Before Augmentation
 
@@ -154,7 +154,7 @@
 
 **Purpose** - Telling the standard deviation from the standard error.
 
-**Context** - The standard deviation describes the spread of the data. The standard error describes the uncertainty of the mean, and it shrinks with the square root of the sample size. Say which one your error bars show. The Omnissiah wants it written.
+**Context** - The standard deviation describes the spread of the data. The standard error describes the uncertainty of the mean, and it shrinks as the square root of the sample size grows. Say which one your error bars show. The Omnissiah wants it written.
 
 ## March 27 - Commemoration of Saint Robusta the Median-Minded
 
@@ -172,7 +172,7 @@
 
 **Purpose** - Comparing new inputs with the data the model was trained on.
 
-**Context** - Compare this month's inputs with the data the model was trained on. The world that produced the training set changes. When the two drift apart, the model degrades without any error message. Let a servitor repeat this check every month.
+**Context** - Compare this month's inputs with the data the model was trained on. The world that produced the training set changes. When the inputs drift away from the training data, the model degrades without any error message. Let a servitor repeat this check every month.
 
 ## March 30 - Rite of the Logit
 

@@ -10,7 +10,7 @@
 
 **Purpose** - Decaying the learning rate during a run.
 
-**Context** - Lower the learning rate slowly during a run, by steps or along a cosine curve. A constant rate ends the run still jumping around the minimum. A decayed rate settles. The tech-priests call a run without decay unfinished.
+**Context** - Lower the learning rate slowly during a run, by steps or along a cosine curve. With a constant rate, the weights still jump around the minimum of the loss when the run ends. With a decayed rate, the weights settle in the minimum. The tech-priests call a run without decay unfinished.
 
 ## April 3 - Feast of the Good and Bad Trials
 
@@ -40,25 +40,25 @@
 
 **Purpose** - Clearing the gradients in every PyTorch training step.
 
-**Context** - In PyTorch, gradients accumulate across backward passes until you clear them. Call zero_grad in every training step, before the backward pass. Otherwise the model is steered by the sum of every batch it has seen. This is a rite, not an option.
+**Context** - In PyTorch, gradients accumulate across backward passes until you clear them. Call zero_grad in every training step, before the backward pass. Otherwise the model is steered by the sum of the gradients of every batch it has seen. The call is a rite, and it is not optional.
 
 ## April 8 - Feast of the Retrieved Passage
 
 **Purpose** - Evaluating the search step of a retrieval system.
 
-**Context** - Retrieval lets a model answer from documents it was never trained on, by placing the relevant passages in its context. The answer is only as good as what was retrieved. So evaluate the search before the prose. A servo-skull fetches the passages.
+**Context** - Retrieval lets a model answer from documents it was never trained on, by placing the relevant passages in its context. The answer is only as good as what was retrieved. So evaluate the search before you evaluate the answer. A servo-skull fetches the passages.
 
 ## April 9 - Rite of the Transformer Block
 
 **Purpose** - Knowing the parts of a transformer block.
 
-**Context** - The tech-priests build a transformer as a stack of identical blocks. Each block holds a self-attention layer and a small feed-forward network, each wrapped in a residual connection with a layer normalisation. Attention moves information between tokens; the feed-forward network works on each token alone.
+**Context** - The adepts build a transformer as a stack of identical blocks. In each block, a self-attention layer and a small feed-forward network are each wrapped in a residual connection with a layer normalisation. Attention moves information between tokens; the feed-forward network works on each token alone.
 
 ## April 10 - Observance of the Returning Mean
 
 **Purpose** - Remembering that extreme values drift back toward the average.
 
-**Context** - Last month's worst performers will tend to improve and its best to decline, with no intervention at all. Before you credit your fix, ask whether extreme values were only drifting back toward the average. The tech-priests call this regression to the mean.
+**Context** - Last month's worst performers will tend to improve and its best performers will tend to decline, with no intervention at all. Before you say that your fix worked, ask whether extreme values were only drifting back toward the average. The tech-priests call this regression to the mean.
 
 ## April 11 - Rite of the Frozen Layers
 
@@ -70,7 +70,7 @@
 
 **Purpose** - Remembering the saint who kept the aspect ratio of images.
 
-**Context** - Saint Lettera knew that resizing an image to a square without keeping its aspect ratio squashes every shape. She kept the ratio and padded the rest, which is called letterboxing. She resized in the same way in training and in inference. The tech-priests do likewise in her memory.
+**Context** - Saint Lettera knew that resizing an image to a square without keeping its aspect ratio squashes every shape. She kept the ratio and padded the rest of the square, which is called letterboxing. She resized in the same way in training and in inference. The tech-priests do likewise in her memory.
 
 ## April 13 - Feast of the Random Forest
 
@@ -88,7 +88,7 @@
 
 **Purpose** - Checking that the features and the loss are finite.
 
-**Context** - One NaN poisons every sum and mean it touches, and it is not even equal to itself. Assert that your features and your loss are finite. Do it before the corruption spreads through the whole dataset. A pipeline that hides NaN is scrap-code.
+**Context** - One NaN turns every sum and mean that contains it into NaN, and NaN is not even equal to itself. Assert that your features and your loss are finite. Do it before the corruption spreads through the whole dataset. A pipeline that hides NaN is scrap-code.
 
 ## April 16 - Rite of the Suppressed Twin
 
@@ -106,7 +106,7 @@
 
 **Purpose** - Not coding categories as plain numbers.
 
-**Context** - Code red, green and blue as 1, 2 and 3, and a linear model concludes that blue is three times red. Where no order exists, use one-hot columns or a learned embedding. The tech-priests call the numbered colours a small heresy.
+**Context** - If you code red, green and blue as 1, 2 and 3, a linear model concludes that blue is three times red. Where no order exists, use one-hot columns or a learned embedding. The tech-priests call the numbered colours a small heresy.
 
 ## April 19 - Commemoration of Saint Annota the Consistent
 
@@ -124,13 +124,13 @@
 
 **Purpose** - Choosing a normalisation that suits small batches.
 
-**Context** - Batch normalisation estimates the mean and the variance from the batch. With very small batches those estimates are noisy and training suffers. The enginseers use group normalisation or layer normalisation there; they do not depend on the batch size.
+**Context** - Batch normalisation estimates the mean and the variance from the batch. With very small batches those estimates are noisy and training suffers. The enginseers use group normalisation or layer normalisation there; these two methods do not depend on the batch size.
 
 ## April 22 - Feast of the Principal Component
 
 **Purpose** - Standardising features before a principal component analysis.
 
-**Context** - Principal components are the directions of greatest variance, each orthogonal to the last. Standardise the features first. Otherwise the leading component only points at the column with the largest units. The Magos calls that a measurement of the units, not of the data.
+**Context** - Principal components are the directions of greatest variance, each orthogonal to the last. Standardise the features first. Otherwise the leading component only points at the column whose unit gives the largest variance. The Magos calls that a measurement of the units, not of the data.
 
 ## April 23 - Observance of the Weighted Average
 
@@ -148,7 +148,7 @@
 
 **Purpose** - Splitting time-ordered data by time, never at random.
 
-**Context** - For data ordered in time, train on the past and validate on the future, never the reverse. A random shuffle lets the model see tomorrow, and its forecast scores become false. The Machine God accepts no forecast that has seen the future.
+**Context** - For data ordered in time, train on the past and validate on the future, never the reverse. A random shuffle puts data from the future into the training set, and the forecast scores become false. The Machine God accepts no forecast from a model trained on the future.
 
 ## April 26 - Feast of the Variational Autoencoder
 
@@ -172,7 +172,7 @@
 
 **Purpose** - Passing the attention mask together with padded sequences.
 
-**Context** - Sequences in a batch are padded to equal length, and the padding means nothing. Pass the attention mask with them. Otherwise the model attends to the padding and mixes it into the answer. The machine spirit cannot see the difference alone.
+**Context** - Sequences in a batch are padded to equal length, and the padding means nothing. Pass the attention mask with them. Otherwise the model attends to the padding and mixes it into the answer. Without the mask, the machine spirit cannot see which positions are padding.
 
 ## April 30 - Vigil of the Personal Reliquary
 

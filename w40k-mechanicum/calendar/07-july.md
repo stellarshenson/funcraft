@@ -2,15 +2,15 @@
 
 ## July 1 - Feast of the Evaluation Set
 
-**Purpose** - Keeping the evaluation set fixed and honest.
+**Purpose** - Keeping the evaluation set the same for every model.
 
-**Context** - An evaluation set is a promise about what 'good' means. Build it from real cases, fix it and version it. Do not change it only because the model finds it hard. The Magos judges every model by the same set.
+**Context** - An evaluation set defines what 'good' means. Build it from real cases, then keep it unchanged and version it. Do not change it only because the model finds it hard. The Magos judges every model by the same set.
 
 ## July 2 - Rite of the Momentum
 
 **Purpose** - Understanding how momentum smooths gradient descent.
 
-**Context** - Momentum keeps a running average of past gradients and moves along it. The optimiser then passes small bumps and moves down narrow ravines. The enginseers call it the motive force of descent.
+**Context** - Momentum keeps a running average of past gradients and moves the weights along that average. The optimiser then passes over small bumps in the loss surface and moves down its narrow valleys. The enginseers call momentum a blessing for gradient descent.
 
 ## July 3 - Vigil of the Underfitted Model
 
@@ -22,7 +22,7 @@
 
 **Purpose** - Checking that observations are independent.
 
-**Context** - Most statistical tests assume independent observations. Ten readings from one sensor within one minute are not ten independent observations. Treating them as ten makes every interval too narrow. The Magos calls that tech-heresy.
+**Context** - Most statistical tests assume independent observations. Ten readings from one sensor within one minute are not ten independent observations. Treating them as ten makes every confidence interval too narrow. The Magos calls that tech-heresy.
 
 ## July 5 - Commemoration of Saint Errata the Inspector
 
@@ -32,9 +32,9 @@
 
 ## July 6 - Feast of the Positional Encoding
 
-**Purpose** - Giving attention the order of the words.
+**Purpose** - Understanding why attention needs positional encodings.
 
-**Context** - Attention alone cannot tell the first word from the last. Positional encodings give each token its place in the sequence. Without them, a sentence is only a bag of words to the model. The machine spirit needs the order.
+**Context** - Attention alone cannot distinguish the first word from the last. Positional encodings give each token its place in the sequence. Without them, a sentence is only a bag of words to the model. The machine spirit needs the order.
 
 ## July 7 - Feast of the Pooled Window
 
@@ -52,31 +52,31 @@
 
 **Purpose** - Doubting scores on public benchmarks.
 
-**Context** - A public benchmark published before a model's training cut-off may be inside its training data. A high score there may be recall, not reasoning. The tech-priests keep a private set that the model can never have read.
+**Context** - A public benchmark published before a model's training cut-off may be inside its training data. A high score there may come from memorised answers, not from reasoning. The tech-priests keep a private set that the model can never have read.
 
 ## July 10 - Feast of the Nearest Neighbour
 
 **Purpose** - Understanding the nearest-neighbour method.
 
-**Context** - The nearest-neighbour method does no training. It stores the data and answers by finding the closest examples. It is slow at prediction, and features on different scales mislead it. Its machine spirit is simple but easy to fool.
+**Context** - The nearest-neighbour method does no training. It stores the data and predicts by finding the closest examples. It is slow at prediction, and features on different scales mislead it. Its machine spirit is simple but easy to fool.
 
 ## July 11 - Feast of the Many Heads
 
 **Purpose** - Understanding multi-head attention.
 
-**Context** - Multi-head attention runs several attention heads side by side. Each head has its own projections of the queries, keys and values and can follow a different relation between tokens. One linear layer joins and mixes their outputs. The enginseers give each head its own task.
+**Context** - Multi-head attention runs several attention heads side by side. Each head has its own projections of the queries, keys and values and can follow a different relation between tokens. One linear layer joins and mixes their outputs. The enginseers hold a feast for this design.
 
 ## July 12 - Saint Quantila of the Ninety-Ninth Percentile
 
-**Purpose** - Remembering the saint who measured the slow tail.
+**Purpose** - Remembering the saint who measured the slowest requests.
 
-**Context** - Saint Quantila measured latency by its 99th percentile, because the mean hides the slow requests that users remember. In her memory the tech-priests report the median and the tail together.
+**Context** - Saint Quantila measured latency by its 99th percentile, because the mean hides the slow requests that users remember. In her memory the tech-priests report the median and the 99th percentile together.
 
 ## July 13 - Observance of the Residual Plot
 
-**Purpose** - Reading a residual plot.
+**Purpose** - Reading a plot of the residuals.
 
-**Context** - Plot the residuals against the fitted values. A shapeless cloud is the mark of a sound regression. A funnel or a curve means the model has left structure in its errors. The adepts look at this plot early.
+**Context** - Plot the residuals against the fitted values. A shapeless cloud of points is the mark of a valid regression. A funnel or a curve means the model has left structure in its errors. The adepts look at this plot early.
 
 ## July 14 - Vigil of the Agent's Leash
 
@@ -100,7 +100,7 @@
 
 **Purpose** - Judging R squared with care.
 
-**Context** - R squared states what share of the variance the model explains on the data it was fitted to. It never falls when a feature is added, useful or not. Judge the model on held-out data instead. The Magos trusts that score.
+**Context** - R squared states what share of the variance the model explains on the data it was fitted to. It never falls when a feature is added, useful or not. Judge the model on held-out data instead. The Magos trusts only the score on held-out data.
 
 ## July 18 - Vigil of the Uneven Error
 
@@ -116,9 +116,9 @@
 
 ## July 20 - Saint Calida of the Heat Map
 
-**Purpose** - Remembering the saint who looked where the model looked.
+**Purpose** - Remembering the saint who mapped which image regions a model uses.
 
-**Context** - Calida used Grad-CAM to draw a heat map of the image regions that drove a prediction. With it she found a classifier that recognised wolves by the snow behind them. In her memory the tech-priests look at where the model looks.
+**Context** - Calida used Grad-CAM to draw a heat map of the image regions that drove a prediction. With it she found a classifier that recognised wolves by the snow behind them. In her memory the tech-priests check which image regions a model uses.
 
 ## July 21 - Litany of the Three Decoders
 
@@ -134,9 +134,9 @@
 
 ## July 23 - Vigil of the Edge of the Range
 
-**Purpose** - Widening a search range when the best value lies on its edge.
+**Purpose** - Widening a hyperparameter search range when the best value lies on its edge.
 
-**Context** - When the best value of a search lies on the edge of the range, the true best may lie outside. Widen the range and search again. Search learning rates and regularisation strengths on a logarithmic scale. The acolytes watch the edges.
+**Context** - When the best hyperparameter value of a search lies on the edge of the range, the true best may lie outside. Widen the range and search again. Search learning rates and regularisation strengths on a logarithmic scale. The acolytes watch the edges.
 
 ## July 24 - Feast of the Augmented Sample
 
@@ -172,7 +172,7 @@
 
 **Purpose** - Building one good feature by hand.
 
-**Context** - A ratio, a difference, a count over the last seven days: one well-chosen feature can give a simple model what a deep one would need a million rows to discover. The enginseers ask a domain expert what to compute.
+**Context** - A ratio, a difference or a count over the last seven days is a feature built by hand. One well-chosen feature can give a simple model what a deep model would need a million rows to discover. The enginseers ask a domain expert what to compute.
 
 ## July 30 - Rite of the Chat Template
 

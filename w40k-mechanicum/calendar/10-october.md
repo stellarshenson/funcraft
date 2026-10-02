@@ -10,13 +10,13 @@
 
 **Purpose** - Reading the power draw of each GPU.
 
-**Context** - On this day the enginseers watch the power of their machines. nvidia-smi reports the power draw of each card in watts beside its limit. A card whose draw stays low during training is idle part of the time.
+**Context** - Today the enginseers watch the power of their machines. nvidia-smi reports the power draw of each card in watts beside its limit. A card whose draw stays low during training is idle part of the time.
 
 ## October 3 - Commemoration of Saint Land the Finder
 
 **Purpose** - Searching for existing code and models before writing new ones.
 
-**Context** - The Finder taught that what is needed already exists. Before writing a new function or training a new model, search the standard library, the project and the published pretrained models. The tech-priests search first, because most of it exists.
+**Context** - The Finder taught that what is needed already exists. Before writing a new function or training a new model, search the standard library, the project and the published pretrained models. The tech-priests search first, because most of what they need already exists.
 
 ## October 4 - The Day of the Sixteen Laws
 
@@ -46,7 +46,7 @@
 
 **Purpose** - Measuring feature importance by shuffling a feature.
 
-**Context** - Permutation importance: shuffle the values of one feature in the validation data and measure how far the score falls. Two correlated features cover for each other, and each can look unimportant. Acolytes shuffle one column at a time.
+**Context** - Permutation importance: shuffle the values of one feature in the validation data and measure how far the score falls. When one of two correlated features is shuffled, the other still gives the model similar information, so each can look unimportant. Acolytes shuffle one column at a time.
 
 ## October 9 - Commemoration of Saint Permuta the Shuffler
 
@@ -94,7 +94,7 @@
 
 **Purpose** - Training embeddings with matching and non-matching pairs.
 
-**Context** - Contrasta trained an encoder to draw the embeddings of matching pairs together and to push non-matching pairs apart. The model learned most from the hard negatives, the non-matches that look alike. The adepts honour her with hard negatives.
+**Context** - Contrasta trained an encoder to draw the embeddings of matching pairs together and to push non-matching pairs apart. The model learned most from the hard negatives, the non-matches that look alike. The adepts honour her by training with hard negatives.
 
 ## October 17 - Observance of the Three Anomalies
 
@@ -118,7 +118,7 @@
 
 **Purpose** - Sampling a signal fast enough to avoid aliasing.
 
-**Context** - A signal must be sampled at more than twice its highest frequency. Sampled more slowly, the high frequencies appear as false low ones, which is called aliasing. Filter before reducing the sampling rate. The cogitator cannot tell false from true.
+**Context** - A signal must be sampled at more than twice its highest frequency. Sampled more slowly, the high frequencies appear as false low ones, which is called aliasing. Filter out the high frequencies before reducing the sampling rate. The cogitator cannot tell false from true.
 
 ## October 21 - Vigil of the Dragged Component
 
@@ -130,13 +130,13 @@
 
 **Purpose** - Remembering the saint who served users with no history.
 
-**Context** - A recommender has nothing to go on for a new user or a new item, because no interactions exist yet (the cold-start problem). Colda fell back on popularity and on the features of the item until enough interactions arrived. The tech-priests plan for the newcomer.
+**Context** - A recommender has no history to use for a new user or a new item, because no interactions exist yet (the cold-start problem). Colda fell back on popularity and on the features of the item until enough interactions arrived. The tech-priests plan for the newcomer.
 
 ## October 23 - Feast of the Random Surfer
 
 **Purpose** - Understanding PageRank as a random surfer.
 
-**Context** - PageRank scores a page by the share of time a random surfer spends on it. The surfer follows a random link, and now and then jumps to a random page. The scores are the dominant eigenvector of the transition matrix and are computed by power iteration. The tech-priests picture the surfer as a servo-skull.
+**Context** - PageRank scores a page by the share of time a random surfer spends on it. The surfer follows a random link and sometimes jumps to a random page. The scores are the dominant eigenvector of the transition matrix and are computed by power iteration. The tech-priests picture the surfer as a servo-skull.
 
 ## October 24 - Feast of the Kibibyte
 
@@ -172,7 +172,7 @@
 
 **Purpose** - Understanding what one convolutional unit can see.
 
-**Context** - Each unit of a convolutional network sees only a patch of the input, and the patch grows with depth. An object larger than the receptive field is seen whole by no unit. Each servitor sees only its own patch.
+**Context** - Each unit of a convolutional network sees only a patch of the input, called its receptive field, and the patch grows with depth. No unit sees the whole of an object larger than its receptive field. The adepts compare the receptive field with the size of the objects in their data.
 
 ## October 30 - Commemoration of Saint Distanta the Scaled
 
@@ -184,5 +184,5 @@
 
 **Purpose** - Knowing that GAN training is unstable.
 
-**Context** - A generative adversarial network trains two networks against each other: a generator that forges and a discriminator that tells forged from real. Training is unstable, and the generator may collapse to a few outputs. The adepts watch both networks.
+**Context** - A generative adversarial network trains two networks against each other: a generator that makes fake samples and a discriminator that distinguishes fake from real. Training is unstable, and the generator may collapse to a few outputs. The adepts watch both networks.
 

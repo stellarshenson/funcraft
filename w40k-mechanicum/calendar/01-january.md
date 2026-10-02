@@ -32,15 +32,15 @@
 
 ## January 6 - Feast of the Descending Gradient
 
-**Purpose** - Honouring gradient descent and its small steps downhill.
+**Purpose** - Honouring gradient descent and its small steps towards a lower loss.
 
-**Context** - Gradient descent finds its way downhill by small steps against the slope. Thank the Omnissiah when the loss falls, but remember that a low training loss was never the goal. The goal is a model that works on new data.
+**Context** - Gradient descent lowers the loss by small steps, each in the direction opposite to the gradient. Thank the Omnissiah when the loss falls, but remember that a low training loss was never the goal. The goal is a model that works on new data.
 
 ## January 7 - Rite of Device Selection
 
 **Purpose** - Choosing the GPU before the framework starts.
 
-**Context** - Set CUDA_VISIBLE_DEVICES first and import the framework second. A framework started without this instruction takes the first GPU it finds, even if another adept is already working there. The enginseers call this the first courtesy of the forge.
+**Context** - Set CUDA_VISIBLE_DEVICES first and import the framework second. A framework started without this instruction takes the first GPU it finds, even if another adept is already working there. The enginseers say that setting this variable is the first courtesy of the forge.
 
 ## January 8 - Litany Against Leakage
 
@@ -52,19 +52,19 @@
 
 **Purpose** - Testing three learning rates before trusting one.
 
-**Context** - A learning rate that is too high makes the loss jump around. One that is too low makes it crawl. Tonight, try three rates, each a factor of ten apart, before you trust any one of them. The servitors do not tire, so run all three.
+**Context** - A learning rate that is too high makes the loss jump around. One that is too low makes it fall very slowly. Tonight, try three rates, each a factor of ten apart, before you trust any one of them. The servitors do not tire, so run all three.
 
 ## January 10 - Feast of the Dot Product
 
 **Purpose** - Understanding the dot product behind every linear layer.
 
-**Context** - The dot product multiplies two vectors component by component and adds the results. It equals the product of their lengths and the cosine of the angle between them. Each output of a linear layer is one dot product of the input with a row of weights, plus a bias. The adepts honour it.
+**Context** - The dot product multiplies two vectors component by component and adds the results. It equals the product of their lengths and the cosine of the angle between them. Each output of a linear layer is one dot product of the input with a row of weights, plus a bias. The adepts honour the dot product.
 
 ## January 11 - Feast of the Blessed Checkpoint
 
 **Purpose** - Saving the full training state, not only the weights.
 
-**Context** - A run that saves no checkpoint loses all its hours when it stops. Save the weights, the optimiser state and the step count together. A model resumed without its optimiser state does not continue the same run. The tech-priests count this a blessing.
+**Context** - A run that saves no checkpoint loses all its hours when it stops. Save the weights, the optimiser state and the step count together. A model resumed without its optimiser state does not continue the same run. The tech-priests count a full checkpoint as a blessing.
 
 ## January 12 - Commemoration of Saint Seedra the Repeatable
 
@@ -88,7 +88,7 @@
 
 **Purpose** - Reporting both mean and median when the data is skewed.
 
-**Context** - Two servitors measure the centre of the same data and disagree. When a few very large values pull the mean far from the median, report both. Then the reader can see the skew.
+**Context** - Two servitors measure the centre of the same data, one with the mean and one with the median, and they disagree. When a few very large values pull the mean far from the median, report both. Then the reader can see the skew.
 
 ## January 16 - Vigil of the Vanishing Gradient
 
@@ -154,7 +154,7 @@
 
 **Purpose** - Remembering what a p-value does and does not say.
 
-**Context** - Saint Nulla taught that a p-value is the chance of data at least this extreme if the null hypothesis holds, and nothing more. It is not the probability that your hypothesis is true. The tech-priests repeat this when a colleague misreads one.
+**Context** - Saint Nulla taught that a p-value is the chance of data at least as extreme as yours if the null hypothesis holds, and nothing more. It is not the probability that your hypothesis is true. The tech-priests repeat this when a colleague misreads a p-value.
 
 ## January 27 - Observance of the Scaled Feature
 
@@ -172,13 +172,13 @@
 
 **Purpose** - Choosing a batch size that the card can hold.
 
-**Context** - Larger batches give smoother gradient estimates and fill more memory. Smaller batches are noisier and often generalise as well. Choose the size the card can hold, then tune the learning rate to match. The adepts who skip that step regret it.
+**Context** - Larger batches give smoother gradient estimates and fill more memory. Smaller batches are noisier and often generalise as well as larger ones. Choose the size the card can hold, then tune the learning rate to match. The adepts who skip that step regret it.
 
 ## January 30 - Rite of the Tokeniser
 
 **Purpose** - Using the tokeniser that the model was trained with.
 
-**Context** - The model never reads your words, only the tokens the tokeniser cuts them into. Use the tokeniser the model was trained with. Any other one feeds the model scrap-code that it has never seen.
+**Context** - The model never reads your words, only the tokens the tokeniser cuts them into. Use the tokeniser the model was trained with. Any other one feeds the model scrap-code: token sequences that it has never seen.
 
 ## January 31 - Vigil of the Rare Fault
 

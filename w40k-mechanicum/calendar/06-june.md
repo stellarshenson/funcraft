@@ -4,7 +4,7 @@
 
 **Purpose** - Scaling the initial weights to the layer width.
 
-**Context** - Weights that start too large make the activations explode. Weights that start too small make the signal fade to nothing. Use an initialisation scaled to the width of each layer. It keeps the variance steady from input to output. The machine spirit needs a steady start.
+**Context** - Weights that start too large make the activations explode, and weights that start too small make the signal fade to nothing. Use an initialisation scaled to the width of each layer. It keeps the variance steady from input to output. The machine spirit needs a steady start.
 
 ## June 2 - Feast of the Majority Vote
 
@@ -34,7 +34,7 @@
 
 **Purpose** - Setting the seed to repeat a random experiment.
 
-**Context** - The cogitator's random numbers are a deterministic sequence that only looks random. The seed selects the sequence. Count this a blessing, because it lets an experiment that involves chance be repeated exactly.
+**Context** - The cogitator's random numbers are a deterministic sequence that only looks random. The seed selects the sequence. Count this as a blessing, because it lets an experiment that involves chance be repeated exactly.
 
 ## June 7 - Feast of the Cosine Similarity
 
@@ -52,7 +52,7 @@
 
 **Purpose** - Recognising dead ReLU units.
 
-**Context** - A ReLU unit whose input is negative for every example outputs zero and receives zero gradient, so it never recovers. If many units have fallen silent, lower the learning rate or use a leaky variant. Enginseers call such units dead.
+**Context** - A ReLU unit whose input is negative for every example outputs zero and receives zero gradient, so it never recovers. Enginseers call such a unit dead. If many units are dead, lower the learning rate or use a leaky variant.
 
 ## June 10 - Feast of the Three Transformers
 
@@ -64,19 +64,19 @@
 
 **Purpose** - Honouring the law of large numbers.
 
-**Context** - As the sample grows, its average converges on the true mean. The law promises nothing about small samples. Ten coin flips owe you no particular number of heads. The tech-priests hold a feast for this law.
+**Context** - As the sample grows, its average converges on the true mean. The law promises nothing about small samples. Ten coin flips guarantee no particular number of heads. The tech-priests hold a feast for this law.
 
 ## June 12 - Commemoration of Saint Secreta the Unspoken
 
 **Purpose** - Keeping passwords and tokens out of notebooks.
 
-**Context** - Saint Secreta never typed a password or a token into a notebook cell. She kept them in the environment or in a secrets store. Nothing she committed ever had to be revoked in a hurry. The tech-priests follow her.
+**Context** - Saint Secreta never typed a password or a token into a notebook cell. She kept them in environment variables or in a secrets store. Her commits contained no secret, so nothing had to be revoked in a hurry. The tech-priests follow her example.
 
 ## June 13 - Observance of the Chunked Document
 
 **Purpose** - Testing chunk size for document retrieval.
 
-**Context** - Documents are cut into chunks before they are embedded for retrieval. Too small, and a passage loses its meaning. Too large, and one vector must stand for many topics. Test the size against real questions, as the adepts do.
+**Context** - Documents are cut into chunks before they are embedded for retrieval. If a chunk is too small, the text in it loses its meaning. If a chunk is too large, one vector must represent many topics. Test the size against real questions, as the adepts do.
 
 ## June 14 - Rite of the Class Weight
 
@@ -112,7 +112,7 @@
 
 **Purpose** - Distilling a large model into a small one.
 
-**Context** - Train a small student to imitate the outputs of a large teacher, and it keeps much of the skill at a fraction of the cost. The teacher's full probability distribution teaches more than its top answer alone. The Magos teaches, the acolyte learns.
+**Context** - Train a small student model to imitate the outputs of a large teacher model. The student keeps much of the teacher's skill at a fraction of the cost. The teacher's full probability distribution teaches more than its top answer alone. The Magos teaches, the acolyte learns.
 
 ## June 20 - Feast of the Adjacency Matrix
 
@@ -130,7 +130,7 @@
 
 **Purpose** - Remembering the saint who checked the condition number first.
 
-**Context** - The condition number of a matrix is the ratio of its largest to its smallest singular value. Conditia computed it before solving: a large one turns small errors in the input into large errors in the answer. A condition number of 10 to the power 8 costs about 8 decimal digits. The tech-priests do likewise.
+**Context** - The condition number of a matrix is the ratio of its largest to its smallest singular value. Conditia computed it before solving, and the tech-priests do likewise. A large condition number turns small input errors into large errors in the answer: 10 to the power 8 costs about 8 decimal digits.
 
 ## June 23 - Rite of the Control Group
 
@@ -148,7 +148,7 @@
 
 **Purpose** - Reading the last lines of a long job's log.
 
-**Context** - Tonight, read the last hundred lines of your longest-running job. A log that nobody reads is only a slow way of filling the disk. A warning you have learned to ignore is still a warning. The servo-skulls write it, so the adepts must read it.
+**Context** - Tonight, read the last hundred lines of your longest-running job. A log that nobody reads is only a slow way of filling the disk. A warning you have learned to ignore is still a warning. The servo-skulls write the log, so the adepts must read it.
 
 ## June 26 - Observance of the Skewed Column
 
@@ -166,7 +166,7 @@
 
 **Purpose** - Encoding hours and weekdays as sine and cosine.
 
-**Context** - Sixth month, twenty-eighth day: 6.28, about two pi, the radians in one full turn. Encode hours, weekdays and months as the sine and cosine of their angle. Then 23:00 sits beside midnight, as the cogitator needs.
+**Context** - Sixth month, twenty-eighth day: 6.28, about two pi, the radians in one full turn. Treat a day, a week or a year as one full turn. Encode hours, weekdays and months as the sine and cosine of their angle. Then 23:00 is encoded close to midnight, as the cogitator needs.
 
 ## June 29 - Rite of the Power Iteration
 

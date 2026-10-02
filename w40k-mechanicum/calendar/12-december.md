@@ -34,7 +34,7 @@
 
 **Purpose** - Counting the trials of a Monte Carlo estimate.
 
-**Context** - Monte Carlo estimation answers a question by simulating many random trials. The error falls with the square root of the number of trials. A hundred times the trials buys one more digit. The cogitator throws the dice.
+**Context** - Monte Carlo estimation answers a question by simulating many random trials. The error falls with the square root of the number of trials. A hundred times as many trials give one more correct digit. The cogitator throws the dice.
 
 ## December 7 - Feast of the Moving Pixel
 
@@ -70,7 +70,7 @@
 
 **Purpose** - Remembering the saint who measured the centrality of nodes.
 
-**Context** - Saint Centrala measured node importance in several ways, called centrality. Degree counts its edges. Betweenness counts the shortest paths through it. Closeness measures its nearness to all others. Eigenvector centrality counts links to important nodes. In her memory the adepts ask what each one answers.
+**Context** - Centrala measured centrality, the importance of a node. Degree counts its edges, and betweenness counts the shortest paths through it. Closeness measures how near it is to all others, and eigenvector centrality counts links to important nodes. In her memory the adepts ask what each measure answers.
 
 ## December 13 - Feast of the Chosen Basis
 
@@ -104,7 +104,7 @@
 
 ## December 18 - Observance of the Two Uncertainties
 
-**Purpose** - Telling noise in the data from what the model does not know.
+**Purpose** - Distinguishing noise in the data from what the model does not know.
 
 **Context** - Aleatoric uncertainty is noise in the data itself; more data does not reduce it. Epistemic uncertainty is what the model does not yet know; more data reduces it. The Magos asks which one is large before the team collects more data.
 
@@ -118,7 +118,7 @@
 
 **Purpose** - Counting the parameters of a layer by hand.
 
-**Context** - A linear layer from n inputs to m outputs has n times m weights and m biases. A convolution has a k by k kernel, c input channels and d output channels. It has k times k times c times d weights and d biases, whatever the image size. Count them once by hand, as the tech-priests do.
+**Context** - A linear layer from n inputs to m outputs has n times m weights and m biases. A convolution has a k by k kernel, c input channels and d output channels. It has k times k times c times d weights and d biases, whatever the image size. Count them once by hand to check the model summary, as adepts do.
 
 ## December 21 - Feast of the Spectrogram
 
@@ -130,7 +130,7 @@
 
 **Purpose** - Knowing what the universal approximation theorem says.
 
-**Context** - A network with one hidden layer, if wide enough, can approximate any continuous function on a bounded domain. The theorem does not say how wide, nor how to find the weights. The Magos reads it as permission, not as a method.
+**Context** - A network with one hidden layer, if wide enough, can approximate any continuous function on a bounded domain. The theorem does not say how wide, nor how to find the weights. The Magos reads the theorem as a statement of what is possible, not as a method to build the network.
 
 ## December 23 - Rite of the Cut Tree
 
@@ -148,40 +148,40 @@
 
 **Purpose** - Learning a distortion-free view from a fisheye image.
 
-**Context** - A network can learn a warp from a fisheye image of a flat target to a distortion-free, telecentric view. No lens formula is needed. In effect the network holds the full Jacobian of the transformation: how every small patch is stretched, turned and sheared. The enginseers let the machine spirit learn the lens.
+**Context** - A network can learn a warp: where to take each output pixel from in the input. Adepts train it on fisheye images of a flat target and get a distortion-free, telecentric view with no lens formula. In effect the network holds the full Jacobian: how every small patch is stretched, turned and sheared.
 
 ## December 26 - Vigil of the Averaged Curve
 
 **Purpose** - Remembering that the mean of a function is not the function of the mean.
 
-**Context** - The average of a function is in general not the function of the average. The mean of the logarithms is not the logarithm of the mean, and the mean of ratios is not the ratio of means. The adepts decide which one the question asks for.
+**Context** - In general, the average of a function is not the function of the average. The mean of the logarithms is not the logarithm of the mean, and the mean of ratios is not the ratio of means. The adepts decide which one the question asks for.
 
 ## December 27 - Feast of the Gated Memory
 
 **Purpose** - Remembering how an LSTM gates its memory.
 
-**Context** - The long short-term memory network carries a cell state through the sequence. Three gates decide what enters it, what is forgotten and what is output. It carried gradients across long sequences before attention took over. The cogitators remember it.
+**Context** - The long short-term memory network carries a cell state through the sequence. Three gates decide what enters the cell state, what is forgotten and what is output. The network carried gradients across long sequences before attention took over that work. The cogitators remember this network.
 
 ## December 28 - Rite of the Single Batch
 
 **Purpose** - Training on one small batch before a long run.
 
-**Context** - Before a long training run, train on one small batch alone. A sound model drives that loss close to zero. One that cannot has a fault in the model, the loss or the data pipeline. The enginseers test the machine spirit this way.
+**Context** - Before a long training run, train on one small batch alone. A correct model brings the loss on that batch close to zero. If the loss stays far from zero, there is a fault in the model, the loss function or the data pipeline. The enginseers test the machine spirit this way.
 
 ## December 29 - Vigil of the Batch-Averaged Metric
 
 **Purpose** - Computing a metric once on all predictions, not per batch.
 
-**Context** - The average of a metric computed per batch is not the metric of the whole set. A smaller last batch gets too much weight. The F1 or the AUC of the whole set is not the mean of batch values at all. The acolytes collect all predictions, then compute the metric once.
+**Context** - A metric averaged over batches is not the metric of the whole set. A smaller last batch gets too much weight. The F1 or the AUC of the whole set is not the mean of batch values at all. The acolytes collect all predictions, then compute the metric once.
 
 ## December 30 - Commemoration of Saint Shrinka the Moderate
 
 **Purpose** - Remembering the saint who shrank noisy group averages.
 
-**Context** - The average of a small group is noisy. Shrinka pulled each group average toward the overall mean, the more so the smaller the group (partial pooling). Her estimates were better on average than the raw group means. The tech-priests shrink small groups in her memory.
+**Context** - The average of a small group is noisy. Shrinka pulled each group average toward the overall mean, and pulled the averages of smaller groups further (partial pooling). Her estimates were better on average than the raw group means. The tech-priests shrink the averages of small groups in her memory.
 
 ## December 31 - Feast of the Final Checkpoint
 
 **Purpose** - Saving the state of the work at the end of the year.
 
-**Context** - The last checkpoint of the year: commit and push the work, save the state of whatever still runs, and write where to resume. Tomorrow the count begins again at epoch zero. The adepts end the year with this rite.
+**Context** - The last checkpoint of the year: commit and push the work, save the state of whatever still runs, and write where to resume. Tomorrow the new year begins, and the adepts call it epoch zero. They end the old year with this rite.

@@ -50,13 +50,13 @@
 
 ## August 9 - Vigil of the Poisoned Pickle
 
-**Purpose** - Loading weights only in a safe format.
+**Purpose** - Loading weights in a safe format only.
 
 **Context** - Loading a pickle file can run any code its author chose. That is scrap-code hidden in a data file. Accept weights from strangers only in a format that stores tensors and nothing else, such as safetensors.
 
 ## August 10 - Observance of the Planned Analysis
 
-**Purpose** - Fixing the analysis plan before you see the results.
+**Purpose** - Deciding the analysis plan before you see the results.
 
 **Context** - Decide the hypothesis, the metric and the test before you look at the outcome, and lock the plan. Every choice made after seeing the data can steer the result toward the answer you hoped for, however honest you are. The Magos demands the plan first.
 
@@ -74,7 +74,7 @@
 
 ## August 13 - Commemoration of Saint Solitaria the Lonely
 
-**Purpose** - Remembering the saint who compared a point with its neighbours.
+**Purpose** - Remembering the saint who found outliers by local density.
 
 **Context** - Solitaria compared the density around each point with the density around its neighbours (the local outlier factor). A point in a much sparser place than its neighbours is an outlier, even where one global threshold would miss it. The tech-priests judge a point by its neighbours.
 
@@ -82,7 +82,7 @@
 
 **Purpose** - Monitoring a model after deployment.
 
-**Context** - Deployment is the start of a model's service, not the end of the project. Log its inputs and predictions, and compare them with the outcomes when they arrive. Set an alarm for the day they differ. A servo-skull can watch it.
+**Context** - Deployment is the start of a model's service, not the end of the project. Log its inputs and predictions, and compare the predictions with the outcomes when the outcomes arrive. Set an alarm for the day the two differ. A servo-skull can watch the model.
 
 ## August 15 - Observance of the Stated Denominator
 
@@ -112,7 +112,7 @@
 
 **Purpose** - Rounding results to what the sample supports.
 
-**Context** - An accuracy of 87.3462 percent measured on 200 examples claims more precision than it has. Each example is worth half a point. Round to what the sample size can support. The tech-priests write about 87 percent.
+**Context** - An accuracy of 87.3462 percent measured on 200 examples claims more precision than it has. Each example is worth half a percentage point. Round to what the sample size can support. The tech-priests write 'about 87 percent'.
 
 ## August 20 - Feast of the Truncated Sum
 
@@ -122,9 +122,9 @@
 
 ## August 21 - Commemoration of Saint Entropa the Surprised
 
-**Purpose** - Remembering the saint who measured surprise.
+**Purpose** - Remembering the saint who measured surprise as entropy.
 
-**Context** - Saint Entropa measured surprise. A certain outcome carries no information, and a fair coin carries one bit. Perplexity is the same measure exponentiated, roughly the number of choices the model is unsure between. The tech-priests honour her for it.
+**Context** - Saint Entropa measured surprise, and her measure is called entropy. An outcome that is sure to happen carries no information, and a fair coin carries one bit. Perplexity is the entropy exponentiated, roughly the number of choices the model is unsure between. The tech-priests honour her for it.
 
 ## August 22 - Feast of the Pruned Network
 
@@ -148,7 +148,7 @@
 
 **Purpose** - Making a discrete choice differentiable with Gumbel-softmax.
 
-**Context** - A choice among discrete options has no gradient. The tech-priests add Gumbel noise to the logits and apply a softmax with a temperature (the Gumbel-softmax trick). The result is a differentiable, approximate sample. A lower temperature brings it closer to a hard choice.
+**Context** - A choice among discrete options has no gradient. The tech-priests add Gumbel noise to the logits and apply a softmax with a temperature (the Gumbel-softmax trick). The result is a differentiable, approximate sample. A lower temperature brings it closer to a choice of exactly one option.
 
 ## August 26 - Rite of the Spectral Clustering
 
@@ -184,5 +184,5 @@
 
 **Purpose** - Evaluating a forecast at many points in time.
 
-**Context** - Train on the data up to a date, predict the next period and score it. Move the date forward and repeat. The average over many origins is a better estimate than one split. The Magos distrusts a forecast that was scored only once.
+**Context** - Train on the data up to a date, called the origin, then predict the next period and score it. Move the origin forward and repeat. The average score over many origins is a better estimate than one split. The Magos distrusts a forecast that was scored only once.
 
