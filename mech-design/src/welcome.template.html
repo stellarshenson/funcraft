@@ -6,6 +6,12 @@
 <title>BEHEMOTH - GalaxaLab</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%230f141b'/%3E%3Crect x='2' y='9' width='3' height='4' fill='%23d8424a'/%3E%3Crect x='6.5' y='6' width='3' height='7' fill='%239db4cc'/%3E%3Crect x='11' y='8' width='3' height='5' fill='%23d6ba93'/%3E%3C/svg%3E">
 <style>
+  /* the font of the title, embedded: Orbitron (SIL Open Font License 1.1), reduced to the Latin characters, weights 400 to 900 */
+  @font-face {
+    font-family: "Orbitron";
+    src: url("data:font/woff2;base64,{{FONT}}") format("woff2");
+    font-weight: 400 900;
+  }
   :root {
     --bg: #0f141b;
     --panel: #171f2a;
@@ -22,7 +28,7 @@
     --display: "Bahnschrift", "DIN Alternate", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { background: var(--bg); scrollbar-color: #3b4c61 #0b0f14; scrollbar-width: thin; }
+  html { background: var(--bg); font-size: 14px; scrollbar-color: #3b4c61 #0b0f14; scrollbar-width: thin; }
   ::-webkit-scrollbar { width: 12px; height: 12px; }
   ::-webkit-scrollbar-track { background: #0b0f14; border-left: 1px solid var(--line); }
   ::-webkit-scrollbar-thumb {
@@ -34,26 +40,26 @@
   body {
     margin: 0;
     color: var(--text);
-    font: 16px/1.55 var(--sans);
+    font: 1rem/1.45 var(--sans);
     background:
       linear-gradient(rgba(157, 180, 204, 0.045) 1px, transparent 1px) 0 0 / 100% 44px,
       linear-gradient(90deg, rgba(157, 180, 204, 0.045) 1px, transparent 1px) 0 0 / 44px 100%,
       radial-gradient(1200px 520px at 50% 0, #1b2533 0, var(--bg) 70%);
     min-height: 100vh;
   }
-  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px 56px; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px 16px; }
 
   /* header: the banner, a moving hazard strip, the name */
   .banner { display: block; width: 100%; height: auto; aspect-ratio: 1140 / 360; background: #29333f; }
   .hazard {
-    height: 12px;
+    height: 8px;
     background: repeating-linear-gradient(-45deg, var(--orange) 0 14px, #141a22 14px 28px);
     background-size: 39.6px 100%;
     animation: slide 2.4s linear infinite;
   }
   @keyframes slide { to { background-position: 39.6px 0; } }
 
-  .name { padding: 34px 0 6px; text-align: center; }
+  .name { padding: 14px 0 0; text-align: center; }
   .kicker {
     margin: 0;
     font: 600 0.82rem/1 var(--mono);
@@ -62,21 +68,21 @@
     color: var(--orange);
   }
   h1 {
-    margin: 10px 0 0;
-    font: 900 clamp(3.1rem, 13.5vw, 9rem)/0.95 var(--display);
+    margin: 6px 0 0;
+    font: 900 clamp(38px, 9vw, 74px)/0.95 "Orbitron", var(--display);      /* in pixels: the title keeps its size when the root size changes */
     letter-spacing: 0.07em;
     text-indent: 0.07em;
     text-transform: uppercase;
     color: var(--text);
     text-shadow: 0 0.035em 0 #5b6f86, 0 0.07em 0 #2b3848, 0 0.22em 0.5em rgba(0, 0, 0, 0.55);
   }
-  .lead { max-width: 46rem; margin: 22px auto 0; font-size: 1.16rem; color: var(--text); }
+  .lead { margin: 8px 0 0; font-size: 1.02rem; color: var(--text); text-wrap: balance; }
   .lead strong { color: var(--orange); letter-spacing: 0.04em; }
 
   /* three feet, each at its own point of the step, as in the banner */
-  .steps { display: flex; justify-content: center; gap: 18px; margin: 26px 0 4px; height: 30px; align-items: flex-end; }
+  .steps { display: flex; justify-content: center; gap: 14px; margin: 8px 0 0; height: 18px; align-items: flex-end; }
   .steps i {
-    display: block; width: 46px; height: 12px; border-radius: 2px;
+    display: block; width: 34px; height: 8px; border-radius: 2px;
     animation: stomp 1.5s cubic-bezier(0.3, 0, 0.7, 1) infinite;
   }
   .steps i:nth-child(1) { background: var(--red); animation-delay: 0s; }
@@ -84,54 +90,64 @@
   .steps i:nth-child(3) { background: var(--tan); animation-delay: 1s; }
   @keyframes stomp {
     0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-16px); }
+    30% { transform: translateY(-9px); }
     66% { transform: translateY(0) scaleY(0.7); }
   }
 
-  /* the figures of the rig */
-  .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 30px 0 0; padding: 0; list-style: none; }
+  /* the figures of the workstation */
+  .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
   .figures li {
-    padding: 16px 18px;
+    padding: 7px 14px;
     background: var(--panel);
     border: 1px solid var(--line);
-    border-top: 3px solid var(--orange);
+    border-top: 2px solid var(--orange);
     border-radius: 4px;
   }
-  .figures b { display: block; font: 800 2.1rem/1.1 var(--display); letter-spacing: 0.03em; }
-  .figures span { color: var(--muted); font-size: 0.92rem; }
+  .figures b { display: block; font: 800 1.55rem/1.15 var(--display); letter-spacing: 0.03em; }
+  .figures span { color: var(--muted); font-size: 0.9rem; }
 
   h2 {
-    margin: 52px 0 6px;
-    font: 800 1.5rem/1.2 var(--display);
+    margin: 18px 0 2px;
+    font: 800 1.25rem/1.2 var(--display);
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
-  h2::before { content: ""; display: inline-block; width: 26px; height: 10px; margin-right: 12px; background: var(--orange); }
-  .intro { margin: 0 0 18px; color: var(--muted); max-width: 52rem; }
+  h2::before { content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 9px; background: var(--orange); }
+  .intro { margin: 0 0 6px; color: var(--muted); }
+  .intro b { color: var(--orange); }
 
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 8px; }
   .card {
     position: relative;
-    padding: 20px 20px 22px;
+    padding: 8px 14px;
     background: linear-gradient(180deg, var(--panel-2), var(--panel));
     border: 1px solid var(--line);
-    border-left: 5px solid var(--c, var(--orange));
+    border-left: 4px solid var(--c, var(--orange));
     border-radius: 4px;
   }
-  .card h3 { margin: 0 0 2px; font: 700 1.14rem/1.3 var(--sans); }
-  .card p { margin: 8px 0 0; color: var(--muted); }
-  .tag { font: 600 0.78rem/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--c, var(--orange)); }
+  .card h3 { margin: 0; font: 700 1.05rem/1.3 var(--sans); }
+  .card p { margin: 0; color: var(--muted); }
+  .tag { font: 600 0.8rem/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--c, var(--orange)); }
 
-  .vram { margin-top: 16px; }
-  .vram b { font: 800 2.3rem/1 var(--display); letter-spacing: 0.03em; color: var(--text); }
-  .vram small { color: var(--muted); font-size: 0.9rem; margin-left: 6px; }
-  .blocks { display: flex; flex-wrap: wrap; gap: 4px; margin: 12px 0 0; padding: 0; list-style: none; }
-  .blocks li { width: 18px; height: 12px; border-radius: 1px; background: var(--c); }
+  /* one GPU per row, every row the same size: index, name, one block per 8 GB, memory */
+  .gpus { display: grid; grid-auto-rows: 1fr; gap: 6px; }
+  .gpu { display: grid; grid-template-columns: 4.2rem 1fr 177px 10rem; align-items: center; gap: 3px 16px; padding: 5px 14px; }
+  .vram { text-align: right; white-space: nowrap; }
+  .vram b { font: 800 1.6rem/1 var(--display); letter-spacing: 0.03em; color: var(--text); }
+  .vram small { color: var(--muted); font-size: 0.85rem; margin-left: 6px; }
+  .blocks { display: flex; flex-wrap: wrap; gap: 3px; margin: 0; padding: 0; list-style: none; }
+  .blocks li { width: 12px; height: 8px; border-radius: 1px; background: var(--c); }
+  @media (max-width: 980px) {
+    .gpu { grid-template-columns: 1fr auto; }
+    .gpu .vram { grid-area: 1 / 2; }
+    .gpu h3 { grid-area: 2 / 1 / 3 / -1; }
+    .gpu .blocks { grid-area: 3 / 1 / 4 / -1; }
+  }
   .unit { margin: 8px 0 0; color: var(--muted); font: 0.78rem var(--mono); letter-spacing: 0.08em; }
 
-  .rig { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
-  .rig li { padding: 16px 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; }
-  .rig span { display: block; font: 600 0.78rem/1 var(--mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  /* one volume folder per card: the name and the path in one line, the sentence below */
+  .vol { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 14px; }
+  .vol p { flex-basis: 100%; }
 
   code {
     font: 0.95em var(--mono);
@@ -139,19 +155,9 @@
     background: #0d1218;
     border: 1px solid var(--line);
     border-radius: 3px;
-    padding: 2px 7px;
+    padding: 1px 6px;
     white-space: nowrap;
   }
-  .path { display: block; margin-top: 12px; padding: 10px 12px; font-size: 1.02rem; white-space: normal; overflow-wrap: anywhere; }
-  .hub {
-    margin-top: 16px; padding: 18px 20px;
-    border: 1px dashed var(--orange); border-radius: 4px;
-    background: rgba(242, 140, 56, 0.08);
-  }
-  .hub b { color: var(--orange); }
-
-  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font: 0.8rem var(--mono); letter-spacing: 0.16em; text-transform: uppercase; text-align: center; }
-
   @media (prefers-reduced-motion: reduce) {
     .hazard, .steps i { animation: none; }
   }
@@ -170,64 +176,52 @@
     <p class="kicker">Stellars-Tech GalaxaLab</p>
     <h1>Behemoth</h1>
     <div class="steps" aria-hidden="true"><i></i><i></i><i></i></div>
-    <p class="lead">Welcome to <strong>BEHEMOTH</strong>. This is the GPU workstation your GalaxaLab runs on: three graphics cards, one large processor, and your volumes mounted in your workspace.</p>
+    <p class="lead">Welcome. <strong>BEHEMOTH</strong> is your AI Development Station and Software Forge.</p>
   </section>
 
   <ul class="figures">
-    <li><b>3</b><span>GPUs</span></li>
-    <li><b>152 GB</b><span>of GPU memory in total</span></li>
-    <li><b>64</b><span>CPU threads</span></li>
+    <li><b>3 GPUs</b><span>152 GB of GPU memory in total</span></li>
+    <li><b>64 CPU threads</b><span>AMD Ryzen Threadripper PRO 7975WX</span></li>
     <li><b>503 GiB</b><span>of system memory</span></li>
   </ul>
 
   <h2>The GPUs</h2>
-  <p class="intro">The cards are listed with the index that <code>nvidia-smi</code> shows. One block is 8 GB of GPU memory.</p>
-  <div class="cards">
-    <article class="card" style="--c: var(--red)">
+  <p class="intro">One block is 8 GB of GPU memory.</p>
+  <div class="gpus">
+    <article class="card gpu" style="--c: var(--red)">
       <span class="tag">GPU 0</span>
       <h3>NVIDIA RTX PRO 4000 Blackwell</h3>
-      <div class="vram"><b>24 GB</b><small>of memory</small></div>
       <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li></ul>
+      <div class="vram"><b>24 GB</b><small>of memory</small></div>
     </article>
-    <article class="card" style="--c: var(--steel)">
+    <article class="card gpu" style="--c: var(--steel)">
       <span class="tag">GPU 1</span>
       <h3>NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition</h3>
-      <div class="vram"><b>96 GB</b><small>of memory</small></div>
       <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>
+      <div class="vram"><b>96 GB</b><small>of memory</small></div>
     </article>
-    <article class="card" style="--c: var(--tan)">
+    <article class="card gpu" style="--c: var(--tan)">
       <span class="tag">GPU 2</span>
       <h3>NVIDIA RTX 5000 Ada Generation</h3>
-      <div class="vram"><b>32 GB</b><small>of memory</small></div>
       <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li><li></li></ul>
+      <div class="vram"><b>32 GB</b><small>of memory</small></div>
     </article>
   </div>
-
-  <h2>The rig</h2>
-  <ul class="rig">
-    <li><span>Processor</span>AMD Ryzen Threadripper PRO 7975WX, 64 threads</li>
-    <li><span>System memory</span>503 GiB</li>
-  </ul>
 
   <h2>Your volumes</h2>
-  <p class="intro">Volumes are mounted in the <code>@volumes</code> folder of your workspace.</p>
+  <p class="intro">Volumes are mounted in the <code>@volumes</code> folder of your workspace. You configure them in <b>GalaxaHub</b>.</p>
   <div class="cards">
-    <article class="card" style="--c: var(--steel)">
-      <span class="tag">Shared</span>
+    <article class="card vol" style="--c: var(--steel)">
       <h3>Shared volumes</h3>
+      <code>~/workspace/@volumes/shared</code>
       <p>Volumes that you share with other users are mounted here.</p>
-      <code class="path">@volumes/shared</code>
     </article>
-    <article class="card" style="--c: var(--tan)">
-      <span class="tag">Personal</span>
+    <article class="card vol" style="--c: var(--tan)">
       <h3>Personal volumes</h3>
+      <code>~/workspace/@volumes/personal</code>
       <p>Volumes that belong to you alone are mounted here.</p>
-      <code class="path">@volumes/personal</code>
     </article>
   </div>
-  <p class="hub">You configure your volumes in <b>GalaxaHub</b>. In a terminal the two folders are <code>~/workspace/@volumes/shared</code> and <code>~/workspace/@volumes/personal</code>.</p>
-
-  <footer>BEHEMOTH &middot; Stellars-Tech GalaxaLab</footer>
 </main>
 </body>
 </html>

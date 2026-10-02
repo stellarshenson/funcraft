@@ -25,7 +25,7 @@ banner-offset:
 
 # the BEHEMOTH welcome page of GalaxaLab: src/welcome.template.html with the banner embedded, one self-contained file
 welcome:
-	$(PYTHON) -c "import base64, pathlib; t = pathlib.Path('src/welcome.template.html').read_text(); b = base64.b64encode(pathlib.Path('out/05-banner-offset.gif').read_bytes()).decode(); pathlib.Path('out/06-behemoth-welcome.html').write_text(t.replace('{{BANNER}}', 'data:image/gif;base64,' + b))"
+	$(PYTHON) src/welcome.py
 
 lookdev:
 	$(BLENDER) -b -P src/lookdev.py
