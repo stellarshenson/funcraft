@@ -10,5 +10,6 @@
 .venv-*/
 __pycache__/
 .ipynb_checkpoints/
+.playwright-mcp/
 */src/_probe.py
 !*/src/*.sh
