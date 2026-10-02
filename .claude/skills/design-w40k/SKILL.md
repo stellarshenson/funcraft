@@ -31,7 +31,7 @@ Hand-drawn PIL textures read flat, pale and "unembroidered". Generate them: `src
 - Prompts end with `STYLE` (fabric), `METAL` (iron) or `GLASS`: centuries-old wear spelled out (threadbare pile, moth holes, soot, wax, tarnished thread), "flat frontal orthographic, evenly lit, fills the frame"
 - Draft 3+ seeds per texture, look at every one, pick in `CHOICES`. **Check every Latin word letter by letter** - it wrote CALCILUM for CALCULUM nine times, LAUDETTUR, SALVATO, COMBUTAT, FIES. Change the motto to words it spells (AVE OMNISSIAH, DEUS IN MACHINA, OMNISSIAH VULT, MACHINA VULT) rather than accept a misspelling
 - `apply all`: cuts the studio backdrop to alpha (fringes and tabs hang free), writes `<stem>.png` + `<stem>_gold.png` (gold-hue mask → metallic, glossy, raised in `embroidered()`)
-- Exact Latin that must be long (parchment prayers, plaques' fallback) stays in PIL (`src/textures.py`) - fill the whole surface, no blank areas
+- Exact Latin that must be long (parchment prayers, plaques' fallback) stays in PIL (`src/textures.py`) - fill the whole surface, no blank areas. On plates it is draped, see Text on surfaces
 - Relief panels (`relief_*`: niches with statues, quatrefoils with cogs, skull friezes) go on any flat iron via `relief_mat()` - box projection in object coordinates, brightness as bump
 
 ## Iconography
@@ -40,6 +40,16 @@ Hand-drawn PIL textures read flat, pale and "unembroidered". Generate them: `src
 - **Purity seals**: domed dark wax stamped with a cog, parchment strip written top to bottom with red rubrics, foxed and torn (`seal()`, `parchment()`); pin them in rows over cloths and hems
 - **Skulls** are aged, grimy, set in cogs, niches or reliefs - never a row of clean white skulls
 - Latin in use: OMNISSIAH VULT, AVE OMNISSIAH, DEUS IN MACHINA, IN CALCULO SALVATIO, SCIENTIA AD ASTRA, LABOR FIDES MACHINA AETERNA, SPIRITUS MACHINAE, MACHINA VULT, MEMORIA AETERNA, PRO OMNISSIAH; litany lines in `LITANY`
+
+## Text on surfaces
+Text placed in image space reads as pasted: the Star Colonel rejected a straight block, lines traced along the generated script, and a plane chart on warped street parchments. Accepted: the text written as a flat texture and draped on the object's shape, the shape taken from surface and outline together (`src/inscribe.py`, `DESIGN.md` 2.5).
+
+- Shape evidence, both together: the measured surface and the outline. MoGe-2 on an enlarged crop round the object (on the whole plate a sheet is one flat plane), depth solved from the normals. A sheet is cut straight, so a wavy edge on the flat chart is warp the measurement missed - carry it into the chart (`waves()`)
+- Chart = the surface laid flat (least squares conformal map); write on the chart, map back per pixel; ink multiplies the surface so its shading lies on the text
+- Plane text only where bend and edge waves are both near zero
+- Cut the sheet with SAM 2.1 from points, not from the text box: the box clips the sheet and hides its edges
+- Remove the old script per stroke (local 75th-percentile tone). Closing blurs the sheet, inpainting leaves blotches, and text on a flattened sheet reads as an overlay
+- Check `wip/preview/sheets-<name>.png` for every sheet before building: grid lines straight on a sheet drawn warped = failed drape. One accepted sheet proves nothing about the others - the book pages passed (bend 16-35°) while the street parchments were still plane (bend 4-8°)
 
 ## Drapery and glass
 - Crimson must fill a large share of the frame (the reference: 43 %): curtains tied back beside the relic (`curtain()`), hangings over the table ends, banners lowered into shot to frame it, fringed

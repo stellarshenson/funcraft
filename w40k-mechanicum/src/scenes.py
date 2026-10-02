@@ -1,41 +1,33 @@
 """Animated banner loops built on generated scene plates (src/genplates.py).
-The plate becomes a MoGe-2 depth mesh (src/backdrop.py) seen by a camera
-that drifts a few centimetres on a closed path. The plate's own candle
-flames flicker and its status lights blink; incense smoke drifts, glowing
-with the plate's own light; dust motes float near the lens. Where
-src/actors.py has baked actors, the priests are rigged meshes (src/rig.py)
-in front of the clean plate, and molten streams flow (src/motion.py). 80
-frames (4 s at 50 ms), an exact loop, the phase and tick clocks as in
-src/mechanicum.py.
 
-    blender -b -P src/scenes.py -- forge preview     # one still, wip/preview/scene-forge.png
-    blender -b -P src/scenes.py -- forge             # wip/frames-forge/f000..f079 + seam-check
+The clean plate (src/cleanplate.py) becomes a MoGe-2 depth mesh
+(src/backdrop.py) seen by a camera that drifts a few centimetres on a
+closed path. In front of it stand the actors (src/actors.py, src/rig.py):
+every element of the motion map as its own mesh moved by bones. Candle
+flames lean with the room's draft and change their light (src/air.py);
+smoke rises from them, simulated as a gas (src/smoke.py) and placed at the
+wick it comes from; molten streams flow (src/motion.py); status lights
+blink; dust motes float near the lens. 80 frames (4 s at 50 ms), an exact
+loop.
+
+    blender -b -P src/scenes.py -- choir sources     # wip/scene3d/choir_sources.json for src/smoke.py
+    blender -b -P src/scenes.py -- choir preview     # one still, wip/preview/scene-choir.png
+    blender -b -P src/scenes.py -- choir             # wip/frames-choir/f000..f079 + seam-check
+    blender -b -P src/scenes.py -- choir 0 20 40     # those frames only
 """
 import bpy, math, os, sys
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import backdrop as B
+import rig
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAMES, TICK, SAMPLES = 80, 16, 64
 RES = (1520, 480)
 CLOCKS, MOVERS, PLATES = [], [], []
 
-# smoke: peak density of the incense; flame: flicker depth; halo: (u, v,
-# radius) of a gold halo a glint sweeps round once per loop; fans: (x, y,
-# radius) in plate pixels of fan blades that turn once per loop
-SCENES = {
-    "forge": dict(smoke=0.04, flame=0.5),
-    "vault": dict(smoke=0.08, flame=0.45),
-    "street": dict(smoke=0.02, flame=0.4),
-    "saint": dict(smoke=0.05, flame=0.4, halo=(0.30, 0.25, 0.10)),
-    "hall": dict(smoke=0.04, flame=0.45),
-    "reliquary": dict(smoke=0.05, flame=0.4, fans=((660, 347, 118), (955, 340, 112))),
-    "foundry": dict(smoke=0.06, flame=0.35),
-    "scriptorium": dict(smoke=0.03, flame=0.45),
-    "choir": dict(smoke=0.05, flame=0.4),
-    "voidshrine": dict(smoke=0.04, flame=0.4),
-}
+# halo: (u, v, radius) of a gold halo a glint sweeps round once per loop
+SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10))}
 
 
 def pixels(img):
@@ -111,16 +103,15 @@ class Nodes:
 
 
 def plate_masks(img, conf):
-    """Flame glow (bright warm pixels, blurred), status lights (bright green
-    pixels) and the halo (bright gold pixels near the halo centre)."""
+    """Status lights (small bright green spots), the halo (bright gold
+    pixels near the halo centre) and the plate's light spread wide."""
     p = pixels(img)[..., :3]
     r, g, b = p[..., 0], p[..., 1], p[..., 2]
     lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
-    core = ((lum > 0.82) & (r > b + 0.12)).astype(np.float32)
-    flame = np.clip(blur(core, 6) * 4, 0, 1)
     led = ((g > 0.45) & (g > r + 0.2) & (g > b + 0.1)).astype(np.float32)
+    led = led * (blur(led, 12) < 0.35)           # small lights only: a screen or a beam of green light stays whole
     led = np.clip(blur(led, 1) * 2, 0, 1)
-    glow = blur(p ** 2.2, 40)                    # the plate's light, spread wide: what lights the smoke
+    glow = blur(p ** 2.2, 40)                    # what lights the smoke from behind
     halo = None
     if "halo" in conf:
         cu, cv, rad = conf["halo"]
@@ -129,18 +120,18 @@ def plate_masks(img, conf):
         d = np.hypot(xx / w - cu, (yy / h - cv) * h / w)
         halo = ((lum > 0.5) & (r > b + 0.15) & (d < rad)).astype(np.float32)
         halo = np.clip(blur(halo, 2) * 1.5, 0, 1)
-    return core, flame, led, halo, glow
+    return led, halo, glow
 
 
-def plate_material(ob, img, conf):
-    """The backdrop's emission, multiplied by a gain: flames flicker, each
-    by its own noise; status lights and screen cells switch off at random
-    once per tick; a glint sweeps round the halo once per loop."""
-    m = ob.material_slots[0].material
+def plate_material(m, conf, group):
+    """A plate material's emission, multiplied by a gain: the candle light
+    (`group`, src/rig.py); status lights and screen cells switch off at
+    random once per tick; a glint sweeps round the halo once per loop."""
     X = Nodes(m.node_tree)
     tex = next(n for n in X.N if n.type == "TEX_IMAGE")
     em = next(n for n in X.N if n.type == "EMISSION")
-    core, flame, led, halo, glow = plate_masks(img, conf)
+    img = tex.image
+    led, halo, glow = plate_masks(img, conf)
     uv = X.new("ShaderNodeTexCoord").outputs["UV"]
 
     def sample(name, a):
@@ -149,51 +140,19 @@ def plate_material(ob, img, conf):
         return t.outputs["Color"]
 
     aspect = img.size[0] / img.size[1]
-    W, H = img.size
-    look = uv
-    for cx, cy, r in conf.get("fans", ()):    # the plate's fan blades turn once per loop
-        px = X.new("ShaderNodeVectorMath", operation="MULTIPLY_ADD")
-        X.L.new(uv, px.inputs[0])
-        px.inputs[1].default_value = (W, H, 0.0)
-        px.inputs[2].default_value = (-cx, -(H - cy), 0.0)
-        sep = X.new("ShaderNodeSeparateXYZ")
-        X.L.new(px.outputs[0], sep.inputs[0])
-        th = X.op("MULTIPLY", X.clock("phase"), -2 * math.pi)
-        c, sn = X.op("COSINE", th), X.op("SINE", th)
-        dx, dy = sep.outputs["X"], sep.outputs["Y"]
-        co = X.new("ShaderNodeCombineXYZ")
-        X.L.new(X.op("ADD", X.op("SUBTRACT", X.op("MULTIPLY", dx, c), X.op("MULTIPLY", dy, sn)), cx), co.inputs[0])
-        X.L.new(X.op("ADD", X.op("ADD", X.op("MULTIPLY", dx, sn), X.op("MULTIPLY", dy, c)), H - cy), co.inputs[1])
-        back = X.new("ShaderNodeVectorMath", operation="DIVIDE")
-        X.L.new(co.outputs[0], back.inputs[0])
-        back.inputs[1].default_value = (W, H, 1.0)
-        ln = X.new("ShaderNodeVectorMath", operation="LENGTH")
-        X.L.new(px.outputs[0], ln.inputs[0])
-        mx = X.new("ShaderNodeMix", data_type="VECTOR")
-        X.L.new(X.op("LESS_THAN", ln.outputs["Value"], r), mx.inputs["Factor"])
-        X.L.new(look, mx.inputs["A"])
-        X.L.new(back.outputs[0], mx.inputs["B"])
-        look = mx.outputs["Result"]
-    if look is not uv:
-        X.L.new(look, tex.inputs["Vector"])
-    stretch = X.new("ShaderNodeVectorMath", operation="MULTIPLY")
-    X.L.new(uv, stretch.inputs[0])
-    stretch.inputs[1].default_value = (aspect, 1.0, 0.0)
-    flick = X.loop_noise(stretch.outputs[0], 14.0, radius=1.5)
-    gain = X.op("ADD", 1.0, X.op("MULTIPLY", sample("flame", flame),
-                                 X.op("MULTIPLY", X.op("SUBTRACT", flick, 0.5), 1.2 * conf["flame"])))
-    # status lights: a 6-pixel grid of cells, each on or off per tick
-    cells = X.new("ShaderNodeVectorMath", operation="MULTIPLY")
-    X.L.new(uv, cells.inputs[0])
-    cells.inputs[1].default_value = (img.size[0] / 6, img.size[1] / 6, 0.0)
-    fl = X.new("ShaderNodeVectorMath", operation="FLOOR")
-    X.L.new(cells.outputs[0], fl.inputs[0])
-    wn = X.new("ShaderNodeTexWhiteNoise", noise_dimensions="4D")
-    X.L.new(fl.outputs[0], wn.inputs["Vector"])
-    X.L.new(X.clock("tick"), wn.inputs["W"])
-    off = X.op("GREATER_THAN", wn.outputs["Value"], 0.6)
-    gain = X.op("SUBTRACT", gain, X.op("MULTIPLY", sample("led", led), X.op("MULTIPLY", off, 0.75)))
-    if halo is not None:
+    gain = X.new("ShaderNodeGroup", node_tree=group).outputs["Gain"]
+    if led.max() > 0:                             # status lights: a 6-pixel grid of cells, each on or off per tick
+        cells = X.new("ShaderNodeVectorMath", operation="MULTIPLY")
+        X.L.new(uv, cells.inputs[0])
+        cells.inputs[1].default_value = (img.size[0] / 6, img.size[1] / 6, 0.0)
+        fl = X.new("ShaderNodeVectorMath", operation="FLOOR")
+        X.L.new(cells.outputs[0], fl.inputs[0])
+        wn = X.new("ShaderNodeTexWhiteNoise", noise_dimensions="4D")
+        X.L.new(fl.outputs[0], wn.inputs["Vector"])
+        X.L.new(X.clock("tick"), wn.inputs["W"])
+        off = X.op("GREATER_THAN", wn.outputs["Value"], 0.6)
+        gain = X.op("SUBTRACT", gain, X.op("MULTIPLY", sample("led", led), X.op("MULTIPLY", off, 0.75)))
+    if halo is not None and halo.max() > 0:
         cu, cv, _ = conf["halo"]
         sep = X.new("ShaderNodeSeparateXYZ")
         X.L.new(uv, sep.inputs[0])
@@ -209,46 +168,65 @@ def plate_material(ob, img, conf):
     return glow
 
 
-def smoke(conf, fov, near, far, glow):
-    """A box of drifting incense filling the view between `near` and `far`.
-    It glows with the plate's own light seen behind it (`glow`, looked up by
-    screen position) and absorbs a little: no light is scattered, so there
-    is no sampling noise and nothing for a denoiser to make flicker."""
-    hw = far * math.tan(fov / 2)
-    me = bpy.data.meshes.new("smoke")
-    ob = bpy.data.objects.new("smoke", me)
-    bpy.context.collection.objects.link(ob)
-    import bmesh
-    bm = bmesh.new()
-    bmesh.ops.create_cube(bm, size=1.0)
-    bm.to_mesh(me)
-    ob.scale = (2.2 * hw, far - near, 2.2 * hw / 2.5)
-    ob.location = (0, (near + far) / 2, 0)
-    m = bpy.data.materials.new("smoke")
-    m.use_nodes = True
-    X = Nodes(m.node_tree)
-    for n in list(X.N):
-        if n.type != "OUTPUT_MATERIAL":
-            X.N.remove(n)
-    co = X.new("ShaderNodeTexCoord").outputs["Object"]
-    wisp = X.loop_noise(co, 3.5, radius=0.4, detail=4.0)
-    dens = X.op("MULTIPLY", X.op("MAXIMUM", X.op("SUBTRACT", wisp, 0.5), 0.0), conf["smoke"] * 8)
-    t = X.new("ShaderNodeTexImage", image=to_image("glow", glow), interpolation="Linear", extension="EXTEND")
-    X.L.new(X.N["Texture Coordinate"].outputs["Window"], t.inputs["Vector"])
-    tint = X.new("ShaderNodeVectorMath", operation="MULTIPLY_ADD")
-    X.L.new(t.outputs["Color"], tint.inputs[0])
-    tint.inputs[1].default_value = (0.9, 0.85, 0.8)
-    tint.inputs[2].default_value = (0.012, 0.011, 0.010)
-    em = X.new("ShaderNodeEmission")
-    X.L.new(tint.outputs[0], em.inputs["Color"])
-    X.L.new(dens, em.inputs["Strength"])
-    ab = X.new("ShaderNodeVolumeAbsorption")
-    X.L.new(X.op("MULTIPLY", dens, 0.3), ab.inputs["Density"])
-    add = X.new("ShaderNodeAddShader")
-    X.L.new(em.outputs[0], add.inputs[0])
-    X.L.new(ab.outputs[0], add.inputs[1])
-    X.L.new(add.outputs[0], X.N["Material Output"].inputs["Volume"])
-    me.materials.append(m)
+def plumes(name, group, glow):
+    """The simulated smoke of every source (wip/sim/<name>/<source>.npz) as
+    a volume at the place it was simulated for. Each loop frame becomes an
+    OpenVDB file once. The smoke shows the light it stands in: the plate's
+    light behind it, and the candle flames near it."""
+    import openvdb as vdb
+    sim = os.path.join(ROOT, "wip", "sim", name)
+    for f in sorted(os.listdir(sim)) if os.path.isdir(sim) else []:
+        if not f.endswith(".npz"):
+            continue
+        sid = f[:-4]
+        d = np.load(os.path.join(sim, f))
+        seq = os.path.join(sim, sid)
+        first = os.path.join(seq, "s_0001.vdb")
+        if not os.path.exists(first) or os.path.getmtime(first) < os.path.getmtime(os.path.join(sim, f)):
+            os.makedirs(seq, exist_ok=True)
+            dens = d["density"].astype(np.float32)
+            for k in range(FRAMES):
+                g = vdb.FloatGrid()
+                g.copyFromArray(dens[k], tolerance=2e-3)
+                g.name = "density"
+                g.transform = vdb.createLinearTransform(voxelSize=float(d["cell"]))
+                vdb.write(os.path.join(seq, f"s_{k + 1:04d}.vdb"), grids=[g])
+        vol = bpy.data.volumes.new("smoke_" + sid)
+        vol.filepath = first
+        vol.is_sequence, vol.frame_duration, vol.frame_start, vol.sequence_mode = True, FRAMES, 1, "REPEAT"
+        ob = bpy.data.objects.new("smoke_" + sid, vol)
+        ob.location = d["origin"].tolist()
+        bpy.context.collection.objects.link(ob)
+        m = bpy.data.materials.new("smoke_" + sid)
+        m.use_nodes = True
+        X = Nodes(m.node_tree)
+        for n in list(X.N):
+            if n.type != "OUTPUT_MATERIAL":
+                X.N.remove(n)
+        dens = X.new("ShaderNodeVolumeInfo").outputs["Density"]
+        t = X.new("ShaderNodeTexImage", image=glow, interpolation="Linear", extension="EXTEND")
+        X.L.new(X.new("ShaderNodeTexCoord").outputs["Window"], t.inputs["Vector"])
+        back = X.new("ShaderNodeVectorMath", operation="MULTIPLY_ADD")      # the plate's light behind, and a floor
+        X.L.new(t.outputs["Color"], back.inputs[0])
+        back.inputs[1].default_value = (1.6, 1.65, 1.8)
+        back.inputs[2].default_value = (0.10, 0.105, 0.115)
+        near = X.new("ShaderNodeVectorMath", operation="SCALE")            # the flames near it
+        near.inputs[0].default_value = (1.0, 0.72, 0.45)
+        X.L.new(X.new("ShaderNodeGroup", node_tree=group).outputs["Glow"], near.inputs["Scale"])
+        lit = X.new("ShaderNodeVectorMath", operation="ADD")
+        X.L.new(back.outputs[0], lit.inputs[0])
+        X.L.new(near.outputs[0], lit.inputs[1])
+        em = X.new("ShaderNodeEmission")
+        X.L.new(lit.outputs[0], em.inputs["Color"])
+        X.L.new(X.op("MULTIPLY", dens, 250.0), em.inputs["Strength"])
+        ab = X.new("ShaderNodeVolumeAbsorption")
+        X.L.new(X.op("MULTIPLY", dens, 30.0), ab.inputs["Density"])
+        add = X.new("ShaderNodeAddShader")
+        X.L.new(em.outputs[0], add.inputs[0])
+        X.L.new(ab.outputs[0], add.inputs[1])
+        X.L.new(add.outputs[0], X.N["Material Output"].inputs["Volume"])
+        vol.materials.append(m)
+        print("SMOKE", sid, d["density"].shape, flush=True)
 
 
 def motes(near, count=36, seed=3):
@@ -274,24 +252,22 @@ def motes(near, count=36, seed=3):
 
 
 def build(name):
-    conf = SCENES[name]
+    conf = SCENES.get(name, {})
     bpy.ops.wm.read_factory_settings(use_empty=True)
     stem = os.path.join(ROOT, "wip", "scene3d", name)
     d = np.load(stem + ".npz")
-    rigged = os.path.exists(stem + "_actors.npz")    # priests as rigged meshes in front of the clean plate
-    image = lambda o: next(n.image for n in o.material_slots[0].material.node_tree.nodes if n.type == "TEX_IMAGE")
-    ob, fov = B.backdrop(stem + "_clean" if rigged else stem)
-    img = image(ob)
-    glow = plate_material(ob, img, conf)
-    if rigged:
-        import rig
-        actor = rig.build(name, MOVERS)
-        glow = plate_material(actor, image(actor), conf)   # the smoke is lit by the plate with the priests' candles
-    if os.path.isdir(stem + "_flow"):                # molten streams: one clean plate per loop frame
-        PLATES.append((img, stem + "_flow"))
+    ob, fov = B.backdrop(stem + "_clean")
+    group = rig.build(name, MOVERS, stem + ".png")
+    plate = ob.material_slots[0].material
+    glow = to_image("glow", plate_material(plate, conf, group))
+    for m in bpy.data.materials:                     # the actors and the fill behind the plate's edges
+        if m is not plate and m.node_tree and any(n.type == "TEX_IMAGE" for n in m.node_tree.nodes):
+            plate_material(m, conf, group)
+    if os.path.isdir(stem + "_flow"):                # streams: one clean plate per loop frame
+        PLATES.append((next(n.image for n in plate.node_tree.nodes if n.type == "TEX_IMAGE" and n.image.filepath), stem + "_flow"))
+    plumes(name, group, glow)
     z = d["depth"][d["mask"]]
-    near, mid = float(np.percentile(z, 1)), float(np.percentile(z, 60))
-    smoke(conf, fov, near * 0.5, mid, glow)
+    near = float(np.percentile(z, 1))
     motes(near)
     cam = B.camera(fov, RES)
     K = d["intrinsics"]
@@ -320,6 +296,7 @@ def build(name):
 def pose(i):
     phase = i / FRAMES
     tick = float((i % FRAMES) // TICK)
+    bpy.context.scene.frame_set(i % FRAMES + 1)      # the smoke's frame
     for kind, node in CLOCKS:
         node.outputs[0].default_value = phase if kind == "phase" else tick
     for mv in MOVERS:
@@ -334,6 +311,8 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1:]
     name = argv[0]
     build(name)
+    if "sources" in argv:                            # rig.build has written the smoke sources
+        return
     s = bpy.context.scene
     if "preview" in argv:
         s.cycles.samples = 24

@@ -3,7 +3,8 @@ banner's 19:6 shape, after the Star Colonel's reference images. MoGe-2
 (src/img2geometry.py) turns the chosen plate into depth, src/scenes.py into
 an animated 3D scene. Drafts go to wip/gen/plate_<name>_<seed>.png
 (skipped when present); `pick` copies the chosen one (PICKS) to
-wip/scene3d/<name>.png and writes exact Latin on its parchments.
+wip/scene3d/<name>.png. src/inscribe.py then writes exact Latin on the
+parchments and book pages listed here.
 
     CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=2 \\
         .venv-moge/bin/python src/genplates.py gen all 1 2 3 4
@@ -80,10 +81,9 @@ for name, what in PLATES.items():
 PICKS = {"forge": 2, "vault": 2, "street": 4, "saint": 4, "hall": 1,
          "reliquary": 4, "foundry": 4, "scriptorium": 2, "choir": 4, "voidshrine": 4}
 
-# the parchments each plate shows: box in plate pixels (x0, y0, x1, y1), the
-# slant of their lines in degrees, and optionally the brightness (0-255) a
-# sheet in shadow still has. The model writes illegible script;
-# `inscribe` washes it out and writes exact Latin in its place.
+# the parchments each plate shows: box in plate pixels (x0, y0, x1, y1).
+# The model writes illegible script; src/inscribe.py takes it out and
+# drapes exact Latin on the sheet in its place.
 PARCHMENTS = {
     "street": [(195, 385, 322, 515, 0), (1395, 392, 1505, 525, 0), (1020, 522, 1086, 602, 0),
                (465, 552, 528, 622, 0), (880, 605, 918, 658, 0)],
@@ -95,79 +95,30 @@ PARCHMENTS = {
     "reliquary": [(640, 555, 760, 690, 0), (815, 552, 928, 678, 0), (985, 538, 1090, 660, 0)],
     "foundry": [(1440, 470, 1478, 620, 0), (2001, 470, 2101, 650, 0)],
     "scriptorium": [(280, 55, 395, 280, 0), (527, 100, 635, 305, 0), (1276, 130, 1392, 335, 0),
-                    (1568, 100, 1712, 350, 0), (1872, 55, 2012, 295, 0), (305, 415, 440, 510, 2),
-                    (445, 405, 590, 500, 2), (812, 362, 985, 490, 10), (990, 355, 1120, 480, 10)],
+                    (1568, 100, 1712, 350, 0), (1872, 55, 2012, 295, 0)],
     "voidshrine": [(1428, 440, 1490, 678, 0)],
+}
+# the pages of open books: the four corners of each page's text block in
+# plate pixels (top left, top right, bottom right, bottom left).
+PAGES = {
+    "scriptorium": [((334, 426), (407, 420), (457, 490), (388, 498)), ((423, 422), (498, 418), (550, 483), (480, 497)),
+                    ((902, 376), (982, 372), (923, 461), (843, 452)), ((1009, 372), (1077, 375), (1023, 462), (944, 454))],
 }
 PRAYER = G.SANCTA + ["Spiritus machinae, audi nos", "Ab errore numeri, libera nos", "Fiat computatio",
                      "Omnia per calculum", "Et in terra calculus", "Ave Omnissiah"]
 
 
-def inscribe(name):
-    """Exact Latin on the plate's parchments: the parchment is the pale part
-    of each box; its old script is inpainted away; then lines of the prayer
-    in brown ink with a red initial per phrase, written at three times the
-    size and scaled down, slanted with the sheet, kept inside it."""
-    import cv2
-    import numpy as np
-    from PIL import Image, ImageDraw, ImageFont
-    path = os.path.join(G.ROOT, "wip", "scene3d", f"{name}.png")
-    im = np.asarray(Image.open(path).convert("RGB")).copy()
-    for k, (x0, y0, x1, y1, slant, *floor) in enumerate(PARCHMENTS.get(name, [])):
-        floor = floor[0] if floor else None
-        box = im[y0:y1, x0:x1]
-        hsv = cv2.cvtColor(box, cv2.COLOR_RGB2HSV).astype(float)
-        pale = (hsv[..., 2] > (floor or 0.55 * np.percentile(hsv[..., 2], 90))) & (hsv[..., 1] < 205)
-        sheet = cv2.morphologyEx(pale.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
-        cs, _ = cv2.findContours(sheet, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        big = max(cv2.contourArea(c) for c in cs)
-        sheet = cv2.drawContours(np.zeros_like(sheet), [c for c in cs if cv2.contourArea(c) > 0.08 * big], -1, 1, -1)   # stains included
-        inner = cv2.erode(sheet, np.ones((5, 5), np.uint8))
-        # a clean sheet: the parchment's own tone and stains, blurred past the
-        # size of a letter over the sheet only, with a fine grain put back
-        f = pale.astype(float) * inner
-        clean = cv2.GaussianBlur(box * f[..., None], (0, 0), 5) / (cv2.GaussianBlur(f, (0, 0), 5)[..., None] + 1e-3)
-        clean += np.random.default_rng(k).normal(0, 4, clean.shape[:2])[..., None]
-        wash = cv2.GaussianBlur(inner.astype(float), (0, 0), 1.2)[..., None]
-        box = (box * (1 - wash) + clean * wash).clip(0, 255).astype(np.uint8)
-        light = box.astype(float).mean(-1) > 0.6 * np.percentile(box.astype(float).mean(-1)[inner > 0], 60)
-        w, h = x1 - x0, y1 - y0
-        S = 3
-        size = max(8, min(w // 12, 16)) * S
-        font = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf", size)
-        layer = Image.new("RGBA", (w * S, h * S), (0, 0, 0, 0))
-        d = ImageDraw.Draw(layer)
-        words = " ".join(PRAYER[(k * 3 + j) % len(PRAYER)].capitalize() + "." for j in range(12)).split()
-        cols = inner.any(0)
-        left, right = np.argmax(cols), len(cols) - np.argmax(cols[::-1])
-        y, i, prev = size * 0.4, 0, "."
-        while y + size < h * S and i < len(words):
-            row = inner[min(h - 1, int((y + size * 0.6) / S))]
-            if row.any():                        # the sheet's own width at this line
-                left, right = np.argmax(row), len(row) - np.argmax(row[::-1])
-            band = slice(int(y / S), min(h, int((y + size) / S)))
-            if (light[band, left:right].mean() if right > left else 0) < 0.6:
-                y += size * 1.2                  # a seal or a tear across this line
-                continue
-            line = [words[i]]                    # a word too long for a narrow tag runs to the edge
-            i += 1
-            while i < len(words) and font.getlength(" ".join(line + [words[i]])) < (right - left) * S * 0.86:
-                line.append(words[i])
-                i += 1
-            x = (left + (right - left) * 0.07) * S
-            for wd in line:
-                red = prev.endswith(".")             # a red initial opens each phrase
-                d.text((x, y), wd[0], font=font, fill=(150, 20, 12, 235) if red else (58, 34, 18, 225))
-                d.text((x + font.getlength(wd[0]), y), wd[1:], font=font, fill=(58, 34, 18, 225))
-                x += font.getlength(wd + " ")
-                prev = wd
-            y += size * 1.2
-        layer = layer.rotate(slant, resample=Image.BICUBIC).resize((w, h), Image.LANCZOS)
-        a = np.asarray(layer).astype(float) / 255
-        alpha = a[..., 3] * cv2.GaussianBlur(inner.astype(float), (0, 0), 1.0)
-        out = box.astype(float) * (1 - alpha[..., None]) + a[..., :3] * 255 * alpha[..., None]
-        im[y0:y1, x0:x1] = cv2.GaussianBlur(out, (0, 0), 0.4).clip(0, 255).astype(np.uint8)
-    Image.fromarray(im).save(path)
+INK, RED = (58, 34, 18), (150, 20, 12)
+SERIF = "/usr/share/fonts/truetype/liberation/LiberationSerif-Italic.ttf"
+
+
+def pick(n):
+    """Copy the chosen draft of plate n to wip/scene3d/<n>.png."""
+    os.makedirs(os.path.join(G.ROOT, "wip", "scene3d"), exist_ok=True)
+    shutil.copy(os.path.join(G.GEN, f"plate_{n}_{PICKS[n]}.png"), os.path.join(G.ROOT, "wip", "scene3d", f"{n}.png"))
+    smoky = os.path.join(G.GEN, f"plate_{n}_smoky.png")              # the copy src/cleanplate.py keeps of the old plate
+    if os.path.exists(smoky):
+        os.remove(smoky)
 
 
 if __name__ == "__main__":
@@ -176,8 +127,6 @@ if __name__ == "__main__":
         seeds = tuple(int(a) for a in sys.argv[3:]) or (1, 2, 3, 4)
         for n in (PLATES if name == "all" else [name]):
             G.generate(f"plate_{n}", seeds)
-    elif cmd == "pick":                           # copy the chosen draft and write its Latin
-        os.makedirs(os.path.join(G.ROOT, "wip", "scene3d"), exist_ok=True)
+    elif cmd == "pick":
         for n in (PICKS if name == "all" else [name]):
-            shutil.copy(os.path.join(G.GEN, f"plate_{n}_{PICKS[n]}.png"), os.path.join(G.ROOT, "wip", "scene3d", f"{n}.png"))
-            inscribe(n)
+            pick(n)
