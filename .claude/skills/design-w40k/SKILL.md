@@ -65,6 +65,8 @@ Text placed in image space reads as pasted: the Star Colonel rejected a straight
 - One material on a sculpt reads as wax or plastic. Paint by part per `design-blender`: loose pieces when the STL has them, region rules otherwise
 - Region rules live in `src/paintfig.py`: measure on orthographic clay views with a height grid, write predicates on face centre and normal, render the views coloured by class, fix overreach (belt bands across arms, cloak rules catching heels), repeat
 - Classes: skin, cloth, machine, leather; machine = worn gunmetal with brass fittings; cloth = absorbent crimson or oxblood
+- A servo-skull is the model (`servo_skull` in `src/models.py`), painted by piece and lit (`src/servoskull.py`), never a skull painted into the plate by the image model: that gave a plain skull with a red eye, "not a proper servo-skull"
+- A statue stays still: no head turn on the saint. A calm place (the forge) keeps its fans and drapes still
 
 ## Reference image to 3D
 - MoGe-2 (`src/img2geometry.py`, venv `.venv-moge`, GPU 1): metric point map, normals, mask, intrinsics, plus a fill layer (depth pushed out from breaks, inpainted colour) for what a moving camera uncovers

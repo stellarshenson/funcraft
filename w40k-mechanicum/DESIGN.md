@@ -244,19 +244,23 @@ This section covers how each element gets its mask. SAM 2.1 (`facebook/sam2.1-hi
 - **Prompt** - the box of the element plus its points; a thing held in a hand is cut together with the hand that holds it (`grip`), so thing and hand move as one
 - **Tidy** - gaps up to 7 px are closed, pieces under 5 % of the largest are dropped, every carried piece leaves its priest's mask, and a pixel claimed by two masks goes to the element whose depth is nearest. Holes in cloth are filled, so a seal pinned on a banner belongs to the banner
 - **Flames** - a flame is a white-hot core with an orange ring, not wider than tall, at least 0.3 of the size a 1.2 × 3 cm flame has at that depth, not beside blue (stained glass), and on a candle: inside a Grounding DINO "candle" box or on a carried candle. A white spot on a figure is a highlight. `NOFLAME` boxes exclude molten metal; `FLAMES` boxes force a lamp flame behind glass
+- **Flame base** - flame and candle top are often one bright blob. `flame_base()` reads the blob's width row by row from the tip: the candle begins where a row is more than 1.5 times as wide as the four rows above it, where the blob widens by 3 px after it has narrowed from its belly, or, for a blob that ends at its widest, where its lower third becomes 1.8 times wider than its upper part. A fixed width limit cut tall flames at their belly
 - **Flame element** - every flame gets a mask of its own and leaves the mask of its candle; it records its wick, its tip and the candle that carries it
+- **Lamp flames** - a flame in a `FLAMES` box burns behind glass, where no draft reaches it. It stays painted and gives light only
+- **Flames at the plate's edge** - a flame whose candle is below the plate ends at the edge and keeps its painted size, because its full height is not known
 
 ### 5.3 Clean plate
 
 This section covers what stands behind the actors. When an actor moves it uncovers what was behind it, so the scene is painted once more without any actor.
 
-- **Hole** - all masks together, grown by 12 px to take the rim light too
+- **Hole** - the masks of all actors and of the flames on carried candles together, grown by 12 px to take the rim light too
 - **Paint** - Z-Image-Turbo's inpainting pipeline fills the hole from a prompt that describes the empty scene (`EMPTY`). Several seeds are drafted; the chosen seed per scene is in `CLEAN_SEED` of `src/motion.py`
 - **Depth** - MoGe-2 measures the clean plate; its depth is scaled to the original on the pixels both share and replaces the original inside the hole
 - **Behind every actor** - the painted scene may put a pillar where a priest stands. The backdrop is therefore pushed behind the back of every actor
 - **Sky** - pixels without depth go to a far dome
 - **Painted smoke** - a wisp painted into the plate would stay in place when its candle moves, and lies at the background's depth. `desmoke` paints it over inside the boxes of `WISPS`; the smoke returns simulated (section 5.7)
 - **Streams stay** - molten streams are not in the hole, and the prompt does not name them, so the paint adds no new glow
+- **Standing candles stay** - the flame of a candle that stands in the scene is not in the hole: the paint would remove the candle with it. `unflame()` takes the flame out of the clean plate locally. It fills the flame from its rim, then replaces the soft tone within 0.7 flame heights of the flame by the tone 1.5 heights out, mixes the two in between, and keeps the detail drawn there except close to the flame, where the detail is the flame's own bright rim. The candle under the wick and the candles beside it are left as painted (`candle_under()`). The paint itself is kept in `<name>_paint.png`, so this step can run again without a new paint. MoGe-2 measures the picture after this step, and where a flame was that depth is used: the first plate's depth there is the candle's, which left a patch of wall hanging in the air at the candle's depth Without this step the bloom of the large painted flame hangs round the small flame as a halo. The same step runs where a carried candle's flame was: there the paint tends to leave a bright patch
 
 ![The choir plate and its clean plate](.images_design/clean-plate.jpg)
 
@@ -291,7 +295,7 @@ This section lists the rules that put every element at its place in depth, and t
 | A hand that holds a thing is cut with the thing | the candle moved and the hand did not | `grip` |
 | A smoke source is the tip of its flame, and moves with it | smoke must not rise metres behind its candle | distance under 5 cm |
 | The backdrop lies behind the back of every actor | a painted pillar hid a priest | - |
-| A flame is shown at the size of a candle flame, about its wick | the model paints flames 6 to 8 cm tall | `FLAME_H` 4 cm |
+| A flame is shown at the size of a candle flame, about its wick | the model paints flames 4 to 26 cm tall | `FLAME_H` 4 cm, at least `FLAME_PX` 8 plate pixels |
 | A thin thing takes one depth | its pixels mix with the background | 30th percentile |
 
 - **Check** - `motion.py plan <name>` draws the scene from above (actors, flames, smoke boxes) and prints two tables: each held thing's depth against its priest's chest, and each smoke source's distance from its flame
@@ -310,7 +314,7 @@ This section covers the model that moves the flames and their light. `src/air.py
 - **Lean** - the flame gas rises at about 1 m/s. Air crossing it at speed v leans it by atan(v / 1 m/s); the wind a flame feels is the air less the candle's own velocity, so a moving candle's flame trails
 - **Length and light** - an updraft stretches the flame and gives more light, a crosswind shortens it and gives less. A stretched flame is drawn thinner
 - **Flame element** - a flame is light, not a thing with an edge. It is drawn from the plate through an alpha that keeps bright, warm pixels only; the glow the model painted round it stays out
-- **Candle light** - every material is multiplied by 1 + Σ (I - 1) R² / (R² + d²): I is the flame's light relative to still air, d the distance to the flame, R = 0.5 m. Flames move with their candles. No shadows are modelled
+- **Candle light** - every material is multiplied by (1 + Σ I s) / (1 + Σ s), summed over the flames: I is the flame's light relative to still air, s = R² / (R² + d²) its share at distance d, R = 0.5 m, and the 1 is the scene's own light. The factor stays between the smallest and the largest I, however many flames stand together; the earlier form 1 + Σ (I - 1) s turned the candles of a cluster dark. Flames move with their candles. No shadows
 
 ![One candle flame in eight frames](.images_design/flames.jpg)
 
@@ -335,7 +339,7 @@ This section covers the smoke of candles and censers. `src/smoke.py` simulates e
 - **Why particles** - particles keep a filament thin where a grid field would blur it
 - **Why smoke shows late** - the gas that leaves a flame is hot and clear; its soot shows a few centimetres higher. Without this the densest smoke sits on the flame tip and reads as a larger, whiter flame
 - **Render** - one OpenVDB file per loop frame. The volume emits and absorbs; it does not scatter. A scattering volume needs light sampling, and the denoiser turned its noise into flicker
-- **Light on the smoke** - the plate's own light behind it (the plate blurred by 40 pixels, looked up by screen position) plus the candle flames within about 12 cm
+- **Light on the smoke** - the plate's own light behind it (the plate blurred by 40 pixels, looked up by screen position) plus the candle flames within about 12 cm, at half the weight of the light behind, so smoke over a flame does not turn white
 
 ### 5.8 Wheels, cloth and streams
 
@@ -351,9 +355,13 @@ This section covers the remaining kinds of motion.
 This section covers the effects that work on the plate's own pixels.
 
 - **Plate material** - backdrop and actors are emission shaders that show the plate, multiplied by the candle light
-- **Status lights and screens** - small bright green lights are divided into 6-pixel cells; each cell switches off at random once per tick (16 frames)
+- **Status lights and screens** - small bright green lights are divided into 6-pixel cells; each cell switches off at random once per tick (16 frames). A green light with more than 42 pixels in a 13-pixel square is no status light and stays whole: a screen, a beam, a pair of glowing eyes
 - **Halo glint** - for the saint plate, gold pixels inside the halo brighten in a narrow band that travels round the halo once per loop
 - **Dust** - 36 small emissive motes near the lens, each on its own closed path
+- **Servo-skull** - a scene may hold a floating servo-skull (`skull` in `SCENES`, built by `src/servoskull.py`). It is the downloaded model, not a picture: a servo-skull painted into the plate by the image model was rejected as not a proper servo-skull
+  - **Paint** - the model's 117 loose pieces get a material by shape: the piece with the most vertices and the teeth are bone, tubes are rubber, fittings on the face are brass, the rest is iron; a disc that only emits red sits in the mouth of the ocular, the piece that reaches furthest forward: three times full red in a core of a quarter of its radius, dark red at the rim. A lit, glossy disc came out pale orange
+  - **Light** - the skull is the one surface in a plate scene that needs light: a warm point light where the scene has one, a cold one behind it, and a weak light from all round. The emitting plate is hidden from the skull's rays and left out of the light sampling; with it the skull came out speckled at 64 samples
+  - **Motion** - it rises and sinks 1.2 cm, drifts 0.8 cm sideways and turns 4 to 5 degrees, once per loop
 - **Camera** - a closed path of 0.8 % of the nearest scene depth (2 to 6 cm) gives parallax
 
 ### 5.10 Checks before a render
@@ -363,8 +371,12 @@ This section lists what is looked at before a scene is rendered in full, in orde
 1. **Motion map** - `wip/preview/motion-<name>.png`: every mask, bone, flame and smoke box
 2. **Text** - `wip/preview/sheets-<name>.png`: the chart of every sheet (section 2.5)
 3. **Placement** - `wip/preview/plan-<name>.png` and the two tables; no `FLAG`
-4. **Test frames** - `scenes.py -- <name> 0 20 40 60`: four frames spread over the loop
+4. **Test frames** - `scenes.py -- <name> 0 20 40 60`: four frames spread over the loop; `src/build-scenes.sh` builds scenes one after another and renders these four frames of each
 5. **Full render** - 80 frames; then the seam (frame 80 against frame 0), the mean change between neighbouring frames, and `motion.py proof <name>`, which measures each element's motion in the frames by optical flow
+
+![Test frames of the choir and the saint scene](.images_design/frames.jpg)
+
+*Fig 7 - Test frame 20 of the choir (top) and of the saint scene (bottom)*
 
 ## 6. Loop and timing
 
@@ -393,9 +405,11 @@ This section covers the render settings, the machines and the GIF step.
 | plate frame | 64 | about 4.4 s | RTX 5000 Ada |
 
 - **Engine** - Blender 4.5.9, Cycles on CUDA; the GPU is chosen by the nvidia-smi index in `CUDA_VISIBLE_DEVICES` (1 is the RTX PRO 6000, 2 is the RTX 5000 Ada)
+- **Stopping a GPU job** - a job that uses a GPU is not killed while it runs. On this workstation (WSL2) three build steps killed at once left a thread waiting in the GPU driver, and every program that opened a GPU afterwards waited behind it for 24 minutes. To stop a queue, stop its shell script and let the running step end
 - **Detached renders** - long renders run under `nohup setsid`, log to `wip/logs/`, and write each frame to disk as it finishes; `src/render-scenes.sh <gpu> <first GIF number> <scene>...` renders plate scenes one after another and assembles each GIF
-- **Assembly** - `src/assemble.py <frames> <gif>` resizes each frame to 1140 × 360, builds one 224-colour palette from the first frame, dithers every frame with Floyd-Steinberg, and writes 50 ms per frame, looping forever
-- **Size** - cathedral GIFs are about 10 MB for 40 frames; plate GIFs were 12 to 13 MB for 40 frames, and the 80-frame versions are larger
+- **Assembly** - `src/assemble.py <frames> <gif>` resizes each frame to 1140 × 360, builds a palette of 224 colours from the first frame by median cut, adds up to 32 colours for the pixels of every tenth frame that lie further than 40 (of 255) from that palette, dithers every frame with Floyd-Steinberg, and writes 50 ms per frame, looping forever. A median cut gives colours by pixel count: without the added colours the servo-skull's red eye lens, about 100 pixels, came out brick red
+- **Size** - cathedral GIFs are about 10 MB for 40 frames; the plate GIFs of 80 frames are 22 to 26 MB
+- **Render time** - a plate scene of 80 frames takes about 4 minutes on the RTX PRO 6000 or the RTX 5000 Ada; ten scenes on three GPUs took 21 minutes
 
 ## 8. Development workflow
 
@@ -425,6 +439,7 @@ This section lists the commands for each step, run from the project folder.
 | cathedral frames | `CUDA_VISIBLE_DEVICES=1 blender -b -P src/mechanicum.py -- shot=altar` |
 | moving elements found by prompt | `.venv-moge/bin/python src/segment.py detect <name> "hooded priest" "candle"` |
 | build a plate scene (masks to smoke) | `src/build-scene.sh <gpu> <name> [clean-plate seed]` |
+| build scenes and render four test frames of each | `nohup setsid src/build-scenes.sh <gpu> <name>...` |
 | motion map, placement check | `python3 src/motion.py map <name>`, `python3 src/motion.py plan <name>` |
 | plate test frames | `CUDA_VISIBLE_DEVICES=2 blender -b -P src/scenes.py -- <name> 0 20 40 60` |
 | plate preview | `CUDA_VISIBLE_DEVICES=2 blender -b -P src/scenes.py -- <name> preview` |
