@@ -2,7 +2,7 @@ BLENDER ?= $(HOME)/.local/opt/blender-4.5.9-linux-x64/blender
 PYTHON  ?= /opt/conda/bin/python3.14
 CHASSIS ?= madcat
 
-.PHONY: banner banner-shake banner-offset frames gif lookdev rig rigcheck weights measure cuts gait clean
+.PHONY: banner banner-shake banner-offset welcome frames gif lookdev rig rigcheck weights measure cuts gait clean
 
 banner: frames gif
 
@@ -22,6 +22,10 @@ banner-offset:
 	rm -rf wip/frames-offset
 	$(BLENDER) -b -P src/gen04_banner_models.py -- shake offset out=frames-offset
 	$(PYTHON) src/assemble.py wip/frames-offset out/05-banner-offset.gif
+
+# the BEHEMOTH welcome page of GalaxaLab: src/welcome.template.html with the banner embedded, one self-contained file
+welcome:
+	$(PYTHON) -c "import base64, pathlib; t = pathlib.Path('src/welcome.template.html').read_text(); b = base64.b64encode(pathlib.Path('out/05-banner-offset.gif').read_bytes()).decode(); pathlib.Path('out/06-behemoth-welcome.html').write_text(t.replace('{{BANNER}}', 'data:image/gif;base64,' + b))"
 
 lookdev:
 	$(BLENDER) -b -P src/lookdev.py

@@ -15,6 +15,7 @@ except Blender itself and a Python with Pillow, numpy and scipy.
 | `out/03-banner-models.gif` | Blender 4.5, Cycles on GPU | The supplied meshes, painted and walked by an armature |
 | `out/04-banner-shake.gif` | as 03 | The camera jolts at every footfall; all three in step |
 | `out/05-banner-offset.gif` | as 03 | Each chassis at its own point in the gait cycle, camera jolting at each footfall |
+| `out/06-behemoth-welcome.html` | `make welcome` | The BEHEMOTH welcome page of GalaxaLab: `src/welcome.template.html` with banner 05 embedded, one self-contained file without JavaScript |
 
 Every animated quantity is a function of `phase` in `[0,1)`, and every scrolling
 element advances a whole number of its own pattern periods across the cycle.
