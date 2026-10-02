@@ -28,7 +28,12 @@
     --display: "Bahnschrift", "DIN Alternate", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
-  html { background: var(--bg); font-size: 14px; scrollbar-color: #3b4c61 #0b0f14; scrollbar-width: thin; }
+  /* the root size falls with the page width: 14 px from 1140 px up, 11 px at 390 px and below; every rem size follows.
+     --extra is added to the large fonts, so they fall faster than the text: 6 px from 1140 px up, 0 px at 390 px and below */
+  html {
+    --extra: clamp(0px, 0.8vw - 3.12px, 6px);
+    background: var(--bg); font-size: clamp(11px, 9.44px + 0.4vw, 14px); scrollbar-color: #3b4c61 #0b0f14; scrollbar-width: thin;
+  }
   ::-webkit-scrollbar { width: 12px; height: 12px; }
   ::-webkit-scrollbar-track { background: #0b0f14; border-left: 1px solid var(--line); }
   ::-webkit-scrollbar-thumb {
@@ -103,12 +108,12 @@
     border-top: 2px solid var(--orange);
     border-radius: 4px;
   }
-  .figures b { display: block; font: 800 1.55rem/1.15 var(--display); letter-spacing: 0.03em; }
+  .figures b { display: block; font: 800 calc(1.12rem + var(--extra))/1.15 var(--display); letter-spacing: 0.03em; }
   .figures span { color: var(--muted); font-size: 0.9rem; }
 
   h2 {
     margin: 18px 0 2px;
-    font: 800 1.25rem/1.2 var(--display);
+    font: 800 calc(1.05rem + 0.47 * var(--extra))/1.2 var(--display);
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
@@ -131,14 +136,23 @@
 
   /* one GPU per row, every row the same size: index, name, one block per 8 GB, memory */
   .gpus { display: grid; grid-auto-rows: 1fr; gap: 6px; }
-  .gpu { display: grid; grid-template-columns: 4.2rem 1fr 177px 10rem; align-items: center; gap: 3px 16px; padding: 5px 14px; }
-  .vram { text-align: right; white-space: nowrap; }
-  .vram b { font: 800 1.6rem/1 var(--display); letter-spacing: 0.03em; color: var(--text); }
-  .vram small { color: var(--muted); font-size: 0.85rem; margin-left: 6px; }
+  .gpu { display: grid; grid-template-columns: 4.2rem 1fr 177px 10rem; align-items: center; gap: 3px 16px; padding: 7px 14px; }
+  /* the box of the memory is as high as its digits (text-box), so the digits are centred in the row with every font */
+  .vram { text-align: right; white-space: nowrap; font: 800 calc(1.17rem + var(--extra))/1 var(--display); text-box: trim-both cap alphabetic; }
+  .vram b { font-weight: inherit; letter-spacing: 0.03em; color: var(--text); }
+  .vram small { margin-left: 6px; font: 400 0.85rem/1 var(--sans); color: var(--muted); }
   .blocks { display: flex; flex-wrap: wrap; gap: 3px; margin: 0; padding: 0; list-style: none; }
   .blocks li { width: 12px; height: 8px; border-radius: 1px; background: var(--c); }
   @media (max-width: 980px) {
-    .gpu { grid-template-columns: 1fr auto; }
+    /* index, name and blocks in the left column, the memory beside them at half the height of the tile */
+    .gpu { grid-template-columns: 1fr auto; align-content: center; gap: 5px 16px; padding: 8px 14px; }
+    .gpu .vram { grid-area: 1 / 2 / 4 / 3; }
+    .gpu h3 { grid-area: 2 / 1; }
+    .gpu .blocks { grid-area: 3 / 1; }
+  }
+  @media (max-width: 480px) {
+    /* no room beside the name: the memory goes in the first line */
+    .gpu { align-content: space-between; gap: 7px 16px; padding: 12px 14px 10px; }
     .gpu .vram { grid-area: 1 / 2; }
     .gpu h3 { grid-area: 2 / 1 / 3 / -1; }
     .gpu .blocks { grid-area: 3 / 1 / 4 / -1; }
