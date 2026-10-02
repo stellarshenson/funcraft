@@ -12,6 +12,7 @@ A looping 19:6 banner GIF of a machine cathedral in the style of the Warhammer 4
 | `out/04-forge.gif` … `out/08-hall.gif` | plate scenes: forge, vault, street, saint, hall |
 | `out/09-reliquary.gif` … `out/13-voidshrine.gif` | plate scenes: reliquary, foundry, scriptorium, choir, voidshrine |
 | `out/14-calendar.md` | the Cult Mechanicus calendar: 366 daily entries for the BEHEMOTH welcome page, one mock holy day per date, each teaching one point of machine learning, statistics or data science |
+| `out/15-sermon.html` | the sermon of the day: one of seven scene banners, drawn with the day of the year as the seed, over an embroidered cloth; a script in the page shows the plan row of today's date. `make sermon` builds it; `SERMON.md` describes the rebuild |
 
 All are 1140 × 360 at 50 ms per frame. GIFs 01 to 03 have 40 frames (2 s loop) and come from `src/mechanicum.py`; the first survives as its GIF only. GIFs 04 to 13 have 80 frames (4 s loop) and come from generated plates: every moving element is cut out and rigged, flames follow a model of the air and smoke is simulated (`src/build-scene.sh`, `src/scenes.py`). `DESIGN.md` describes both pipelines. The loop is exact: each render also produces the frame at phase 1.0 as `seam-check.png` in its frames folder, which must match `f000.png`.
 

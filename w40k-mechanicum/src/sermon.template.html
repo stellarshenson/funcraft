@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sermon of the Day</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23d9a441' stroke-width='6' stroke-dasharray='4.3 4.3'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%235a0d12' stroke='%23d9a441' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink: #0d0506;
+    --velvet: #581613;
+    --velvet-light: #71201c;
+    --velvet-dark: #2e0b09;
+    --gold: #c2923a;
+    --gold-dim: #7a5a22;
+    --bone: #e6d3a8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--bone);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  main { margin: 0; padding: 12px 12px 24px; }
+  .banner { aspect-ratio: {{WIDTH}} / {{HEIGHT}}; margin-bottom: 14px; }      /* keeps the place of the banner before it loads */
+  .banner img { display: block; width: 100%; height: 100%; }
+
+  /* the embroidered cloth: a coarse worn weave, a frayed edge, a hand-stitched seam, lozenge bands, corner cogs.
+     The #rough filter bends every ornament a little, as a hand would */
+  .cloth {
+    position: relative;
+    padding: 3px 40px;                    /* the vertical padding keeps the margins of the bands inside the cloth */
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.1 0 0 0 -.38'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='300'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.006 .018' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.5 0 0 0 -.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat,
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, .17) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(90deg, rgba(255, 230, 190, .06) 0 1px, transparent 1px 4px),
+      radial-gradient(ellipse at 50% 0, var(--velvet-light), var(--velvet) 55%, var(--velvet-dark));
+    box-shadow: 0 14px 44px rgba(0, 0, 0, .65), inset 0 0 34px rgba(0, 0, 0, .5);
+  }
+  .seam { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .seam rect { fill: none; filter: url(#rough); }
+  .seam .edge { x: 1px; y: 1px; width: calc(100% - 2px); height: calc(100% - 2px); stroke: var(--gold-dim); stroke-width: 3; }
+  .seam .stitch {
+    x: 9px; y: 9px; width: calc(100% - 18px); height: calc(100% - 18px);
+    stroke: var(--gold); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 9 5 6 4 11 6 7 5 10 4;
+  }
+  .band, .cog { filter: url(#rough); }
+  .band {
+    height: 10px;
+    margin: 15px 12px 8px;
+    background:
+      linear-gradient(135deg, var(--gold) 25%, transparent 25%) -5px 0 / 10px 10px,
+      linear-gradient(225deg, var(--gold) 25%, transparent 25%) -5px 0 / 10px 10px,
+      linear-gradient(315deg, var(--gold) 25%, transparent 25%) 0 0 / 10px 10px,
+      linear-gradient(45deg, var(--gold) 25%, transparent 25%) 0 0 / 10px 10px;
+    opacity: .85;
+  }
+  .cog { position: absolute; width: 26px; height: 26px; }
+  .cog.tl { top: 15px; left: 15px; }
+  .cog.tr { top: 15px; right: 15px; }
+  .cog.bl { bottom: 15px; left: 15px; }
+  .cog.br { bottom: 15px; right: 15px; }
+
+  .day, .blessing {
+    margin: 0;
+    text-align: center;
+    color: var(--gold);
+    font-variant: small-caps;
+    letter-spacing: .14em;
+  }
+  .day { font-size: .85rem; }
+  h1 {
+    margin: 2px 0 3px;
+    padding-bottom: 4px;
+    border-bottom: 2px dashed var(--gold-dim);
+    text-align: center;
+    color: var(--gold);
+    font-size: clamp(1.3rem, 3.6vw, 1.75rem);
+    font-weight: normal;
+    letter-spacing: .04em;
+    line-height: 1.2;
+    text-shadow: 0 1px 0 #3a2506, 0 2px 0 rgba(0, 0, 0, .5);
+    text-wrap: balance;
+  }
+  .invocation { margin: 0 0 6px; text-align: center; font-size: .9rem; font-style: italic; opacity: .85; }
+  .sermon { margin: 0; font-size: 1.05rem; line-height: 1.5; }
+  .sermon::first-letter {
+    float: left;
+    margin: .08em .12em 0 0;
+    color: var(--gold);
+    font-size: 2.6em;
+    line-height: .85;
+    text-shadow: 0 2px 0 rgba(0, 0, 0, .5);
+  }
+  .blessing { margin-top: 6px; font-size: .9rem; }
+
+  @media (max-width: 520px) {
+    .cloth { padding: 3px 24px; }
+    .sermon { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <!-- the banner script puts the chosen banner here; where scripts are switched off the browser shows the choir -->
+  <div class="banner"><noscript><img src="data:image/avif;base64,{{BANNER}}" alt="A scene of the Cult Mechanicus"></noscript></div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="cog" viewBox="0 0 34 34">
+      <circle cx="17" cy="17" r="12" fill="none" stroke="#c2923a" stroke-width="6" stroke-dasharray="4.7 4.7"/>
+      <circle cx="17" cy="17" r="8.5" fill="#2e0b09" stroke="#c2923a" stroke-width="1.5" stroke-dasharray="2 1.5"/>
+      <circle cx="17" cy="17" r="2.6" fill="#c2923a"/>
+    </symbol>
+    <filter id="rough" x="-10%" y="-40%" width="120%" height="180%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+  <article class="cloth">
+    <svg class="seam" aria-hidden="true"><rect class="edge"/><rect class="stitch"/></svg>
+    <svg class="cog tl" aria-hidden="true"><use href="#cog"/></svg>
+    <svg class="cog tr" aria-hidden="true"><use href="#cog"/></svg>
+    <svg class="cog bl" aria-hidden="true"><use href="#cog"/></svg>
+    <svg class="cog br" aria-hidden="true"><use href="#cog"/></svg>
+    <div class="band"></div>
+    <p class="day" id="day">Sermon of the Day</p>
+    <h1 id="title">The cogitator sleeps</h1>
+    <p class="invocation" id="invocation"></p>
+    <p class="sermon" id="sermon">This page chooses the sermon with a script. Scripts are switched off here, so no sermon can be chosen.</p>
+    <p class="blessing" id="blessing"></p>
+    <div class="band" style="margin:8px 12px 15px"></div>
+  </article>
+</main>
+<script>
+  // one store per month, from references/calendar-plan.md: the rows [title, fact] of its days as JSON, deflated, in base64
+  const SERMONS = {{SERMONS}};
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+                  "November", "December"];
+  const INVOCATIONS = [
+    "Hear the sermon of the day, adepts of the forge.",
+    "The Magos speaks. The forge listens.",
+    "By the will of the Omnissiah, learn this today.",
+    "The cogitator has chosen the word of the day.",
+    "Let the machine spirits be still, and let the adepts attend.",
+    "From the sacred records, the lesson of this day.",
+    "Light the incense. Open the notebook. Hear the lesson."
+  ];
+  const BLESSINGS = [
+    "Praise the Omnissiah. Ave Omnissiah.",
+    "Ave Omnissiah. Ave Deus Mechanicus.",
+    "So it is computed. So it shall be.",
+    "The flesh is weak. The data endures.",
+    "May the machine spirit favour the run.",
+    "Go, and run it with a fixed seed.",
+    "Thus ends the lesson. Return to the forge."
+  ];
+
+  // today, or the date given after # in the address, as in sermon.html#02-29
+  const now = new Date();
+  const asked = location.hash.match(/^#(\d\d)-(\d\d)$/);
+  const month = asked ? +asked[1] : now.getMonth() + 1;
+  const date = asked ? +asked[2] : now.getDate();
+  const year = now.getFullYear();
+  const number = Math.round((Date.UTC(year, month - 1, date) - Date.UTC(year, 0, 1)) / 864e5) + 1;      // day of the year
+
+  // inflates the store of one month only and shows the row of the day
+  async function show() {
+    const packed = Uint8Array.from(atob(SERMONS[month - 1]), c => c.charCodeAt(0));
+    const rows = await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream("deflate"))).json();
+    const row = rows[date - 1];
+    if (!row) return;
+    const text = row[1].endsWith(".") ? row[1] : row[1] + ".";
+    document.getElementById("day").textContent =
+      date + " " + MONTHS[month - 1] + " · Day " + number + " · " + number.toString(2);
+    document.getElementById("title").textContent = row[0];
+    document.getElementById("invocation").textContent = INVOCATIONS[number % INVOCATIONS.length];
+    document.getElementById("sermon").textContent = text;
+    document.getElementById("blessing").textContent = BLESSINGS[(number * 3) % BLESSINGS.length];
+    document.title = row[0] + " - Sermon of the Day";
+  }
+  if (SERMONS[month - 1]) show();
+</script>
+<script>
+  // a script of its own, so that the sermon shows even where the banners fail.
+  // One store per banner: an animated AVIF in base64. The day chooses one, and only that one is given to the
+  // browser to decode
+  const BANNERS = {{BANNERS}};
+
+  // one number in [0, 1) from a seed (the generator mulberry32)
+  function draw(seed) {
+    let t = seed + 0x6D2B79F5 | 0;
+    t = Math.imul(t ^ t >>> 15, 1 | t);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+
+  // the seed is the day of the year, so every reader sees the same banner on the same day
+  const banner = new Image();
+  banner.alt = "A scene of the Cult Mechanicus";
+  banner.src = "data:image/avif;base64," + BANNERS[Math.floor(draw(number) * BANNERS.length)];
+  document.querySelector(".banner").append(banner);
+</script>
+</body>
+</html>

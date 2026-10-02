@@ -2,7 +2,7 @@ BLENDER ?= $(HOME)/.local/opt/blender-4.5.9-linux-x64/blender
 PYTHON ?= python3
 export CUDA_VISIBLE_DEVICES ?= 1
 
-.PHONY: banner frames gif assets previews clean
+.PHONY: banner frames gif assets previews sermon clean
 
 banner: frames gif
 
@@ -19,6 +19,10 @@ assets:
 
 previews:
 	$(BLENDER) -b -P src/preview_models.py
+
+# the sermon of the day: a banner and the row of today's date from references/calendar-plan.md, one self-contained file (SERMON.md)
+sermon:
+	$(PYTHON) src/sermon.py
 
 clean:
 	rm -rf wip/frames
