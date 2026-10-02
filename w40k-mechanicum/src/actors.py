@@ -39,7 +39,8 @@ ROOT = M.ROOT
 TAU = 2 * math.pi
 STEP = 2                   # plate pixels per mesh vertex
 REACH = 0.65               # m, how far in front of the chest a hand can hold a thing
-FLAME_H = 0.04             # m, the height of a candle flame; the model paints them 6 to 8 cm tall
+FLAME_H = 0.04             # m, the height of a candle flame; the model paints them 5 to 25 cm tall
+FLAME_PX = 8.0             # plate pixels: a flame shown smaller than this has no shape left
 
 
 def smooth(e0, e1, x):
@@ -80,6 +81,15 @@ def pixel(K, size, P):
     """Blender world points (..., 3) to plate pixels (x, y)."""
     W, H = size
     return ((P[..., 0] / P[..., 1] * K[0, 0] + K[0, 2]) * W - 0.5, (-P[..., 2] / P[..., 1] * K[1, 1] + K[1, 2]) * H - 0.5)
+
+
+def flame_scale(fl, z, f):
+    """How much a painted flame shrinks about its wick: to FLAME_H at depth
+    z (f: focal length in pixels), but not below FLAME_PX pixels, and never
+    larger than painted. A flame cut off by the plate's edge keeps its size:
+    its full height is not known."""
+    h = max(fl["wick"][1] - fl["tip"][1], 1.0)
+    return 1.0 if fl.get("edge") else min(1.0, max(FLAME_H * f / (z * h), FLAME_PX / h))
 
 
 def load(name):
@@ -130,13 +140,14 @@ def layout(name):
     els = [dict(e) for e in M.MAPS[name] if e["kind"] not in ("stream", "smoke")]
     for fl in flames:
         if fl["mesh"]:
-            els.append(dict(kind="flame", id=fl["id"], who="Flame", wick=fl["wick"], tip=fl["tip"], owner=fl["owner"]))
+            els.append(dict(kind="flame", id=fl["id"], who="Flame", wick=fl["wick"], tip=fl["tip"], owner=fl["owner"],
+                            edge=fl.get("edge", False)))
     by = {e["id"]: e for e in els}
 
     def sized(el, z):
-        """Sets a flame's scale to FLAME_H at depth z; returns its tip after scaling (plate pixels)."""
+        """Sets a flame's scale at depth z (flame_scale); returns its tip after scaling (plate pixels)."""
         wk, tp = el["wick"], el["tip"]
-        el["scale"] = min(1.0, FLAME_H * f / (z * max(wk[1] - tp[1], 1.0)))
+        el["scale"] = flame_scale(el, z, f)
         return (wk[0] + el["scale"] * (tp[0] - wk[0]), wk[1] + el["scale"] * (tp[1] - wk[1]))
 
     for el in els:
@@ -408,15 +419,15 @@ def wheel(name, el, K, size, fit, rings=48, spokes=240):
 
 def source(el, flames, depth, f):
     """Plate pixel and depth of a fixed smoke source: the tip of the flame
-    nearest `at` within 60 px, at the size the flame is shown (FLAME_H), or
-    `at` itself (a censer). f: the focal length in pixels."""
+    nearest `at` within 60 px, at the size the flame is shown (flame_scale),
+    or `at` itself (a censer). f: the focal length in pixels."""
     x, y = el["at"]
     near = min(flames, key=lambda f: math.hypot(f["wick"][0] - x, f["wick"][1] - y), default=None)
     if near and math.hypot(near["wick"][0] - x, near["wick"][1] - y) < 60:
         (wx, wy), (tx, ty) = near["wick"], near["tip"]
         yy, xx = int(min(wy + 6, depth.shape[0] - 1)), int(wx)
         z = float(np.percentile(depth[max(yy - 3, 0):yy + 4, max(xx - 3, 0):xx + 4], 30))
-        s = min(1.0, FLAME_H * f / (z * max(wy - ty, 1.0)))
+        s = flame_scale(near, z, f) if near["mesh"] else 1.0
         return (wx + s * (tx - wx), wy + s * (ty - wy)), z
     return (x, y), float(np.percentile(depth[y - 4:y + 5, x - 4:x + 5], 30))
 
@@ -433,7 +444,8 @@ def flame_texture(name, els):
     alpha = np.zeros(body.shape, np.float32)
     for el in els:
         if el["kind"] == "flame":
-            a = body * cv2.GaussianBlur(el["mask"].astype(np.float32), (0, 0), 1.5)
+            near = cv2.erode(el["mask"].astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7)))
+            a = body * cv2.GaussianBlur(near.astype(np.float32), (0, 0), 1.2)   # close to the flame: not the candle's lit rim
             a[int(el["wick"][1]) + 2:] = 0
             alpha = np.maximum(alpha, a)
     cv2.imwrite(stem + "_flames.png", np.dstack([bgr, alpha]).__mul__(255).astype(np.uint8))

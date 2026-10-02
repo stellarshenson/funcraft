@@ -9,12 +9,15 @@ from the candle's own motion); then the meshes. The pass also writes
 wip/scene3d/<name>_sources.json: the path of every smoke source, for
 src/smoke.py.
 
-Candle light. One node group, shared by every material: the light a
-surface point gets from flame c falls with the square of the distance, so
-its brightness is multiplied by 1 + sum_c (I_c - 1) R^2 / (R^2 + d_c^2),
-where I_c is the flame's light relative to still air (src/air.py), d_c the
-distance to the flame and R = REACH the distance at which a candle's light
-equals the rest of the scene's. Flames move with their candles. No shadows.
+Candle light. One node group, shared by every material. A surface point
+gets the scene's own light, 1, and from flame c the share
+s_c = R^2 / (R^2 + d_c^2): d_c is the distance to the flame and R = REACH
+the distance at which a candle's light equals the rest of the scene's. The
+plate shows the point in still air; its brightness is multiplied by
+(1 + sum_c I_c s_c) / (1 + sum_c s_c), where I_c is the flame's light
+relative to still air (src/air.py). The factor stays between the smallest
+and the largest I_c, however many flames stand together. Flames move with
+their candles. No shadows.
 """
 import bpy, json, math, os, sys
 import numpy as np
@@ -51,7 +54,7 @@ def light_group(n):
                 L.new(x, m.inputs[i])
         return m
 
-    gain, glow, handles = 1.0, 0.0, []
+    gain, total, glow, handles = 0.0, 1.0, 0.0, []
     for _ in range(n):
         at = N.new("ShaderNodeCombineXYZ")
         d = N.new("ShaderNodeVectorMath")
@@ -62,10 +65,15 @@ def light_group(n):
         share = op("DIVIDE", REACH ** 2, op("ADD", d2, REACH ** 2).outputs[0]).outputs[0]
         dev = op("MULTIPLY", share, 0.0)                     # input 1: I - 1
         gain = op("ADD", gain, dev.outputs[0]).outputs[0]
+        total = op("ADD", total, share).outputs[0]
         near = op("DIVIDE", GLOW ** 2, op("ADD", d2, GLOW ** 2).outputs[0]).outputs[0]
         lit = op("MULTIPLY", near, 1.0)                      # input 1: I
         glow = op("ADD", glow, lit.outputs[0]).outputs[0]
         handles.append((at, dev, lit))
+    if handles:
+        gain = op("ADD", 1.0, op("DIVIDE", gain, total).outputs[0]).outputs[0]
+    else:
+        gain = 1.0
     for name, v in (("Gain", gain), ("Glow", glow)):
         if isinstance(v, float):
             c = N.new("ShaderNodeValue")

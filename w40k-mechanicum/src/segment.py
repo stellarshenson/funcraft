@@ -91,18 +91,52 @@ def cut(name):
     print("SEGMENT_DONE", name, len(masks))
 
 
+def flame_base(widths):
+    """The first row of a bright blob that is candle, not flame; None if
+    the whole blob is flame. widths: the blob's width per row, from the tip
+    down. A flame widens slowly from its tip to its belly and narrows to
+    the wick. The candle's glowing top begins where a row is more than 1.5
+    times as wide as the four rows above it, or where the blob, after
+    narrowing from the belly for 3 rows or to 0.6 of the belly's width,
+    widens again by 3 px. A blob that ends at its widest has not narrowed
+    to a wick: its lower rows are candle, from the first row that is 1.8
+    times and 6 px wider than the blob's upper 40 %, if that row lies in
+    the blob's lower third (higher up it is the flame's own belly)."""
+    w = np.array([np.median(widths[max(i - 1, 0):i + 2]) for i in range(len(widths))])
+    abrupt = next((i for i in range(3, len(w)) if w[i] > 1.5 * w[max(i - 4, 0):i].max() + 1), None)
+    waist, peak, pi, low = None, 0, 0, None
+    for i, wd in enumerate(w):
+        if wd >= peak:                                           # still widening: the belly is here or further down
+            peak, pi, low = wd, i, None
+        elif low is None or wd <= low:
+            low, li = wd, i
+        elif wd >= low + 3 and (li - pi >= 3 or low <= 0.6 * peak):
+            waist = li + 1
+            break
+    merged = None
+    if w[-1] >= 0.9 * w.max():
+        top = float(np.median(w[:max(2, int(0.4 * len(w)))]))
+        merged = next((i for i in range(len(w)) if w[i] > max(1.8 * top, top + 6)), None)
+        merged = merged if merged is not None and merged >= 0.66 * len(w) else None
+    found = [v for v in (abrupt, waist, merged) if v is not None]
+    return min(found) if found else None
+
+
 def find_flames(name, masks, candles):
     """Candle flames of the plate: a white-hot core with an orange glow
     round it, not wider than tall, at least 0.3 of the size a 1.2 x 3 cm
     flame has at that depth, and at the top of a candle (`candles`:
     Grounding DINO's boxes; a highlight on brass has no candle under it);
     or any white-hot core inside a box of motion.FLAMES. The flame ends
-    where the blob widens into the glowing top of the candle.
+    where the blob becomes the glowing top of the candle (flame_base); a
+    flame that the bottom of the plate cuts off (`edge`) ends at that edge.
     A flame on a carried candle, and any other flame at least 6 px tall,
     gets a mask of its own, `f<n>`: the flame with a margin that holds its
-    soft edge. The flame itself leaves every other mask. Every flame is
-    listed with its wick and tip pixel, its world position and its owner
-    (the carried candle it burns on)."""
+    soft edge. The flame itself leaves every other mask. A flame in a box
+    of motion.FLAMES is a lamp's, behind glass: no draft reaches it, so it
+    stays painted and only gives light. Every flame is listed with its
+    wick and tip pixel, its world position and its owner (the carried
+    candle it burns on)."""
     import actors as A
     img = np.asarray(Image.open(os.path.join(ROOT, "wip", "scene3d", name + ".png")).convert("RGB"), np.float32) / 255
     d = np.load(os.path.join(ROOT, "wip", "scene3d", name + ".npz"))
@@ -151,13 +185,12 @@ def find_flames(name, masks, candles):
         nb, lb = cv2.connectedComponents(body.astype(np.uint8), connectivity=8)
         fl = np.isin(lb, np.unique(lb[m])) & body                       # the warm blob the core sits in
         ys, xs = np.nonzero(fl)
-        widths = np.array([fl[row].sum() for row in range(ys.min(), ys.max() + 1)])
-        top = float(np.median(widths[:max(2, int(0.4 * len(widths)))]))
-        wide = np.nonzero(widths > max(1.8 * top, top + 6))[0]           # where the glowing top of the candle begins
-        if len(wide):
-            fl[ys.min() + int(wide[0]):] = False
+        base = flame_base(np.array([fl[row].sum() for row in range(ys.min(), ys.max() + 1)]))
+        edge = bool(ys.max() >= H - 3)                                   # its candle is below the plate
+        if base is not None and not edge:
+            fl[ys.min() + base:] = False
         ys, xs = np.nonzero(fl)
-        if len(ys) == 0 or ys.max() - ys.min() < 2 or ys.max() - ys.min() > 90:
+        if len(ys) == 0 or ys.max() - ys.min() < 2 or (ys.max() - ys.min() > 90 and not edge):
             continue
         hf = int(ys.max() - ys.min() + 1)
         tip = (float(xs[ys == ys.min()].mean()), float(ys.min()))
@@ -166,7 +199,8 @@ def find_flames(name, masks, candles):
         yy, xx = int(min(wick[1] + 6, H - 1)), int(wick[0])
         z = float(np.percentile(depth[max(yy - 3, 0):yy + 4, max(xx - 3, 0):xx + 4], 30))
         grow = lambda k: cv2.dilate(fl.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))) > 0
-        f = dict(id=f"f{len(flames) + 1}", wick=wick, tip=tip, owner=owner, mesh=bool(hf >= 6 or owner is not None),
+        f = dict(id=f"f{len(flames) + 1}", wick=wick, tip=tip, owner=owner, edge=edge,
+                 mesh=bool((hf >= 6 or owner is not None) and not forced),
                  area=int(area), world=A.world(K, (W, H), wick[0], wick[1], z).tolist())
         if f["mesh"]:                                            # the flame is its own element
             cut = grow(9)

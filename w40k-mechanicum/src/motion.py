@@ -127,9 +127,6 @@ MAPS = {
         swing("3", "Pendant on its chain", (1260, 0, 1320, 92), [(1292, 60)], (1290, 0), 1.5, 0.6),
         swing("4", "Magnifier arm", (402, 180, 628, 356), [(572, 305), (470, 232)], (409, 207), 0.8, 0.15),
         swing("5", "Lens on the right arm", (1060, 100, 1150, 272), [(1104, 232)], (1135, 118), 2.0, 0.45),
-        spin("6", "Left fan of the card", (833, 484, 955, 574), [(893, 529), (866, 522), (920, 544)], rim="inner"),
-        spin("7", "Right fan of the card", (955, 501, 1079, 593), [(1017, 547), (990, 540), (1046, 560)], rim="inner"),
-        cloth("8", "Velvet drape on its stand", (1314, 64, 1890, 690), [(1600, 300), (1650, 500)], phase=0.2),
         smoke("s1", "Smoke of the candle", at=(470, 420)),
     ],
     "vault": [
@@ -169,7 +166,7 @@ MAPS = {
         smoke("s2", "Smoke of a street candle", at=(1226, 592)),
     ],
     "saint": [
-        priest("1", "The saint", (567, 101, 1015, 761), [(800, 450), (795, 160)], 0.0, head=0.2, turn=5, robe=0),
+        priest("1", "The saint: a statue, only its hands move", (567, 101, 1015, 761), [(800, 450), (795, 160)], 0.0, head=0.2, robe=0),
         carry("1l", "Left hand of the saint", "1", (572, 238, 652, 312), [(604, 275)], hand=(604, 275), lift=1.5),
         carry("1r", "Right hand of the saint", "1", (952, 278, 1022, 348), [(990, 315)], hand=(990, 315), lift=1.5),
         cloth("2", "Banner, left", (1, 1, 169, 568), [(80, 250)], phase=0.0),
@@ -195,9 +192,6 @@ MAPS = {
         smoke("s3", "Smoke of a floor candle, right", at=(1954, 638)),
     ],
     "reliquary": [
-        spin("1", "Turbine of the right shrine", (2105, 180, 2400, 480), [(2251, 329), (2200, 280), (2300, 380)], rim="inner"),
-        spin("2", "Cog with the red gem", (735, 70, 827, 162), [(781, 116)]),
-        spin("3", "Gear between the fans", (770, 236, 840, 306), [(805, 271)]),
         smoke("s1", "Smoke of the censer", at=(1311, 376)),
         spin("5", "Left fan of the card", (535, 222, 785, 472), [(660, 347), (620, 300), (700, 400)], rim="inner"),
         spin("6", "Right fan of the card", (838, 223, 1072, 457), [(955, 340), (915, 300), (995, 385)], rim="inner"),

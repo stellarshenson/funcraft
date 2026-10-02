@@ -7,8 +7,9 @@ every element of the motion map as its own mesh moved by bones. Candle
 flames lean with the room's draft and change their light (src/air.py);
 smoke rises from them, simulated as a gas (src/smoke.py) and placed at the
 wick it comes from; molten streams flow (src/motion.py); status lights
-blink; dust motes float near the lens. 80 frames (4 s at 50 ms), an exact
-loop.
+blink; dust motes float near the lens; a scene may hold a floating
+servo-skull, a painted 3D model with lights of its own (src/servoskull.py).
+80 frames (4 s at 50 ms), an exact loop.
 
     blender -b -P src/scenes.py -- choir sources     # wip/scene3d/choir_sources.json for src/smoke.py
     blender -b -P src/scenes.py -- choir preview     # one still, wip/preview/scene-choir.png
@@ -27,7 +28,14 @@ RES = (1520, 480)
 CLOCKS, MOVERS, PLATES = [], [], []
 
 # halo: (u, v, radius) of a gold halo a glint sweeps round once per loop
-SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10))}
+# skull: a floating servo-skull. px, depth: where it is (plate pixel, metres); height in metres; yaw: its face
+#        turned so many degrees to the camera's right; key, rim: its warm light and the cold light behind it,
+#        each (plate pixel, depth, colour, watts); ambient: the weak light from all round
+SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10)),
+          "forge": dict(skull=dict(px=(790, 235), depth=3.3, height=0.36, yaw=22,
+                                   key=((965, 345), 3.05, (1.0, 0.6, 0.28), 7.0),      # the lantern
+                                   rim=((700, 110), 4.3, (0.4, 0.58, 1.0), 25.0),      # the night window
+                                   ambient=(0.012, 0.017, 0.026)))}
 
 
 def pixels(img):
@@ -109,7 +117,8 @@ def plate_masks(img, conf):
     r, g, b = p[..., 0], p[..., 1], p[..., 2]
     lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
     led = ((g > 0.45) & (g > r + 0.2) & (g > b + 0.1)).astype(np.float32)
-    led = led * (blur(led, 12) < 0.35)           # small lights only: a screen or a beam of green light stays whole
+    big = (blur(led, 6) >= 0.25).astype(np.float32)   # more than 42 green pixels in a 13 px square: no status light
+    led = led * (blur(big, 8) < 1e-3)            # small lights only: a screen, a beam, a pair of glowing eyes stays whole
     led = np.clip(blur(led, 1) * 2, 0, 1)
     glow = blur(p ** 2.2, 40)                    # what lights the smoke from behind
     halo = None
@@ -211,7 +220,7 @@ def plumes(name, group, glow):
         back.inputs[1].default_value = (1.6, 1.65, 1.8)
         back.inputs[2].default_value = (0.10, 0.105, 0.115)
         near = X.new("ShaderNodeVectorMath", operation="SCALE")            # the flames near it
-        near.inputs[0].default_value = (1.0, 0.72, 0.45)
+        near.inputs[0].default_value = (0.5, 0.36, 0.22)             # half the backlight's weight: no white clumps over a flame
         X.L.new(X.new("ShaderNodeGroup", node_tree=group).outputs["Glow"], near.inputs["Scale"])
         lit = X.new("ShaderNodeVectorMath", operation="ADD")
         X.L.new(back.outputs[0], lit.inputs[0])
@@ -279,6 +288,14 @@ def build(name):
     s = bpy.context.scene
     s.world = bpy.data.worlds.new("world")
     s.world.color = (0, 0, 0)
+    if "skull" in conf:
+        import servoskull
+        W, H = d["depth"].shape[1], d["depth"].shape[0]
+        at = lambda px, z: (((px[0] + 0.5) / W - K[0, 2]) / K[0, 0] * z, z, -((px[1] + 0.5) / H - K[1, 2]) / K[1, 1] * z)
+        sk = conf["skull"]
+        servoskull.build(at(sk["px"], sk["depth"]), sk["height"], sk["yaw"], MOVERS,
+                         *[(at(px, z), colour, watts) for px, z, colour, watts in (sk["key"], sk["rim"])])
+        s.world.color = sk["ambient"]
     s.render.engine = "CYCLES"
     s.cycles.device = "GPU"
     s.cycles.samples = SAMPLES
