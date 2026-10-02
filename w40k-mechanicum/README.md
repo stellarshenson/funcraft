@@ -8,8 +8,14 @@ A looping 19:6 banner GIF of a machine cathedral in the style of the Warhammer 4
 |---|---|
 | `out/01-mechanicum.gif` | the first version: nave, shrines, altar-machine, standing adepts |
 | `out/02-mechanicum.gif` | a praying congregation, Mechanicus priests leading the rite, servitors, embroidered banners and drapes, Latin frieze and purity seals |
+| `out/03-mechanicum-altar.gif` | the altar close-up with two priests and the near servitor |
+| `out/04-forge.gif` … `out/08-hall.gif` | plate scenes: forge, vault, street, saint, hall |
+| `out/09-reliquary.gif` … `out/13-voidshrine.gif` | plate scenes: reliquary, foundry, scriptorium, choir, voidshrine |
+| `out/14-calendar.md` | the Cult Mechanicus calendar: 366 daily entries for the BEHEMOTH welcome page, one mock holy day per date, each teaching one point of machine learning, statistics or data science |
 
-Both are 1140 × 360, 40 frames at 50 ms (2 s loop). The loop is exact: the render also produces the frame at phase 1.0 as `wip/frames/seam-check.png`, which must match `f000.png`. `src/mechanicum.py` builds the latest version; the first survives as its GIF only.
+All are 1140 × 360 at 50 ms per frame. GIFs 01 to 03 have 40 frames (2 s loop) and come from `src/mechanicum.py`; the first survives as its GIF only. GIFs 04 to 13 have 80 frames (4 s loop) and come from generated plates: every moving element is cut out and rigged, flames follow a model of the air and smoke is simulated (`src/build-scene.sh`, `src/scenes.py`). `DESIGN.md` describes both pipelines. The loop is exact: each render also produces the frame at phase 1.0 as `seam-check.png` in its frames folder, which must match `f000.png`.
+
+The calendar is written in `calendar/`, one Markdown file per month. `references/calendar-plan.md` holds the title and the fact of every day, `references/calendar-brief.md` the writing rules. `python3 src/liturgy.py` checks all months and writes `out/14-calendar.md`.
 
 ## Running it
 
@@ -40,6 +46,8 @@ src/emblem.py          renders the medallion for the banners
 src/textures.py        banners, plaque and screen images
 src/preview_models.py  model previews
 src/assemble.py        frames → GIF
+src/liturgy.py         checks the calendar, joins the months
+calendar/              the Cult Mechanicus calendar, one file per month
 in/models/originals/   downloads exactly as received, each with SOURCE.txt
 resources/assets/      generated textures in use
 references/            the look to follow: reference images and links
