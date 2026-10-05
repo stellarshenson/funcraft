@@ -11,7 +11,7 @@ Working examples to copy from:
 
 | Page | Build | Template | Has scripts |
 |---|---|---|---|
-| `w40k-mechanicum/out/15-sermon.html`, 7.1 MB | `src/sermon.py`, `make sermon` | `src/sermon.template.html` | yes: data by date, one of seven banners, music, tunes on buttons |
+| `w40k-mechanicum/out/15-sermon/` and `out/15-sermon.zip`, a package of 9.9 MB: `index.html` and files in `resources/` (`design-sermons-html.md`) | `src/sermon.py`, `make sermon` | `src/sermon.template.html` | yes: data by date, one of seven banners, a badge per day, music, tunes on buttons, an image to download |
 | `mech-design/out/06-behemoth-welcome.html`, 0.47 MB | `src/welcome.py`, `make welcome` | `src/welcome.template.html` | no: animated banner, embedded font, type sizes that follow the page width |
 
 ## Build
@@ -21,7 +21,7 @@ Working examples to copy from:
 - Review comments of the lab's HTML viewer are stored in the built file. Fix the template and rebuild; the rebuild removes the comments
 
 ## Size
-- Seven GIFs of 7 MB each made a 64.4 MB page. It crashed the Star Colonel's browser and headless Chrome in the lab viewer. The same page is 2.0 MB now, and 7.1 MB with four audio files that the Star Colonel ordered
+- Seven GIFs of 7 MB each made a 64.4 MB page. It crashed the Star Colonel's browser and headless Chrome in the lab viewer. The same page was 2.0 MB after that, and 13.5 MB as one file with four audio files, 13 seal images and 366 badge images that the Star Colonel ordered. It is a package now, and a visit transfers about 2.1 MB of its 9.9 MB
 - Keep a page under 5 MB. Base64 adds a third to every embedded file
 
 ## Animated images

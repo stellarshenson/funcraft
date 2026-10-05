@@ -12,7 +12,7 @@ A looping 19:6 banner GIF of a machine cathedral in the style of the Warhammer 4
 | `out/04-forge.gif` … `out/08-hall.gif` | plate scenes: forge, vault, street, saint, hall |
 | `out/09-reliquary.gif` … `out/13-voidshrine.gif` | plate scenes: reliquary, foundry, scriptorium, choir, voidshrine |
 | `out/14-calendar.md` | the Cult Mechanicus calendar: 366 daily entries for the BEHEMOTH welcome page, one mock holy day per date, each teaching one point of machine learning, statistics or data science |
-| `out/15-sermon.html` | the sermon of the day: one of seven scene banners, drawn with the day of the year as the seed, over an embroidered cloth; a script in the page shows the calendar entry of today's date, one music file plays once, and three prayer buttons each play a tune. `make sermon` builds it; `SERMON.md` describes the rebuild |
+| `out/15-sermon/`, `out/15-sermon.zip` | the sermon of the day as a package, `index.html` with a `resources` folder: one of seven scene banners, drawn with the day of the year as the seed, over an embroidered cloth; a script shows the calendar entry of today's date with the service badge of the day, one music file plays once, three prayer buttons each play a tune, and a download button gives the sermon with its badge as one image. A reader whose total of prayers reaches a holy number receives a seal and a sermon of `rewards.md`. `make sermon` builds it; `SERMON.md` describes the rebuild and `design-sermons-html.md` the design |
 
 All are 1140 × 360 at 50 ms per frame. GIFs 01 to 03 have 40 frames (2 s loop) and come from `src/mechanicum.py`; the first survives as its GIF only. GIFs 04 to 13 have 80 frames (4 s loop) and come from generated plates: every moving element is cut out and rigged, flames follow a model of the air and smoke is simulated (`src/build-scene.sh`, `src/scenes.py`). `DESIGN.md` describes both pipelines. The loop is exact: each render also produces the frame at phase 1.0 as `seam-check.png` in its frames folder, which must match `f000.png`.
 
@@ -48,7 +48,11 @@ src/textures.py        banners, plaque and screen images
 src/preview_models.py  model previews
 src/assemble.py        frames → GIF
 src/liturgy.py         checks the calendar, joins the months
+src/seals.py           designs the seals of the reward sermons with the image model
+src/badges.py          draws the service badge of every day with the image model
 calendar/              the Cult Mechanicus calendar, one file per month
+rewards.md             the reward sermons of the sermon page, one entry per holy number
+badges.md              what the service badge of every day shows, one line per day
 in/models/originals/   downloads exactly as received, each with SOURCE.txt
 resources/assets/      generated textures in use
 references/            the look to follow: reference images and links

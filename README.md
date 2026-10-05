@@ -40,7 +40,7 @@ A machine cathedral in the style of the Adeptus Mechanicus, made with two pipeli
 - **Plate pipeline** - one generated image gets depth from MoGe-2; every element that moves is cut out with SAM 2.1 and becomes its own mesh with bones; flames follow a model of the air and smoke is simulated as a gas
 - **Textures** - embroidery, iron reliefs and stained glass come from Z-Image-Turbo; Latin text is written flat and draped on the surface that carries it
 - **Calendar** - `calendar/` holds 366 short entries, one mock holy day per date, each teaching one point of machine learning, statistics or data science
-- **Sermon page** - `make sermon` builds one HTML file of 7.1 MB that shows the entry of today's date under one of seven banners, plays one music file and has three prayer buttons with a tune each; `SERMON.md` describes the rebuild
+- **Sermon page** - `make sermon` builds a package of 9.9 MB, `index.html` with a `resources` folder and the same files as a zip, that shows the entry of today's date with its service badge under one of seven banners, plays one music file and has three prayer buttons with a tune each. A visit transfers 10 of its 408 files. A download button gives the sermon with its badge as one image. A reader whose total of prayers reaches a holy number receives a seal and one of the 13 reward sermons of `rewards.md`; `SERMON.md` describes the rebuild and `design-sermons-html.md` the design
 
 ## Structure
 
@@ -54,7 +54,7 @@ funcraft/
 │  ├─ README.md  DESIGN.md  Makefile
 │  └─ src/  in/  resources/  wip/  out/
 └─ w40k-mechanicum/
-   ├─ README.md  DESIGN.md  SERMON.md  Makefile
+   ├─ README.md  DESIGN.md  SERMON.md  design-sermons-html.md  rewards.md  badges.md  Makefile
    ├─ calendar/
    └─ src/  in/  resources/  references/  wip/  out/
 ```
