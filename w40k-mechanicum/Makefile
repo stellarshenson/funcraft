@@ -20,7 +20,8 @@ assets:
 previews:
 	$(BLENDER) -b -P src/preview_models.py
 
-# the sermon of the day: a banner and the calendar entry of today's date from calendar/, one self-contained file (SERMON.md)
+# the sermon of the day: a banner and the calendar entry of today's date from calendar/, as a package of index.html, a
+# resources folder and a zip (SERMON.md, design-sermons-html.md)
 sermon:
 	$(PYTHON) src/sermon.py
 

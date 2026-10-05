@@ -94,11 +94,14 @@
     line-height: .85;
     text-shadow: 0 2px 0 rgba(0, 0, 0, .5);
   }
-  .blessing { margin-top: 6px; font-size: .9rem; }
+  .blessing { clear: both; margin-top: 6px; font-size: .9rem; }
+  /* the service badge of the day: an embroidered patch at the right of the sermon text, which flows around it. The
+     badge script gives it the badge of the day together with its size, so the text is laid out once */
+  .badge { float: right; width: auto; height: 112px; margin: 4px 0 4px 16px; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .55)); }
 
   /* the prayer buttons: thin, in one row below the cloth; a button is lit while its tune plays */
   .prayers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .prayers button {
+  .prayers button, .keep {
     flex: 1 1 160px;
     padding: 3px 10px;
     background: var(--velvet-dark);
@@ -108,26 +111,116 @@
     font-size: .8rem;
     font-variant: small-caps;
     letter-spacing: .14em;
+    white-space: nowrap;                  /* a label stays on one line; a button that does not fit moves to the next row */
     cursor: pointer;
   }
   .prayers button:hover { border-color: var(--gold); }
+  /* the holy download button, at the end of the prayer row and on a reward: small, with an arrow and no label. It
+     gives the reader the sermon with its badge as one image */
+  .prayers .keep, .keep { flex: none; border-color: var(--gold); color: var(--bone); }
+  .keep:hover { background: var(--velvet); }
+  .keep svg { display: block; width: 1.15em; height: 1.15em; }
   .prayers button[aria-pressed="true"] { background: var(--velvet); border-color: var(--gold); color: var(--bone); }
 
+  /* the answer of the prayer counter: a strip at the top edge of the window, with a headline and one line of counts.
+     It takes no room in the page, lets every click through and lies above the dimmed page of a reward. A script
+     slides it in and, after a few seconds, out */
+  .heard {
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    right: 0;
+    top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 16px;
+    margin: 0;
+    padding: 10px 16px;
+    background: var(--velvet);
+    border-bottom: 2px solid var(--gold);
+    box-shadow: 0 0 30px 6px rgba(194, 146, 58, .4), 0 8px 26px rgba(0, 0, 0, .8);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  .heard svg { width: 26px; height: 26px; }
+  .heard strong {
+    color: var(--gold);
+    font-size: 1.35rem;
+    font-weight: normal;
+    font-variant: small-caps;
+    letter-spacing: .14em;
+    text-shadow: 0 1px 0 #3a2506, 0 2px 0 rgba(0, 0, 0, .5);
+  }
+  .heard span { color: var(--bone); font-size: 1.05rem; }
+  .heard.failed { background: var(--velvet-dark); border-color: var(--gold-dim); box-shadow: 0 8px 26px rgba(0, 0, 0, .8); }
+  .heard.failed strong { color: var(--bone); }
+
+  /* the reward at a holy number: a patch of cloth with the seal of the number and a sermon for the reader, in the middle of the
+     window and above the page, which it dims. It takes no room in the page; a script fades it in and, at the next
+     click or key press, out */
+  .reward {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(13, 5, 6, .82);        /* the dimmed page: the colour --ink */
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1.2s, visibility 1.2s;
+  }
+  .reward.shown { opacity: 1; visibility: visible; }
+  .reward > div {
+    display: grid;
+    justify-items: center;
+    gap: 5px;
+    max-width: min(480px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 16px 26px 12px;
+    background: var(--velvet-dark);
+    border: 2px dashed var(--gold-dim);
+    box-shadow: 0 0 0 6px var(--velvet-dark), 0 0 0 7px var(--gold-dim), 0 14px 50px 20px rgba(0, 0, 0, .75);
+    text-align: center;
+  }
+  .reward.shown > div { pointer-events: auto; }
+  .reward img { height: 170px; max-width: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6)); }
+  .reward p, .reward h2 { margin: 0; }
+  .reward .rank, .reward .leave { color: var(--gold); font-size: .8rem; font-variant: small-caps; letter-spacing: .14em; overflow-wrap: anywhere; }
+  .reward h2 { color: var(--gold); font-size: 1.25rem; font-weight: normal; letter-spacing: .04em; text-wrap: balance; }
+  .reward .for { font-size: .9rem; font-style: italic; opacity: .85; overflow-wrap: anywhere; }
+  .reward .lesson { font-size: 1rem; line-height: 1.45; text-wrap: balance; }
+  .reward .keep { margin-top: 5px; }
+  .reward .leave { margin-top: 4px; opacity: .6; }
+
+  @media (min-width: 1100px) {
+    .badge { margin-top: -62px; }         /* a wide page has few lines of sermon: the badge reaches up beside the title, so the cloth stays low */
+  }
   @media (max-width: 520px) {
     .cloth { padding: 3px 24px; }
     .sermon { font-size: 1rem; }
+    .badge { height: 92px; margin-left: 12px; }
+    .heard svg:last-child { display: none; }      /* one cog: the second would stand alone in a line */
   }
 </style>
 </head>
 <body>
 <main>
   <!-- the banner script puts the chosen banner here; where scripts are switched off the browser shows the choir -->
-  <div class="banner"><noscript><img src="data:image/avif;base64,{{BANNER}}" alt="A scene of the Cult Mechanicus"></noscript></div>
+  <div class="banner"><noscript><img src="resources/banners/{{BANNER}}.avif" alt="A scene of the Cult Mechanicus"></noscript></div>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="cog" viewBox="0 0 34 34">
       <circle cx="17" cy="17" r="12" fill="none" stroke="#c2923a" stroke-width="6" stroke-dasharray="4.7 4.7"/>
       <circle cx="17" cy="17" r="8.5" fill="#2e0b09" stroke="#c2923a" stroke-width="1.5" stroke-dasharray="2 1.5"/>
       <circle cx="17" cy="17" r="2.6" fill="#c2923a"/>
+    </symbol>
+    <symbol id="down" viewBox="0 0 12 12">
+      <path d="M6 1v7.5M2.8 5.5 6 8.7l3.2-3.2M1.5 11h9" fill="none" stroke="currentColor" stroke-width="1.6"/>
     </symbol>
     <filter id="rough" x="-10%" y="-40%" width="120%" height="180%">
       <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="noise"/>
@@ -144,6 +237,8 @@
     <p class="day" id="day">Sermon of the Day</p>
     <h1 id="title">The cogitator sleeps</h1>
     <p class="invocation" id="invocation"></p>
+    <!-- the badge script puts the service badge of the day here; where scripts are switched off it stays hidden -->
+    <img class="badge" id="badge" alt="The service badge of the day" hidden>
     <p class="sermon" id="sermon">This page chooses the sermon with a script. Scripts are switched off here, so no sermon can be chosen.</p>
     <p class="blessing" id="blessing"></p>
     <div class="band" style="margin:8px 12px 15px"></div>
@@ -151,12 +246,25 @@
   <!-- the prayer script puts one button per prayer here; where scripts are switched off there are no buttons -->
   <div class="prayers"></div>
 </main>
-<!-- the music: one file inside the page, without controls, played once. It starts by itself where the browser allows sound;
+<!-- the answer of the prayer counter to a prayer: the prayer script writes the headline and the counts into it -->
+<p class="heard" id="heard" role="status"><svg aria-hidden="true"><use href="#cog"/></svg><strong></strong><span></span><svg aria-hidden="true"><use href="#cog"/></svg></p>
+<!-- the reward at a holy number of prayers: the prayer script puts the seal, the rank and the sermon into it -->
+<div class="reward" id="reward" role="status">
+  <div>
+    <img alt="">
+    <p class="rank"></p>
+    <h2></h2>
+    <p class="for"></p>
+    <p class="lesson"></p>
+    <button type="button" class="keep" title="Holy Download" aria-label="Holy Download"><svg aria-hidden="true"><use href="#down"/></svg></button>
+    <p class="leave">Click or press a key to return to the forge</p>
+  </div>
+</div>
+<!-- the music: one file of the package, without controls, played once. It starts by itself where the browser allows sound;
      elsewhere the music script starts it on the first click or key press of the reader -->
-<audio id="music" autoplay src="data:audio/mpeg;base64,{{MUSIC}}"></audio>
-<script>
-  // one store per month, from the entries of calendar/: the rows [title, context] of its days as JSON, deflated, in base64
-  const SERMONS = {{SERMONS}};
+<audio id="music" autoplay src="resources/music.mp3"></audio>
+<!-- the build writes every script block to the file resources/<data-name>.js and leaves its address here -->
+<script data-name="sermon">
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
                   "November", "December"];
   const INVOCATIONS = [
@@ -186,10 +294,11 @@
   const year = now.getFullYear();
   const number = Math.round((Date.UTC(year, month - 1, date) - Date.UTC(year, 0, 1)) / 864e5) + 1;      // day of the year
 
-  // inflates the store of one month only and shows the row of the day
+  // one file per month, from the entries of calendar/: the rows [title, context] of its days as JSON, gzipped.
+  // Gets the file of the month of the day only, inflates it and shows the row of the day
   async function show() {
-    const packed = Uint8Array.from(atob(SERMONS[month - 1]), c => c.charCodeAt(0));
-    const rows = await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream("deflate"))).json();
+    const packed = await fetch(`resources/sermons/${String(month).padStart(2, "0")}.json.gz`);
+    const rows = await new Response(packed.body.pipeThrough(new DecompressionStream("gzip"))).json();
     const row = rows[date - 1];
     if (!row) return;
     const text = row[1].endsWith(".") ? row[1] : row[1] + ".";
@@ -201,12 +310,12 @@
     document.getElementById("blessing").textContent = BLESSINGS[(number * 3) % BLESSINGS.length];
     document.title = row[0] + " - Sermon of the Day";
   }
-  if (SERMONS[month - 1]) show();
+  if (month >= 1 && month <= 12) show();
 </script>
-<script>
+<script data-name="banner">
   // a script of its own, so that the sermon shows even where the banners fail.
-  // One store per banner: an animated AVIF in base64. The day chooses one, and only that one is given to the
-  // browser to decode
+  // One file per banner, resources/banners/<name>.avif: an animated AVIF. The day chooses one, and the browser gets
+  // only that one
   const BANNERS = {{BANNERS}};
 
   // one number in [0, 1) from a seed (the generator mulberry32)
@@ -220,10 +329,10 @@
   // the seed is the day of the year, so every reader sees the same banner on the same day
   const banner = new Image();
   banner.alt = "A scene of the Cult Mechanicus";
-  banner.src = "data:image/avif;base64," + BANNERS[Math.floor(draw(number) * BANNERS.length)];
+  banner.src = "resources/banners/" + BANNERS[Math.floor(draw(number) * BANNERS.length)] + ".avif";
   document.querySelector(".banner").append(banner);
 </script>
-<script>
+<script data-name="music">
   // a script of its own. A browser blocks sound before the first action of the reader on the page:
   // then the first click or key press starts the music
   const music = document.getElementById("music");
@@ -241,12 +350,97 @@
     if (music.paused) music.play();
   });
 </script>
-<script>
-  // a script of its own: one thin button per prayer, [label, tune]. A tune is an mp3 in base64, and the browser
-  // gets it only when its button is pressed. A tune plays over the music and over the other tunes; a second
-  // press of its button stops it
+<script data-name="prayers">
+  // a script of its own: one thin button per prayer, [label, address of the tune, gain]. A tune is an mp3 file, and
+  // the browser gets it only when its button is pressed. A tune plays over the music and over the other tunes; a
+  // second press of its button stops it
   const PRAYERS = {{PRAYERS}};
-  for (const [label, store] of PRAYERS) {
+
+  // the prayer counter: a service on a host of its own, the host of this page with prayer-counter as its first
+  // label. Every press of a prayer button is reported to it, and the page does not wait for the answer. The call
+  // carries no cookie and no header but Content-Type, so the service knows the reader only by the name in the body.
+  // The address comes from the base address of the page, because in the lab viewer the page address is a blob
+  const home = new URL(document.baseURI);
+  const COUNTER = home.protocol + "//" + home.host.replace(/^[^.]+/, "prayer-counter") + "/api/prayers";
+
+  // the user name where the page can read it: the lab address /user/<name>/ of this page or of a page that frames it
+  function reader() {
+    for (const address of [() => document.baseURI, () => parent.location.pathname, () => top.location.pathname]) {
+      try {
+        const hit = address().match(/\/user\/([^/]+)\//);
+        if (hit) return decodeURIComponent(hit[1]);
+      } catch (error) {}                      // a frame of another host refuses the read
+    }
+    return null;
+  }
+
+  // the holy numbers, from the entries of rewards.md: [prayers of the reader, rank, title of the sermon, the sermon].
+  // The seal of a number is the file resources/seals/<number>.avif. The count of the reader is the total over all prayers. When it reaches one of the
+  // numbers, the reader receives the seal of that number and a sermon of their own
+  const HOLY = {{REWARDS}};
+
+  // shows the answer of the prayer counter in the strip at the top edge of the window: a headline and one line of
+  // text. The strip slides in, stays and slides out in 4.5 s
+  function hear(headline, line, failed = false) {
+    const heard = document.getElementById("heard");
+    heard.querySelector("strong").textContent = headline;
+    heard.querySelector("span").textContent = line;
+    heard.classList.toggle("failed", failed);
+    for (const running of heard.getAnimations()) running.cancel();
+    heard.animate([{ opacity: 0, transform: "translateY(-100%)" }, { opacity: 1, transform: "none", offset: .08 },
+                   { opacity: 1, transform: "none", offset: .86 }, { opacity: 0, transform: "translateY(-100%)" }], 4500);
+  }
+
+  // the reward at a holy number: the seal of the number and a sermon for this reader, over the page. It fades in, stays until
+  // the next click or key press outside its download button, and fades out. Any other count shows nothing
+  function reward(count) {
+    const holy = HOLY.find(([number]) => number === count);
+    if (!holy) return;
+    const seal = document.getElementById("reward");
+    const write = (part, text) => seal.querySelector(part).textContent = text;
+    seal.querySelector("img").src = `resources/seals/${count}.avif`;
+    write(".rank", `Seal of the ${holy[1]} · ${count} · ${count.toString(2)}`);
+    write("h2", holy[2]);
+    write(".for", `For ${reader() || "an unnamed adept"}, who has said ${count} prayers.`);
+    write(".lesson", holy[3]);
+    seal.dataset.number = count;
+    seal.classList.add("shown");
+    const leave = event => {
+      if (event.target.closest?.(".keep")) return;      // the holy download button keeps the reward open
+      removeEventListener("pointerdown", leave);
+      removeEventListener("keydown", leave);
+      seal.classList.remove("shown");
+    };
+    setTimeout(() => { addEventListener("pointerdown", leave); addEventListener("keydown", leave); }, 1200);      // after the fade in
+  }
+  // a look at one reward without the prayers: the address ends with #reward-42
+  const look = location.hash.match(/^#reward-(\d+)$/);
+  if (look) reward(+look[1]);
+
+  // reports one press, writes to the console what was sent and what came back, and shows the answer to a start
+  async function report(prayer, action) {
+    const press = { prayer, action, user: reader(), time: new Date().toISOString(),
+                    day: String(month).padStart(2, "0") + "-" + String(date).padStart(2, "0"),
+                    sermon: document.getElementById("title").textContent };
+    console.info(`[prayer counter] ${press.user || "an unknown reader"} pressed "${prayer}" (${action}): POST ${COUNTER} ${JSON.stringify(press)}`);
+    let counted;
+    try {
+      const answer = await fetch(COUNTER, { method: "POST", headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify(press), credentials: "omit" });
+      if (!answer.ok) throw new Error(`the service answered ${answer.status}`);
+      counted = await answer.json();
+      console.info(`[prayer counter] counted: ${JSON.stringify(counted)}`);
+    } catch (error) {
+      console.info(`[prayer counter] not counted: ${error.message}`);
+    }
+    if (action !== "start") return;           // the service counts only a start
+    if (!counted) return hear("Prayer not recorded", "The noosphere did not answer.", true);
+    // count: the presses of this prayer by all readers; yours: the presses of all prayers by this reader
+    hear("Prayer recorded", `This prayer: ${counted.count} by the congregation` + (counted.yours > 0 ? ` · Your prayers: ${counted.yours}` : ""));
+    setTimeout(reward, 1200, counted.yours);      // the reader sees the strip first; it stays above the reward
+  }
+
+  for (const [label, store, gain] of PRAYERS) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = label;
@@ -254,13 +448,150 @@
     let tune;
     button.addEventListener("click", () => {
       if (!tune) {
-        tune = new Audio("data:audio/mpeg;base64," + store);
+        tune = new Audio(store);
         tune.addEventListener("play", () => button.setAttribute("aria-pressed", "true"));
         tune.addEventListener("pause", () => button.setAttribute("aria-pressed", "false"));      // also at the end of the tune
+        if (gain !== 1) {                     // a gain node, because the volume of an audio element ends at 1
+          const context = new AudioContext();
+          const amplifier = context.createGain();
+          amplifier.gain.value = gain;
+          context.createMediaElementSource(tune).connect(amplifier).connect(context.destination);
+        }
       }
-      if (tune.paused) { tune.currentTime = 0; tune.play(); } else tune.pause();
+      if (tune.paused) { tune.currentTime = 0; tune.play(); report(label, "start"); } else { tune.pause(); report(label, "stop"); }
     });
     document.querySelector(".prayers").append(button);
+  }
+</script>
+<script data-name="badge">
+  // a script of its own: the service badge of the day and the holy download button.
+  // One badge per day, from src/badges.py: the file resources/badges/<mm-dd>.avif. BADGES holds the width and the
+  // height of every badge in one row per month, so the text is laid out before the badge arrives. The browser gets
+  // the badge of the day only
+  const BADGES = {{BADGES}};
+  const patch = BADGES[month - 1]?.[date - 1];
+  const today = String(month).padStart(2, "0") + "-" + String(date).padStart(2, "0");
+  const badge = document.getElementById("badge");
+  if (patch) {
+    [badge.width, badge.height] = patch;
+    badge.src = `resources/badges/${today}.avif`;
+    badge.hidden = false;
+  }
+
+  // the keepsake: a sermon with its badge as one PNG image, 1000 pixels wide, drawn on a canvas in the colours of the
+  // cloth. picture is the address of the badge, head a line above the title, note a line in italics below it, text
+  // the sermon and foot the closing lines
+  async function keepsake(picture, head, title, note, text, foot) {
+    const image = new Image();
+    image.src = picture;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    const pen = canvas.getContext("2d");
+    const serif = 'Georgia, "Times New Roman", serif';
+    const width = 1000, margin = 96, gold = "#c2923a", bone = "#e6d3a8";
+    const tall = Math.min(image.naturalHeight, 300), wide = image.naturalWidth * tall / image.naturalHeight;
+    // every row: text, font, colour, height of a line, room below the row, space between its letters
+    const rows = [[head.toUpperCase(), `21px ${serif}`, gold, 32, 6, "3px"], [title, `46px ${serif}`, gold, 56, 30, "1px"],
+                  [note, `italic 25px ${serif}`, bone, 36, 16, "0px"], [text, `29px ${serif}`, bone, 45, 22, "0px"],
+                  ...foot.map(line => [line.toUpperCase(), `21px ${serif}`, gold, 34, 0, "3px"])];
+    // breaks every row into lines that fit between the margins
+    for (const row of rows) {
+      pen.font = row[1];
+      pen.letterSpacing = row[5];
+      const lines = [""];
+      for (const word of row[0].split(" ")) {
+        const longer = (lines.at(-1) + " " + word).trim();
+        if (pen.measureText(longer).width > width - 2 * margin && lines.at(-1)) lines.push(word); else lines[lines.length - 1] = longer;
+      }
+      row[0] = lines;
+    }
+    canvas.width = width;
+    canvas.height = margin + tall + 34 + rows.reduce((sum, row) => sum + row[0].length * row[3] + row[4], 0) + margin - 20;
+
+    // the cloth, its edge, its seam and its four corner cogs
+    const glow = pen.createRadialGradient(width / 2, 0, 0, width / 2, 0, canvas.height);
+    for (const [stop, colour] of [[0, "#71201c"], [.55, "#581613"], [1, "#2e0b09"]]) glow.addColorStop(stop, colour);
+    pen.fillStyle = glow;
+    pen.fillRect(0, 0, width, canvas.height);
+    pen.strokeStyle = "#7a5a22";
+    pen.lineWidth = 6;
+    pen.strokeRect(12, 12, width - 24, canvas.height - 24);
+    pen.strokeStyle = gold;
+    pen.lineWidth = 3;
+    pen.setLineDash([20, 11]);
+    pen.strokeRect(30, 30, width - 60, canvas.height - 60);
+    for (const [x, y] of [[66, 66], [width - 66, 66], [66, canvas.height - 66], [width - 66, canvas.height - 66]]) {
+      const ring = (radius, line, dash, fill) => {
+        pen.beginPath();
+        pen.arc(x, y, radius, 0, 2 * Math.PI);
+        pen.lineWidth = line;
+        pen.setLineDash(dash);
+        pen.fillStyle = fill;
+        pen.fill();
+        if (line) pen.stroke();
+      };
+      ring(17, 9, [6.68, 6.68], "#2e0b09");      // the teeth: eight dashes around the ring
+      ring(11, 2, [], "#2e0b09");
+      ring(3.6, 0, [], gold);
+    }
+    pen.setLineDash([]);
+
+    // the badge with its shadow, then the rows, each line centred
+    pen.shadowColor = "rgba(0, 0, 0, .6)";
+    pen.shadowBlur = 16;
+    pen.shadowOffsetY = 8;
+    pen.drawImage(image, (width - wide) / 2, margin - 20, wide, tall);
+    pen.shadowColor = "transparent";
+    pen.textAlign = "center";
+    let y = margin - 20 + tall + 34;
+    for (const [lines, font, colour, step, room, spacing] of rows) {
+      pen.font = font;
+      pen.letterSpacing = spacing;
+      pen.fillStyle = colour;
+      for (const line of lines) pen.fillText(line, width / 2, (y += step) - step * .28);
+      if (font.startsWith("46px")) {            // the dashed rule below the title, as on the page
+        pen.strokeStyle = "#7a5a22";
+        pen.lineWidth = 3;
+        pen.setLineDash([12, 8]);
+        pen.beginPath();
+        pen.moveTo(margin, y + 10);
+        pen.lineTo(width - margin, y + 10);
+        pen.stroke();
+      }
+      y += room;
+    }
+    return new Promise(done => canvas.toBlob(done, "image/png"));
+  }
+
+  // gives the image to the reader: as a download, or in a new tab where the frame of the page forbids downloads
+  function hand(image, name) {
+    const address = URL.createObjectURL(image);
+    const rules = frameElement?.sandbox;            // the frame of a page of another host cannot be read
+    if (rules?.length && !rules.contains("allow-downloads")) return void open(address, "_blank");
+    const link = document.createElement("a");
+    link.href = address;
+    link.download = name;
+    link.click();
+  }
+
+  // the button on a reward: the reward sermon with its seal
+  const sealed = document.getElementById("reward");
+  sealed.querySelector(".keep").addEventListener("click", async event => {
+    event.currentTarget.blur();                     // the next key press then leaves the reward
+    const part = name => sealed.querySelector(name).textContent;
+    hand(await keepsake(sealed.querySelector("img").src, part(".rank"), part("h2"), part(".for"), part(".lesson"),
+                        [`Granted on ${now.getDate()} ${MONTHS[now.getMonth()]} ${year}`]), `reward-${sealed.dataset.number}.png`);
+  });
+
+  // the button below the cloth: the sermon of the day with its badge
+  if (patch) {
+    const keep = sealed.querySelector(".keep").cloneNode(true);
+    keep.addEventListener("click", async () => {
+      const part = id => document.getElementById(id).textContent;
+      hand(await keepsake(badge.src, `${date} ${MONTHS[month - 1]} ${year} · Day ${number}`, part("title"), part("invocation"),
+                          part("sermon"), [part("blessing")]), `sermon-${today}.png`);
+    });
+    document.querySelector(".prayers").append(keep);
   }
 </script>
 </body>
