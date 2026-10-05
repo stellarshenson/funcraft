@@ -54,15 +54,13 @@
   }
   .wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px 16px; }
 
-  /* header: the banner, a moving hazard strip, the name */
+  /* header: the banner, a hazard strip, the name. Only the banner moves */
   .banner { display: block; width: 100%; height: auto; aspect-ratio: 1140 / 360; background: #29333f; }
   .hazard {
     height: 8px;
     background: repeating-linear-gradient(-45deg, var(--orange) 0 14px, #141a22 14px 28px);
     background-size: 39.6px 100%;
-    animation: slide 2.4s linear infinite;
   }
-  @keyframes slide { to { background-position: 39.6px 0; } }
 
   .name { padding: 14px 0 0; text-align: center; }
   .kicker {
@@ -84,20 +82,14 @@
   .lead { margin: 8px 0 0; font-size: 1.02rem; color: var(--text); text-wrap: balance; }
   .lead strong { color: var(--orange); letter-spacing: 0.04em; }
 
-  /* three feet, each at its own point of the step, as in the banner */
+  /* three feet at rest */
   .steps { display: flex; justify-content: center; gap: 14px; margin: 8px 0 0; height: 18px; align-items: flex-end; }
   .steps i {
     display: block; width: 34px; height: 8px; border-radius: 2px;
-    animation: stomp 1.5s cubic-bezier(0.3, 0, 0.7, 1) infinite;
   }
-  .steps i:nth-child(1) { background: var(--red); animation-delay: 0s; }
-  .steps i:nth-child(2) { background: var(--steel); animation-delay: 0.5s; }
-  .steps i:nth-child(3) { background: var(--tan); animation-delay: 1s; }
-  @keyframes stomp {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-9px); }
-    66% { transform: translateY(0) scaleY(0.7); }
-  }
+  .steps i:nth-child(1) { background: var(--red); }
+  .steps i:nth-child(2) { background: var(--steel); }
+  .steps i:nth-child(3) { background: var(--tan); }
 
   /* the figures of the workstation */
   .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
@@ -171,9 +163,6 @@
     border-radius: 3px;
     padding: 1px 6px;
     white-space: nowrap;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hazard, .steps i { animation: none; }
   }
 </style>
 </head>
