@@ -136,7 +136,7 @@
 
 **Purpose** - Widening a hyperparameter search range when the best value lies on its edge.
 
-**Context** - When the best hyperparameter value of a search lies on the edge of the range, the true best may lie outside. Widen the range and search again. Search learning rates and regularisation strengths on a logarithmic scale. The acolytes watch the edges.
+**Context** - When the best hyperparameter value of a search lies on the edge of the range, the true best may lie outside. Widen the range and search again. Widen learning rates and regularisation strengths by factors of ten, because they are searched on a logarithmic scale. The acolytes watch the edges.
 
 ## July 24 - Feast of the Augmented Sample
 

@@ -91,7 +91,19 @@ Two ways to fail:
 - **Too heavy** - "In the choir of features a column chanted in millimetres drowns one chanted in kilometres, and the datasmiths anoint every column to a common scale." The reader must translate it. Write: "A column in millimetres outweighs a column in kilometres. Scale the features before any method that relies on distances or on gradient descent. The machine spirit hears only the loudest column."
 - **No cult at all** - an entry with no tech-priest, Magos, machine spirit, heresy or other word of the short list. Every entry has at least one
 
-## 5. Limits
+## 5. Internal logic
+
+An entry is one chain of statements: the rite or the fact of the day, the technical point, and what the adept does. Each statement follows from the one before it.
+
+- **One message** - a reader can say in one sentence what the entry tells them to know or to do
+- **Every fact is used** - a number, a date or a piece of cult lore stays only when the technical point needs it. "Sixteen is 2 to the power 4" in an entry about language models is used by nothing, so it is removed
+- **Stated link** - the step from the cult to the technical point is written out. Not "One law forbids thinking machines. So a language model only predicts the next token", but "The cult does not count a language model as a thinking machine, because it only predicts the next token"
+- **True connectives** - so, because, then and therefore stand only where the second statement follows from the first. A date does not cause a method: "Fifth day of the fifth month, so five folds" is a custom of the cult, and it is written as a custom
+- **One point** - a second technical point stays only with its link to the first. Without a link it belongs to another day
+- **Saints** - what the tech-priests do in memory of a saint is what the saint did
+- **Last sentence** - it answers the problem that the entry raised, or names who does the thing. It does not open a new subject
+
+## 6. Limits
 
 - **Correctness** - every technical statement is true as written. Keep the fact of the plan or the source; do not add numbers, version numbers or claims that are not given there. Where a fact holds "often" or "usually", keep that word
 - **People** - no real person. No named Warhammer character: not the Emperor, no primarch, no named magos. The title "Commemoration of Saint Land the Finder" comes from the PDF and stays; its Context speaks of "the Finder" only
@@ -99,7 +111,7 @@ Two ways to fail:
 - **Original text** - no sentence copied from the PDF or from any Games Workshop text
 - **Variety** - no two entries in a month open with the same three words; "The tech-priests" opens at most four entries in a month
 
-## 6. Workstation facts
+## 7. Workstation facts
 
 Use these wherever an entry speaks of the machine. Do not invent others.
 

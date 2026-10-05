@@ -82,7 +82,7 @@
 
 **Purpose** - Estimating pi with random points.
 
-**Context** - In month-day order, March 14 is 3.14, the first digits of pi. Scatter random points in a square, count the share inside the inscribed circle and multiply it by four. This Monte Carlo method converges slowly. Any adept can run it on a cogitator.
+**Context** - In month-day order, March 14 is 3.14, the first digits of pi. To estimate pi, scatter random points in a square, count the share inside the inscribed circle and multiply it by four. This Monte Carlo method converges slowly. Any adept can run it on a cogitator.
 
 ## March 15 - Observance of the Reversed Aggregate
 

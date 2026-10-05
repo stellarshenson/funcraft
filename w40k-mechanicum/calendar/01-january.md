@@ -4,7 +4,7 @@
 
 **Purpose** - Starting the year with a clean and repeatable setup.
 
-**Context** - Cogitators count time from the first second of 1 January 1970, and every training run counts from epoch zero. Start the year the way the tech-priests do: a clean environment, a fresh seed, and the seed written down.
+**Context** - Cogitators count time from the first second of 1 January 1970, and every training run counts from epoch zero. Today the year starts its own count at zero. The tech-priests start it as they start a run: a clean environment, a fresh seed, and the seed written down.
 
 ## January 2 - Rite of the Three Partitions
 

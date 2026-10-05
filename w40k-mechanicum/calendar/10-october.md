@@ -22,7 +22,7 @@
 
 **Purpose** - Remembering what a language model is: a predictor of the next token.
 
-**Context** - Today the tech-priests recite the sixteen laws of the cult, and sixteen is 2 to the power 4. One law forbids thinking machines. So the tech-priests remind everyone that a language model only predicts the next token from the statistics of its training text.
+**Context** - Today the tech-priests recite the sixteen laws of the cult. One law forbids thinking machines. The cult does not count a language model as one, because it only predicts the next token from the statistics of its training text. The tech-priests remind every adept of this today.
 
 ## October 5 - Ascent of the Binaric Living Conduit
 
@@ -34,7 +34,7 @@
 
 **Purpose** - Knowing that a model only writes the tool call.
 
-**Context** - When a language model calls a tool, it only writes a request: a tool name and arguments. Your code performs the call. Validate the arguments first, and let the model call a calculator for arithmetic. The Magos trusts no unchecked request.
+**Context** - When a language model calls a tool, it only writes a request: a tool name and arguments. Your code performs the call, so validate the arguments in your code first. The Magos trusts no unchecked request. For arithmetic, give the model a calculator: it computes, and the model only predicts.
 
 ## October 7 - Vigil of the Collider
 
@@ -46,7 +46,7 @@
 
 **Purpose** - Measuring feature importance by shuffling a feature.
 
-**Context** - Permutation importance: shuffle the values of one feature in the validation data and measure how far the score falls. When one of two correlated features is shuffled, the other still gives the model similar information, so each can look unimportant. Acolytes shuffle one column at a time.
+**Context** - Permutation importance: shuffle the values of one feature in the validation data and measure how far the score falls. When one of two correlated features is shuffled, the other still gives the model similar information, so each can look unimportant. Acolytes judge no feature by this score alone.
 
 ## October 9 - Commemoration of Saint Permuta the Shuffler
 
@@ -70,7 +70,7 @@
 
 **Purpose** - Expecting fault-free months by chance alone.
 
-**Context** - Counts of rare independent events in a fixed interval follow the Poisson distribution, whose variance equals its mean. A servitor that faults twice a month on average will pass about one month in seven with no fault at all, by chance alone.
+**Context** - Counts of rare independent events in a fixed interval follow the Poisson distribution. Its variance equals its mean, so counts with a small mean scatter widely around it. A servitor that faults twice a month on average will pass about one month in seven with no fault at all, by chance alone.
 
 ## October 13 - Vigil of the Judging Model
 

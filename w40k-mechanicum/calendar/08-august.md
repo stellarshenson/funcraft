@@ -28,7 +28,7 @@
 
 **Purpose** - Remembering the saint of random search.
 
-**Context** - Saint Hypera sampled her hyperparameters at random instead of on a grid, and so tried many more distinct values of the few that mattered. In her memory the tech-priests search the learning rate on a logarithmic scale.
+**Context** - Saint Hypera sampled her hyperparameters at random instead of on a grid, and so tried many more distinct values of the few that mattered. She sampled the learning rate on a logarithmic scale, so every order of magnitude was tried equally often. In her memory the tech-priests search as she did.
 
 ## August 6 - Observance of the Sparse Weight
 

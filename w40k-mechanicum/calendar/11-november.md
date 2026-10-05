@@ -64,7 +64,7 @@
 
 **Purpose** - Reading 1111 as binary and as hexadecimal.
 
-**Context** - The date written 1111 and read as binary is fifteen, F in hexadecimal. That is four bits, all set to 1. Two hexadecimal digits write one byte. The cogitator celebrates this feast with a binary chant.
+**Context** - The date written 1111 and read as binary is fifteen, F in hexadecimal. One hexadecimal digit writes four bits, and here all four are set to 1. A byte has eight bits, so two hexadecimal digits write one byte. The cogitator celebrates this feast with a binary chant.
 
 ## November 12 - Commemoration of Saint Steadia the Stationary
 
@@ -136,7 +136,7 @@
 
 **Purpose** - Remembering how memoisation speeds up a naive recursion.
 
-**Context** - The date 11-23 gives 1, 1, 2, 3: each term is the sum of the two before it. Naive recursion makes the work grow exponentially. Store each term after it is computed (memoisation) and the work grows linearly. The cogitator keeps what it computed.
+**Context** - The date 11-23 gives 1, 1, 2, 3: each term is the sum of the two before it. A function that calls itself for both earlier terms computes the same terms many times, so its work grows exponentially. Let the cogitator store each term once it is computed (memoisation), and the work grows linearly.
 
 ## November 24 - Vigil of the Curved Bowl
 

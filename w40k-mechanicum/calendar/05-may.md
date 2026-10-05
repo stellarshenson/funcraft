@@ -28,7 +28,7 @@
 
 **Purpose** - Cross-validating with five folds.
 
-**Context** - Fifth day of the fifth month, so five folds. Train five times, each time holding out a different fifth of the data. Report the mean and the spread of the five scores, not only the best one. The adepts report all five.
+**Context** - On the fifth day of the fifth month the adepts honour cross-validation with five folds. Train five times, each time holding out a different fifth of the data. Report the mean and the spread of the five scores, not only the best one.
 
 ## May 6 - Commemoration of Saint Isotropa the Even-Spread
 
