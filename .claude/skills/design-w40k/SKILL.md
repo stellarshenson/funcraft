@@ -1,6 +1,6 @@
 ---
 name: design-w40k
-description: Art direction and asset recipes for Warhammer 40,000 Adeptus Mechanicus scenes in the funcraft banners (w40k-mechanicum) - the grimdark gothic grade, distressed materials, shiny gold against absorbent crimson velvet, embroidered banners and altar cloths, the Cog Mechanicum, purity seals and Latin, figurative stained glass, candlelit shadowplay, figures painted by part, textures generated with Z-Image-Turbo and reference images turned into 3D with MoGe-2. Use when building, dressing, texturing, lighting or reviewing any W40k, Mechanicus or techno-gothic scene, when a render looks clean, flat, pale, washed out, plastic, waxy or "not W40k", or when asked for embroidery, drapes, banners, seals, Latin, stained glass, skulls, cogs, servitors, tech-priests or "more detail".
+description: Art direction and asset recipes for Warhammer 40,000 Adeptus Mechanicus scenes in the funcraft banners (w40k-mechanicum, mech-design) - the grimdark gothic grade, distressed materials, shiny gold against absorbent crimson velvet, embroidered banners and altar cloths, the Cog Mechanicum, purity seals and Latin, figurative stained glass, candlelit shadowplay, figures painted by part, BattleMechs in household livery with ornament on every armour plate, holy cloth banners with tassels and enamel sigils, textures generated with Z-Image-Turbo and reference images turned into 3D with MoGe-2. Use when building, dressing, texturing, lighting or reviewing any W40k, Mechanicus or techno-gothic scene, when a render looks clean, flat, pale, washed out, plastic, waxy or "not W40k", or when asked for embroidery, drapes, banners, seals, sigils, heraldry, livery, holy cloth, Latin, stained glass, skulls, cogs, servitors, tech-priests or "more detail".
 ---
 
 # Design W40k
@@ -68,6 +68,22 @@ Text placed in image space reads as pasted: the Star Colonel rejected a straight
 - A servo-skull is the model (`servo_skull` in `src/models.py`), painted by piece and lit (`src/servoskull.py`), never a skull painted into the plate by the image model: that gave a plain skull with a red eye, "not a proper servo-skull"
 - A statue stays still: no head turn on the saint. A calm place (the forge) keeps its fans and drapes still
 
+## Mechs in livery
+BattleMechs as war engines of a knightly household of the Cult Mechanicus: `../mech-design/`, its `PROCESSION.md` section 6. Walk, rig and joints: `design-mech`.
+
+- **Household** - three enamels: Mars red (0.20, 0.012, 0.009 linear), black, bone (0.44, 0.38, 0.27); each chassis is led by another one, gold trims on all. "Think of imperial knights insignia"
+- **Ornament by plate size** (radius of the largest circle in the plate): under 7 cm a dark seam line; from 7 cm a steel band with rivets; from 18 cm a raised gold trim and an engraved field; from 24 cm a gold emblem (60 %), a halved field (16 %) or warning stripes (8 %); from 36 cm a cog-tooth border, an emblem and a scroll with a motto
+- Trim, band and seam follow the plate's real outline at a constant distance, so they read as part of the model
+- **Engraving** - a damask of quatrefoils with skulls, a filigree of vines: tone on tone on red and bone, gold inlay on black
+- **Emblems** - cog with skull (on every centre-line plate), skull in laurels, winged skull, cog-axe and staff, chalice with flames, winged hourglass, fleur-de-lys, wax seal. A generated eagle had one head, the Imperial eagle has two - not used
+- **Holy cloth** between the legs - crimson velvet about 1 m wide, forked end, golden tassels (kutasy) at the lower corners. Draw the layout exactly: a cog wheel that holds the house mark on a disc parted as the Machina Opus (left half bone on red, right half red on bone), mottos in type (PER CALCULUM AD ASTRA), the name in binary cant, the cog with the skull, a border of cog teeth and beads. A plain two-colour cloth "has nothing on it"
+- The image model paints the velvet alone (tone-on-tone cog damask); use only its brightness on the household red, so the cloth keeps one red. Asked to repaint the whole layout it wrote FER for PER at strength 0.30 and painted a skull over the mark at 0.55
+- Thread: ridges that follow each outline, a darker cord at the edges; bone thread is not metal (`../mech-design/src/procession/clothart.py`)
+- **Sigil badge** (`../mech-design/src/sigil.py`) - the glyph's two inks as enamel, steel wire along every edge, a steel rim so a dark enamel shows on a dark page. Red with bone was chosen over black with red. The house mark in the cog wheel is the house's own Mechanicum sigil
+- **Joints** - a steel hub, bolted flanges, ribs. A toy's snap-on ball is not W40k
+- **Forge deck** - riveted black iron with brass inlays, grates that glow orange and light the legs from below; a skyline of forge towers, cog wheels and chimneys, "very mechanicum-like or holy-terra like"; chimney smoke simulated, dense and slow because it is far; embers; ground fog behind the mechs
+- No smoke leaves the mechs, no halos
+
 ## Reference image to 3D
 - MoGe-2 (`src/img2geometry.py`, venv `.venv-moge`, GPU 1): metric point map, normals, mask, intrinsics, plus a fill layer (depth pushed out from breaks, inpainted colour) for what a moving camera uncovers
 - `src/backdrop.py` builds the textured mesh and a matching camera; from its own viewpoint it reproduces the image, moves up to ~8 cm show clean parallax, 25 cm and more smear
@@ -81,4 +97,4 @@ The Star Colonel asked for less and subtler movement: fans a ninth of a turn per
 - Compare side by side with the reference crop the Star Colonel sent; measure the grade
 - Previews before any animation render
 
-<!-- improved 2026-09-30 | body 0→1187w / 0→66L | benchmark n/a (declined) | via improve-skill -->
+<!-- improved 2026-10-07 | body 1510→2000w / 77→93L | trigger n/a (unrun) | via improve-skill -->
