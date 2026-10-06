@@ -28,7 +28,7 @@ OUT = ROOT / "resources" / "assets" / "badges"
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
 SEEDS = (1, 2, 3)
-SIZE = 240                                 # longer side of a stored badge in pixels: twice its size on the page
+SIZE = 240                                 # longer side of a stored badge in pixels: its size in the downloaded image
 
 LOOK = ("One embroidered cloth patch seen from the front, lying flat, centred, isolated on a pure black background, "
         "the whole patch inside the frame with a black margin around it. A military duty patch of the Adeptus "
@@ -46,7 +46,9 @@ FORMS = {
     "Other": "A tall octagonal badge, a rectangle with cut corners",
 }
 # day: seed of the draft that goes into the page, where the first whole draft is not the best one
-CHOICES = {"01-19": 2, "01-22": 2, "02-24": 3, "03-24": 3}
+CHOICES = {"01-19": 2, "01-22": 2, "02-09": 2, "02-23": 2, "02-24": 2, "02-28": 2, "03-14": 1, "03-24": 3, "05-05": 3,
+           "06-07": 3, "06-21": 2, "07-01": 3, "07-11": 2, "07-30": 3, "07-31": 2, "09-20": 2, "09-25": 2, "10-25": 3,
+           "10-30": 3, "11-08": 2, "11-10": 3, "11-20": 3, "12-07": 2, "12-13": 2}
 
 
 def calendar():

@@ -93,9 +93,9 @@ The styles are one `style` block. The cloth textures and the page icon are SVG i
 
 | Page width | Badge | Prayer row |
 |---|---|---|
-| 1100 px and wider | 112 px high, raised beside the title, so a short sermon does not make the cloth higher | one row |
-| 521 px to 1099 px | 112 px high, at the right of the sermon text, which flows around it | one row |
-| 520 px and narrower | 92 px high, at the right of the sermon text | two rows |
+| 1100 px and wider | 88 px high, raised beside the title, so a short sermon does not make the cloth higher | one row |
+| 521 px to 1099 px | 88 px high, at the right of the sermon text, which flows around it | one row |
+| 520 px and narrower | 72 px high, at the right of the sermon text | two rows |
 
 Where scripts do not run, the page shows the first banner and the text `The cogitator sleeps`, with no sermon, no badge and no buttons.
 
@@ -140,7 +140,7 @@ The banners are the scene animations of the project, reduced for the page.
 
 Every day of the calendar has its own service badge: an embroidered duty patch that shows the subject of the sermon of that day.
 
-- **Format** - AVIF with transparency, 240 px on the longer side, quality 55, about 11 kB each. The page shows a badge 112 px high, so the file has about twice the pixels of the screen
+- **Format** - AVIF with transparency, 240 px on the longer side, quality 55, about 11 kB each. The page shows a badge 88 px high, and the downloaded image draws it at its full size
 - **Design line** - `badges.md` holds one line per day that says what the badge shows. A line names objects only: no text and no exact count above four, because the image model keeps neither
 - **Drawing** - `src/badges.py` gives the line, the outline and the look to the image model Z-Image-Turbo, makes three drafts per day, takes the first draft that shows one whole patch inside the frame, and removes the black ground
 - **Sizes** - `badge.js` holds the width and the height of every badge, because the outlines differ
@@ -210,7 +210,7 @@ The download button gives the reader one PNG image to keep: the sermon with its 
 - **Sermon of the day** - the head line is the date with the year and the day number; the closing line is the blessing
 - **Reward sermon** - the head line is the rank with the number; the line in italics names the reader and the count; the closing line is the date of the grant
 - **File name** - `sermon-<mm-dd>.png` or `reward-<number>.png`
-- **Frame without downloads** - where the frame of the page has a sandbox without `allow-downloads`, the image opens in a new tab, and the reader saves it there
+- **Frame without downloads** - where the frame of the page has a sandbox without `allow-downloads`, the image opens in a new tab, and the reader saves it there. The page opens the tab empty inside the click handler and puts the image into it when the image is drawn: Safari lets a page open a tab only while it handles the click
 
 ## 8. Host requirements
 
@@ -231,8 +231,16 @@ The content policy of the host must allow the following.
 | `media-src` | `'self'` | the music and the prayer tunes |
 | `connect-src` | `'self' https://prayer-counter.<host>` | the month of sermons; the prayer counter |
 
+One policy that holds every row, with the frame rule of the hub:
+
+```
+default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://prayer-counter.<host>; frame-ancestors 'self'
+```
+
+`blob:` in `img-src` is for the downloaded image when it opens in a new tab. Whether Chrome needs it there is not measured.
+
 > [!WARNING]
-> The source of the GalaxaHub welcome handler, read on 2026-10-05, sends packages with `script-src 'none'`. Under that policy the page shows only its fallback text.
+> The source of the GalaxaHub welcome handler, read on 2026-10-05, sends packages with `script-src 'none'`. Under that policy the page shows only its fallback text. The hub in use on that day sent `script-src 'unsafe-inline'` and `media-src data:`, a policy for a page with everything inside one file: it blocked the five scripts and the music.
 
 ## 9. Build
 
@@ -246,7 +254,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 | `rewards.md` and `resources/assets/seal_<number>.png` | sermons into the page, seals as AVIF | `resources/seals/<number>.avif` |
 | mp3 files of `resources/assets/` | copied | `resources/music.mp3`, `resources/prayers/<n>.mp3` |
 | `src/sermon.template.html` | placeholders filled; every script block written to a file | `index.html`, `resources/<name>.js` |
-| the folder `out/15-sermon/` | all files, sorted, deflated | `out/15-sermon.zip` |
+| the files this build wrote | sorted, deflated. A file that JupyterLab adds to the folder, such as a checkpoint copy, is left out | `out/15-sermon.zip` |
 
 - **Clean start** - the build removes the folder of the build before it, so no file of an old build stays in the package
 - **Complete or nothing** - the build stops when a month has a missing day, when `rewards.md` has one number twice, or when a placeholder or an inline script is left in the page
@@ -257,7 +265,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 This section lists the checks that run after a build. Their scripts are in `wip/sermon/`, which is not in git.
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
-- **Page checks** - `test.py` runs 70 checks in headless Chrome at 1440, 720 and 390 px width: the 10 requested files, the badge, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
+- **Page checks** - `test.py` runs 71 checks in headless Chrome at 1440, 720 and 390 px width: the 10 requested files, the badge, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
 - **Lab viewer** - `lab.py` opens `out/15-sermon/index.html` in the HTML viewer of the lab and checks the sermon, the badge and one download
 - **Calendar** - `python3 src/liturgy.py` checks the form of the 366 entries
 
@@ -266,4 +274,4 @@ This section lists the checks that run after a build. Their scripts are in `wip/
 This section lists what is not settled.
 
 - **Reader's total** - the page takes `yours` of the prayer counter as the reader's total over all prayers. The counter answers the count of the pressed prayer, measured on 2026-10-05. Until one of them changes, a reward appears when one prayer alone reaches the number. The counter gives the total as `count` of `GET /api/report?user=<name>`
-- **Hub policy** - the page needs `script-src 'self'` and the prayer counter in `connect-src` from the hub, as section 8 lists
+- **Hub policy** - the policy of section 8 is derived from the files the built package loads. It has not been run on the hub

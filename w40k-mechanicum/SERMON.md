@@ -108,6 +108,7 @@ The page reports every press of a prayer button to the prayer counter, a service
 - **Console** - one line per press, `[prayer counter] <user> pressed "<prayer>" (<action>): POST ...`, then `[prayer counter] counted: ...` or `[prayer counter] not counted: <reason>`
 - **Policy** - the call goes to another host, so the server that sends the page must allow it in its Content-Security-Policy (`connect-src`). The lab allows only its own host: in the lab HTML viewer the browser blocks the call and the console reads `not counted: Failed to fetch`
 - **Not used by the page** - `GET /api/prayers` answers the counts per prayer, `GET /api/report` answers the counts by sermon, prayer, user and date as JSON, with the filter `?user=<name>`, and `POST /api/reset` deletes the counts
+- **Report** - `python3 src/counter.py` reads `GET /api/report` and prints the totals, the prayers of every reader and the prayers of every day as Markdown tables. The command `/prayer-counter` runs it
 
 ### 2.6 Reward sermons changed
 
@@ -150,7 +151,7 @@ Every day has a service badge: an embroidered duty patch at the right of the ser
 - **Choice** - the badge of a day is its first draft that shows one whole patch inside the frame. `picks` writes one sheet per month with the chosen draft of every day and frames in red a day without such a draft. `sheet <month>` shows all drafts of a month. Put the seed of a better draft into `CHOICES`
 - **Apply** - `apply` removes the black ground and writes `resources/assets/badges/<mm-dd>.png`, 240 px on the longer side. Then `make sermon`. The build stops when the badge of a day is missing
 - **Download button** - the small button with the arrow at the end of the prayer row gives the sermon of the day as one PNG image, 1000 px wide: the badge, the date with the year and the day number, the title, the invocation, the sermon and the blessing. The file name is `sermon-<mm-dd>.png`. The same button on a reward gives `reward-<number>.png`
-- **Frame without downloads** - in a frame whose sandbox has no `allow-downloads` the image opens in a new tab, and the reader saves it there
+- **Frame without downloads** - in a frame whose sandbox has no `allow-downloads` the image opens in a new tab, and the reader saves it there. The tab opens empty at the click and gets the image a moment later, because Safari lets a page open a tab only while it handles the click
 
 ### 2.8 Size and quality
 
@@ -171,7 +172,7 @@ With these values a banner is 0.13 MB to 0.26 MB. The same banner is 1.28 MB as 
 This section lists the checks after a build.
 
 - **Build output** - the last line reads `wrote .../out/15-sermon and 15-sermon.zip: 408 files, 9.9 MB, zip 9.8 MB, 366 sermons, 7 banners, 3 prayers, 13 rewards, 366 badges`
-- **Scripted checks** - `wip/sermon/test.py` runs 70 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. The head of each script has its commands. `wip/` is not in git
+- **Scripted checks** - `wip/sermon/test.py` runs 71 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. The head of each script has its commands. `wip/` is not in git
 - **Today** - open `out/15-sermon/index.html` in the HTML viewer of the lab or through a web server. It shows the date, the day number, the title, the sermon and the badge of today. Opened as a local file, the browser blocks the request for the sermons
 - **Any date** - add `#MM-DD` to the address, for example `index.html#02-29`. Reload the page after a change of the address
 - **Banner** - the banner moves. It is the same on every load of one day and differs between days, for example `#10-02` and `#10-03`
@@ -191,4 +192,4 @@ The page needs a browser that shows animated AVIF and has `DecompressionStream`.
 
 ## 4. Publish
 
-The package is complete in both forms. To publish, upload `out/15-sermon.zip` where a package is accepted, or copy the folder `out/15-sermon/` with its `resources` folder over the published copy. `design-sermons-html.md`, section 8, lists what the host must allow. The package contains the music file and the prayer tunes: publish it only where their licences allow that.
+The package is complete in both forms. To publish, upload `out/15-sermon.zip` where a package is accepted, or copy the folder `out/15-sermon/` with its `resources` folder over the published copy. JupyterLab can add `.ipynb_checkpoints` folders to the folder; the zip holds only the files of the build. `design-sermons-html.md`, section 8, lists what the host must allow. The package contains the music file and the prayer tunes: publish it only where their licences allow that.

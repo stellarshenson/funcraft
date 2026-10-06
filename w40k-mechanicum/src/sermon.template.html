@@ -84,8 +84,8 @@
     text-shadow: 0 1px 0 #3a2506, 0 2px 0 rgba(0, 0, 0, .5);
     text-wrap: balance;
   }
-  .invocation { margin: 0 0 6px; text-align: center; font-size: .9rem; font-style: italic; opacity: .85; }
-  .sermon { margin: 0; font-size: 1.05rem; line-height: 1.5; }
+  .invocation { margin: 0 0 11px; text-align: center; font-size: .9rem; font-style: italic; opacity: .85; }
+  .sermon { margin: 0; font-size: 1.08rem; line-height: 1.5; }
   .sermon::first-letter {
     float: left;
     margin: .08em .12em 0 0;
@@ -94,10 +94,10 @@
     line-height: .85;
     text-shadow: 0 2px 0 rgba(0, 0, 0, .5);
   }
-  .blessing { clear: both; margin-top: 6px; font-size: .9rem; }
+  .blessing { clear: both; margin-top: 11px; font-size: .9rem; }
   /* the service badge of the day: an embroidered patch at the right of the sermon text, which flows around it. The
      badge script gives it the badge of the day together with its size, so the text is laid out once */
-  .badge { float: right; width: auto; height: 112px; margin: 4px 0 4px 16px; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .55)); }
+  .badge { float: right; width: auto; height: 88px; margin: 4px 0 4px 16px; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .55)); }
 
   /* the prayer buttons: thin, in one row below the cloth; a button is lit while its tune plays */
   .prayers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -203,8 +203,8 @@
   }
   @media (max-width: 520px) {
     .cloth { padding: 3px 24px; }
-    .sermon { font-size: 1rem; }
-    .badge { height: 92px; margin-left: 12px; }
+    .sermon { font-size: 1.02rem; }
+    .badge { height: 72px; margin-left: 12px; }
     .heard svg:last-child { display: none; }      /* one cog: the second would stand alone in a line */
   }
 </style>
@@ -563,11 +563,18 @@
     return new Promise(done => canvas.toBlob(done, "image/png"));
   }
 
-  // gives the image to the reader: as a download, or in a new tab where the frame of the page forbids downloads
-  function hand(image, name) {
-    const address = URL.createObjectURL(image);
+  // opens the new tab for the image where the frame of the page forbids downloads, as the hub's Welcome frame does.
+  // A click handler calls this before the image is drawn: Safari lets a page open a tab only while it handles the
+  // click, and drawing the image takes longer than that
+  function tab() {
     const rules = frameElement?.sandbox;            // the frame of a page of another host cannot be read
-    if (rules?.length && !rules.contains("allow-downloads")) return void open(address, "_blank");
+    return rules?.length && !rules.contains("allow-downloads") ? open("", "_blank") : null;
+  }
+
+  // gives the image to the reader: in the tab that tab() opened, or else as a download
+  function hand(image, name, place) {
+    const address = URL.createObjectURL(image);
+    if (place) return void place.location.replace(address);
     const link = document.createElement("a");
     link.href = address;
     link.download = name;
@@ -579,8 +586,9 @@
   sealed.querySelector(".keep").addEventListener("click", async event => {
     event.currentTarget.blur();                     // the next key press then leaves the reward
     const part = name => sealed.querySelector(name).textContent;
+    const place = tab();
     hand(await keepsake(sealed.querySelector("img").src, part(".rank"), part("h2"), part(".for"), part(".lesson"),
-                        [`Granted on ${now.getDate()} ${MONTHS[now.getMonth()]} ${year}`]), `reward-${sealed.dataset.number}.png`);
+                        [`Granted on ${now.getDate()} ${MONTHS[now.getMonth()]} ${year}`]), `reward-${sealed.dataset.number}.png`, place);
   });
 
   // the button below the cloth: the sermon of the day with its badge
@@ -588,8 +596,9 @@
     const keep = sealed.querySelector(".keep").cloneNode(true);
     keep.addEventListener("click", async () => {
       const part = id => document.getElementById(id).textContent;
+      const place = tab();
       hand(await keepsake(badge.src, `${date} ${MONTHS[month - 1]} ${year} · Day ${number}`, part("title"), part("invocation"),
-                          part("sermon"), [part("blessing")]), `sermon-${today}.png`);
+                          part("sermon"), [part("blessing")]), `sermon-${today}.png`, place);
     });
     document.querySelector(".prayers").append(keep);
   }

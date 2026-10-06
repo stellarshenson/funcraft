@@ -50,6 +50,7 @@ src/assemble.py        frames → GIF
 src/liturgy.py         checks the calendar, joins the months
 src/seals.py           designs the seals of the reward sermons with the image model
 src/badges.py          draws the service badge of every day with the image model
+src/counter.py         prints a report of the prayers that the prayer counter has counted
 calendar/              the Cult Mechanicus calendar, one file per month
 rewards.md             the reward sermons of the sermon page, one entry per holy number
 badges.md              what the service badge of every day shows, one line per day

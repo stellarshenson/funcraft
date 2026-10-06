@@ -49,6 +49,7 @@ PRAYERS = [                               # the prayer buttons: label, tune and 
     ("Desecration of Flesh", "resources/assets/I made the PERFECT Tech Priest voice from scratch Warhammer 40k.mp3", 0.7),
 ]
 sizes = {}                                # folder of the package: bytes written into it
+written = []                              # the files of the package, as paths inside it
 
 
 def write(name, data):
@@ -58,6 +59,7 @@ def write(name, data):
     path.write_bytes(data)
     folder = name.rpartition("/")[0]
     sizes[folder] = sizes.get(folder, 0) + len(data)
+    written.append(name)
     return name
 
 
@@ -131,11 +133,12 @@ page = re.sub(r'<script data-name="(\w+)">\n(.*?)</script>', script, page, flags
 assert "{{" not in page and "<script>" not in page, "a placeholder or an inline script is left in the page"
 write("index.html", page.encode())
 
-files = sorted(path for path in OUT.rglob("*") if path.is_file())
+# The archive takes the files this build wrote, not the files in the folder: JupyterLab puts checkpoint copies of new
+# files into the folder while the build runs. An archive needs no entry for a folder.
 with zipfile.ZipFile(OUT.with_suffix(".zip"), "w", zipfile.ZIP_DEFLATED) as archive:
-    for path in files:                    # files only: an archive needs no entry for a folder
-        archive.write(path, path.relative_to(OUT).as_posix())
+    for name in sorted(written):
+        archive.write(OUT / name, name)
 print("package:", ", ".join(f"{folder or 'index.html'} {size / 1e6:.2f} MB" for folder, size in sorted(sizes.items())))
-print(f"wrote {OUT} and {OUT.with_suffix('.zip').name}: {len(files)} files, {sum(sizes.values()) / 1e6:.1f} MB,",
+print(f"wrote {OUT} and {OUT.with_suffix('.zip').name}: {len(written)} files, {sum(sizes.values()) / 1e6:.1f} MB,",
       f"zip {OUT.with_suffix('.zip').stat().st_size / 1e6:.1f} MB, {sum(map(len, months))} sermons, {len(BANNERS)} banners,",
       len(prayers), "prayers,", len(rewards), "rewards,", sum(map(len, badges)), "badges")
