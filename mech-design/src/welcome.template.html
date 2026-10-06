@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BEHEMOTH - GalaxaLab</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%230f141b'/%3E%3Crect x='2' y='9' width='3' height='4' fill='%23d8424a'/%3E%3Crect x='6.5' y='6' width='3' height='7' fill='%239db4cc'/%3E%3Crect x='11' y='8' width='3' height='5' fill='%23d6ba93'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='2' fill='%230f141b'/%3E%3Crect x='2' y='9' width='3' height='4' fill='%23e04a3a'/%3E%3Crect x='6.5' y='6' width='3' height='7' fill='%239db4cc'/%3E%3Crect x='11' y='8' width='3' height='5' fill='%23d9cdb0'/%3E%3C/svg%3E">
 <style>
   /* the font of the title, embedded: Orbitron (SIL Open Font License 1.1), reduced to the Latin characters, weights 400 to 900 */
   @font-face {
@@ -12,6 +12,7 @@
     src: url("data:font/woff2;base64,{{FONT}}") format("woff2");
     font-weight: 400 900;
   }
+  /* the dark steel blue of the hangar and its orange hazard colour; Mars red, steel and bone for the three machines and the motifs */
   :root {
     --bg: #0f141b;
     --panel: #171f2a;
@@ -20,9 +21,9 @@
     --text: #e9eef5;
     --muted: #95a3b6;
     --orange: #f28c38;
-    --red: #d8424a;
+    --red: #e04a3a;
     --steel: #9db4cc;
-    --tan: #d6ba93;
+    --bone: #d9cdb0;
     --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
     --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
     --display: "Bahnschrift", "DIN Alternate", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
@@ -54,15 +55,23 @@
   }
   .wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px 16px; }
 
-  /* header: the banner, a hazard strip, the name. Only the banner moves */
+  /* header: the banner, a hazard strip, the crest centred on the strip, the name. Only the banner moves */
   .banner { display: block; width: 100%; height: auto; aspect-ratio: 1140 / 360; background: #29333f; }
   .hazard {
     height: 8px;
     background: repeating-linear-gradient(-45deg, var(--orange) 0 14px, #141a22 14px 28px);
     background-size: 39.6px 100%;
   }
+  /* the wheel of Stellars Tech: a bone cog wheel that holds the two halves of the mark on a disc parted in red and bone. Its
+     centre is on the middle of the hazard strip, 4px over its lower edge: as much of it is over the banner as is under the strip */
+  .crest {
+    --side: clamp(40px, 4.8vw, 54px);
+    display: block; position: relative; width: var(--side); height: auto; aspect-ratio: 1; margin: calc(var(--side) / -2 - 4px) auto -6px;
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
+  }
 
-  .name { padding: 14px 0 0; text-align: center; }
+  /* behind the name, a large faint cog wheel of twenty-four teeth, wider than the title: its two sides show beside the title */
+  .name { padding: 14px 0 0; text-align: center; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%239db4cc' stroke-opacity='0.14'%3E%3Ccircle cx='50' cy='50' r='45' stroke-width='7' stroke-dasharray='5.8905 5.8905'/%3E%3Ccircle cx='50' cy='50' r='39' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='27' stroke-width='1.2'/%3E%3C/svg%3E") center 46% / clamp(327px, 77vw, 636px) no-repeat; }
   .kicker {
     margin: 0;
     font: 600 0.82rem/1 var(--mono);
@@ -70,6 +79,9 @@
     text-transform: uppercase;
     color: var(--orange);
   }
+  /* the marks that open and close a transmission */
+  .kicker::before { content: "+++ "; color: var(--red); }
+  .kicker::after { content: " +++"; color: var(--red); }
   h1 {
     margin: 6px 0 0;
     font: 900 clamp(38px, 9vw, 74px)/0.95 "Orbitron", var(--display);      /* in pixels: the title keeps its size when the root size changes */
@@ -77,7 +89,7 @@
     text-indent: 0.07em;
     text-transform: uppercase;
     color: var(--text);
-    text-shadow: 0 0.035em 0 #5b6f86, 0 0.07em 0 #2b3848, 0 0.22em 0.5em rgba(0, 0, 0, 0.55);
+    text-shadow: 0 0.035em 0 #b3261e, 0 0.07em 0 #5a1612, 0 0.22em 0.5em rgba(0, 0, 0, 0.6);
   }
   .lead { margin: 8px 0 0; font-size: 1.02rem; color: var(--text); text-wrap: balance; }
   .lead strong { color: var(--orange); letter-spacing: 0.04em; }
@@ -89,16 +101,17 @@
   }
   .steps i:nth-child(1) { background: var(--red); }
   .steps i:nth-child(2) { background: var(--steel); }
-  .steps i:nth-child(3) { background: var(--tan); }
+  .steps i:nth-child(3) { background: var(--bone); }
 
   /* the figures of the workstation */
   .figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+  /* the top edge of a tile is a row of steel cog teeth */
   .figures li {
-    padding: 7px 14px;
-    background: var(--panel);
+    padding: 9px 14px 7px;
+    background: repeating-linear-gradient(90deg, var(--steel) 0 8px, transparent 8px 16px) 0 0 / 100% 3px no-repeat, var(--panel);
     border: 1px solid var(--line);
-    border-top: 2px solid var(--orange);
-    border-radius: 4px;
+    border-top: 0;
+    border-radius: 2px;
   }
   .figures b { display: block; font: 800 calc(1.12rem + var(--extra))/1.15 var(--display); letter-spacing: 0.03em; }
   .figures span { color: var(--muted); font-size: 0.9rem; }
@@ -109,7 +122,11 @@
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
-  h2::before { content: ""; display: inline-block; width: 18px; height: 8px; margin-right: 9px; background: var(--orange); }
+  /* a cog wheel of twelve teeth before every heading */
+  h2::before {
+    content: ""; display: inline-block; width: 1.3em; height: 1.3em; margin-right: 0.5em; vertical-align: -0.3em;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239db4cc'%3E%3Ccircle cx='12' cy='12' r='9.5' stroke-width='3.4' stroke-dasharray='2.487 2.487'/%3E%3Ccircle cx='12' cy='12' r='6.6' stroke-width='2.6'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='%239db4cc' stroke='none'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
   .intro { margin: 0 0 6px; color: var(--muted); }
   .intro b { color: var(--orange); }
 
@@ -117,10 +134,13 @@
   .card {
     position: relative;
     padding: 8px 14px;
-    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    background:
+      radial-gradient(circle at right 7px top 7px, #6b8098 0 1.6px, transparent 2.2px),      /* two rivets */
+      radial-gradient(circle at right 7px bottom 7px, #6b8098 0 1.6px, transparent 2.2px),
+      linear-gradient(180deg, var(--panel-2), var(--panel));
     border: 1px solid var(--line);
     border-left: 4px solid var(--c, var(--orange));
-    border-radius: 4px;
+    border-radius: 2px;
   }
   .card h3 { margin: 0; font: 700 1.05rem/1.3 var(--sans); }
   .card p { margin: 0; color: var(--muted); }
@@ -164,13 +184,26 @@
     padding: 1px 6px;
     white-space: nowrap;
   }
+
+  /* the start-up call of a BattleMech, sent as a Mechanicus transmission */
+  .litany {
+    margin: 20px 0 0; text-align: center; text-wrap: balance;
+    font: 600 0.78rem/1.7 var(--mono); letter-spacing: 0.26em; text-transform: uppercase; color: var(--muted);
+  }
+  .litany b { font-weight: inherit; color: var(--red); }
+  /* the cog with the skull closes the page, over the litany */
+  .seal { display: block; width: 56px; height: auto; aspect-ratio: 1; margin: 26px auto 0; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7)); }
+  .seal + .litany { margin-top: 10px; }
+  /* machine cant: AVE OMNISSIAH, one byte per letter */
+  .cant { margin: 6px 0 0; text-align: center; text-wrap: balance; font: 0.68rem/1.6 var(--mono); letter-spacing: 0.12em; color: #4a5c72; }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap" style="padding-bottom:0">
-    <img class="banner" src="{{BANNER}}" alt="Three walking machines in a hangar, under a sign that reads Stellars-Tech BEHEMOTH">
+    <img class="banner" src="{{BANNER}}" alt="Nine walking machines in red, black and bone armour with gold trims, three in front and six behind them, on the deck of a forge, in front of towers and chimneys">
     <div class="hazard" aria-hidden="true"></div>
+    <img class="crest" src="{{CREST}}" alt="" aria-hidden="true">
   </div>
 </header>
 
@@ -203,7 +236,7 @@
       <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>
       <div class="vram"><b>96 GB</b><small>of memory</small></div>
     </article>
-    <article class="card gpu" style="--c: var(--tan)">
+    <article class="card gpu" style="--c: var(--bone)">
       <span class="tag">GPU 2</span>
       <h3>NVIDIA RTX 5000 Ada Generation</h3>
       <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li><li></li></ul>
@@ -219,12 +252,16 @@
       <code>~/workspace/@volumes/shared</code>
       <p>Volumes that you share with other users are mounted here.</p>
     </article>
-    <article class="card vol" style="--c: var(--tan)">
+    <article class="card vol" style="--c: var(--bone)">
       <h3>Personal volumes</h3>
       <code>~/workspace/@volumes/personal</code>
       <p>Volumes that belong to you alone are mounted here.</p>
     </article>
   </div>
+
+  <img class="seal" src="{{SEAL}}" alt="" aria-hidden="true">
+  <p class="litany" aria-hidden="true"><b>+++</b> Reactor online <b>+++</b> Sensors online <b>+++</b> All systems nominal <b>+++</b> Ave Omnissiah <b>+++</b></p>
+  <p class="cant" aria-hidden="true">01000001 01010110 01000101 00100000 01001111 01001101 01001110 01001001 01010011 01010011 01001001 01000001 01001000</p>
 </main>
 </body>
 </html>

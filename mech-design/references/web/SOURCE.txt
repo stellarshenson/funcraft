@@ -1,0 +1,4 @@
+machina-opus.png  https://wh40k.lexicanum.com/mediawiki/images/d/db/Machina_Opus.png
+                  the Machina Opus, the sign of the Adeptus Mechanicus, from the page
+                  https://wh40k.lexicanum.com/wiki/Adeptus_Mechanicus (Lexicanum), fetched 2026-10-06.
+                  Reference for the layout of the crest of the welcome page (src/crest.py). Not embedded in any output.

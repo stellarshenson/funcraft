@@ -36,9 +36,12 @@ them.
 | Mad Cat (Timber Wolf) | `in/models/madcat-timberwolf.stl` | 12.0 | steel blue-grey armour, near-black limbs and feet, oxblood on the front faces of the missile racks | 0.45 |
 | Atlas AS7 | `in/models/atlas-as7-rs.stl` | 13.4 | charcoal hull, oxblood arms and shoulders, bone-white skull face | 0.9 |
 | BattleMaster | `in/models/battlemaster.stl` | 12.8 | sand armour, dark helmet and feet | 0.40 |
+| Marauder | `in/models/marauder.stl`, assembled from a kit by `src/marauder.py` | 12.4 | olive hull and legs, dark arms and feet, oxblood cockpit and cannon | 0.5 |
 
 Heights are in scene units, with the feet on z = 0. The colours, as linear RGB,
-and the body regions that receive them are in `SCHEMES` in `src/paint.py`.
+and the body regions that receive them are in `SCHEMES` in `src/paint.py`; the
+Marauder enters its own scheme and joints from `src/marauder.py`, and it stands
+in banner 10 only (`PROCESSION.md`, section 10).
 
 Every face is painted as one of three classes:
 
@@ -122,6 +125,10 @@ tilted 1.8° down. World +X appears on the left of the image.
 | `out/03-banner-models.gif` | all three chassis in step |
 | `out/04-banner-shake.gif` | the camera tilts 0.1° at every footfall and settles within about five frames, as a decaying cosine (7 Hz, time constant 0.1 s) |
 | `out/05-banner-offset.gif` | as 04, with the Atlas 11 frames and the BattleMaster 21 frames ahead of the Mad Cat in the gait cycle, so the six footfalls per loop are spread across it |
+| `out/07-banner-procession.avif` | the mechs in another livery, on another ground, in front of another backdrop, with the gait offsets and the shake of 05: `PROCESSION.md` |
+| `out/08-banner-procession-hips.avif` | as 07, with the hips rocking by 4.5° in the walk, a march for the Atlas and the BattleMaster and a bird walk for the Mad Cat |
+| `out/09-banner-procession-column.avif` | as 08, with six more mechs in two ranks behind the three, each at its own point in the gait cycle; the camera tilts at the footfalls of the three only |
+| `out/10-banner-procession-marauder.avif` | as 09, with the Marauder in the place of one rear BattleMaster, and cloth banners between the legs of the Marauder and of the front Mad Cat that lean in the wind and swing with every step |
 
 ## Loop rules
 

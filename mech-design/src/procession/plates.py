@@ -1,6 +1,6 @@
 """Backdrop plates of the procession scene: the far world behind the three
 walking mechs, generated with Z-Image-Turbo as the plates of scenes 04 to 13
-are (src/genplates.py, src/gentextures.py).
+of w40k-mechanicum are (src/procession/gen.py).
 
 The scene camera stands 8.6 m above flat ground and looks level along it;
 its horizon is at row 295 of a 2432 x 768 plate. The moving ground covers
@@ -13,21 +13,20 @@ a 2432 x 768 plate with that horizon on row 295. Drafts named <name>x are
 generated 1.5 times larger and reduced, for finer detail.
 
     CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 HF_HUB_OFFLINE=1 \\
-        .venv-moge/bin/python src/procession/plates.py gen all 1 2 3 4     # wip/gen/plate_terra_<name>_<seed>.png
-    .venv-moge/bin/python src/procession/plates.py sheet                   # wip/preview/procession/plates-<name>.jpg
+        ../w40k-mechanicum/.venv-moge/bin/python src/procession/plates.py gen all 1 2 3 4     # wip/gen/plate_terra_<name>_<seed>.png
+    ../w40k-mechanicum/.venv-moge/bin/python src/procession/plates.py sheet                   # wip/preview/procession/plates-<name>.jpg
     CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 HF_HUB_OFFLINE=1 \\
-        .venv-moge/bin/python src/procession/plates.py pick <name> <seed>  # wip/scene3d/terra_<name><seed>.png and .npz
-    .venv-moge/bin/python src/procession/plates.py edit <name><seed>       # wip/scene3d/terra_<name><seed>_fx.npz
+        ../w40k-mechanicum/.venv-moge/bin/python src/procession/plates.py pick <name> <seed>  # wip/scene3d/terra_<name><seed>.png and .npz
+    ../w40k-mechanicum/.venv-moge/bin/python src/procession/plates.py edit <name><seed>       # wip/scene3d/terra_<name><seed>_fx.npz
+    CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 HF_HUB_OFFLINE=1 \\
+        ../w40k-mechanicum/.venv-moge/bin/python src/procession/plates.py desmoke <name><seed> [paint seed]  # wip/scene3d/terra_<name><seed>c.png: the painted smoke out
 """
 import os, sys, glob
 import numpy as np
 from PIL import Image
-HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
-import gentextures as G
+from gen import G, ROOT, PREVIEW
 
 W, H, STRIP, HORIZON = 2432, 768, 336, 295
-PREVIEW = os.path.join(G.ROOT, "wip", "preview", "procession")
 
 FRAME = ("A very wide panorama seen from far away across a vast empty plaza, level with the ground, through a long "
          "lens. Everything stands miles away along the horizon and rises into the sky, with open sky above the "
@@ -70,8 +69,16 @@ PLATES = {
                "a gothic cathedral city, a golden double-headed eagle on the central dome, crimson banners hanging "
                "from the statues' arms, furnace glow at their feet.",
 }
+# drafts named <name>s and <name>w: a low skyline under a tall sky; `pick` cuts the rows of sky it cannot place
+SKY = ("A very wide panorama. The upper two thirds of the picture are open sky: towering banks of smog and smoke lit "
+       "from behind, shafts of light, a few tiny void ships. The skyline is far away, many miles, small in the "
+       "picture, and lies low along the horizon in the lower third: it never reaches the upper half of the picture. "
+       "A narrow strip of empty flat plaza of dark stone slabs lies along the bottom. No people, no vehicles, no "
+       "robots, no text. The distant skyline: ")
 for name, what in PLATES.items():
     G.JOBS[f"plate_terra_{name}"] = (W, STRIP, FRAME + what + " " + STYLE)
+    G.JOBS[f"plate_terra_{name}s"] = (W, 448, SKY + what + " " + STYLE)
+    G.JOBS[f"plate_terra_{name}t"] = (W, 640, SKY + what + " " + STYLE)
     G.JOBS[f"plate_terra_{name}x"] = (W * 3 // 2, STRIP * 3 // 2, FRAME + what + " " + STYLE)
 
 
@@ -104,6 +111,32 @@ def sheet():
         print("sheet", name, [os.path.basename(f) for f in fs])
 
 
+def widen(name, seed, k=0.5, strengths=(0.5, 0.65)):
+    """A draft whose skyline is too tall for the 295 rows above the horizon:
+    reduce it by k, set it in the middle of a strip 2432 wide with its mirror
+    image on both sides, and let the model paint the whole strip again from
+    that start (ZImageImg2ImgPipeline, the prompt of the draft). The mirror
+    images keep sky and ground continuous; the painting turns them into
+    other buildings. Writes wip/gen/plate_terra_<name>o_<seed><n>.png for the
+    n-th strength: a higher strength changes more."""
+    import torch
+    from diffusers import ZImageImg2ImgPipeline
+    src = Image.open(os.path.join(G.GEN, f"plate_terra_{name}_{seed}.png")).convert("RGB")
+    h = int(round(src.height * k / 16)) * 16
+    mid = src.resize((int(round(src.width * h / src.height / 16)) * 16, h), Image.LANCZOS)
+    x0 = (W - mid.width) // 2
+    canvas = Image.new("RGB", (W, h))
+    canvas.paste(mid.transpose(Image.FLIP_LEFT_RIGHT), (x0 - mid.width, 0))
+    canvas.paste(mid.transpose(Image.FLIP_LEFT_RIGHT), (x0 + mid.width, 0))
+    canvas.paste(mid, (x0, 0))
+    pipe = ZImageImg2ImgPipeline.from_pretrained("Tongyi-MAI/Z-Image-Turbo", torch_dtype=torch.bfloat16).to("cuda")
+    for n, st in enumerate(strengths, 1):
+        out = pipe(prompt=G.JOBS[f"plate_terra_{name}"][2], image=canvas, strength=st, width=W, height=h,
+                   num_inference_steps=12, guidance_scale=0.0, generator=torch.Generator("cuda").manual_seed(seed)).images[0]
+        out.save(os.path.join(G.GEN, f"plate_terra_{name}o_{seed}{n}.png"))
+        print("widened", name, seed, st, out.size, flush=True)
+
+
 def pick(name, seed):
     """Measure one strip with MoGe-2 and set it into a 2432 x 768 plate with
     its horizon on row 295: wip/scene3d/terra_<name><seed>.png, and .npz with
@@ -111,7 +144,10 @@ def pick(name, seed):
     normals, all in plate rows, plus the rows the strip fills."""
     import torch
     from moge.model.v2 import MoGeModel
-    strip = np.asarray(Image.open(os.path.join(G.GEN, f"plate_terra_{name}_{seed}.png")).convert("RGB"))
+    strip = Image.open(os.path.join(G.GEN, f"plate_terra_{name}_{seed}.png")).convert("RGB")
+    if strip.width != W:                               # a wide draft: reduced, its skyline is lower and finer
+        strip = strip.resize((W, round(strip.height * W / strip.width)), Image.LANCZOS)
+    strip = np.asarray(strip)
     model = MoGeModel.from_pretrained("Ruicheng/moge-2-vitl-normal").cuda().eval()
     x = torch.from_numpy(strip.astype(np.float32) / 255).permute(2, 0, 1).cuda()
     with torch.no_grad():
@@ -125,11 +161,47 @@ def pick(name, seed):
     plate[r1:] = plate[r1 - 1]                         # ground below: hidden by the moving ground
     depth, mask, normal = np.zeros((H, W), np.float32), np.zeros((H, W), bool), np.zeros((H, W, 3), np.float32)
     depth[r0:r1], mask[r0:r1], normal[r0:r1] = d["points"][r0 + top:r1 + top, :, 2], d["mask"][r0 + top:r1 + top], d["normal"][r0 + top:r1 + top]
-    stem = os.path.join(G.ROOT, "wip", "scene3d", f"terra_{name}{seed}")
+    stem = os.path.join(ROOT, "wip", "scene3d", f"terra_{name}{seed}")
     Image.fromarray(plate).save(stem + ".png")
     np.savez_compressed(stem + ".npz", depth=depth, mask=mask, normal=normal, rows=np.array([r0, r1]))
     print(f"PICK {name} {seed}: horizon at strip row {row:.1f} of {len(strip)}, MoGe field of view {fov:.1f} deg, "
           f"MoGe camera height {height:.2f}; strip fills plate rows {r0} to {r1}; measured {mask.mean() * 100:.0f} % of the plate")
+
+
+# the painted smoke of a plate: for each plume the plate pixel of the chimney's mouth and the columns it fills
+SMOKE = {"forgeto51": [((1320, 100), (1235, 1405)), ((1450, 103), (1365, 1535)), ((1655, 90), (1560, 1750)),
+                       ((2000, 95), (1905, 2095)), ((2305, 88), (2235, 2322)), ((1840, 225), (1812, 1872))]}
+CLEAR = ("A wide evening sky over a far industrial skyline: towering banks of amber and grey smog lit from behind, soft "
+         "haze, shafts of pale light. Only sky and clouds: no smoke columns, no chimneys, no towers, no buildings, no "
+         "ships, no text. Cinematic matte painting, extremely detailed")
+
+
+def desmoke(name, seed=3):
+    """Paint the smoke columns of plate `name` out, with Z-Image-Turbo's
+    inpainting pipeline: painted smoke stands still, and the scene sets
+    simulated smoke over the chimneys (src/procession/chimneys.py). What is
+    painted over is the sky above each mouth in SMOKE, up to the top of the
+    plate (the small far chimney: 80 rows). Writes terra_<name>c.png and a
+    copy of the depth, terra_<name>c.npz, for `edit <name>c`."""
+    import cv2, shutil, torch
+    from diffusers import ZImageInpaintPipeline
+    stem = os.path.join(ROOT, "wip", "scene3d", f"terra_{name}")
+    plate = Image.open(stem + ".png").convert("RGB")
+    rows = 352                                         # the part of the plate that holds the sky, a multiple of 16
+    hole = np.zeros((rows, W), np.uint8)
+    for (x, y), (x0, x1) in SMOKE[name]:
+        hole[(0 if x1 - x0 > 100 else y - 80):y - 3, x0:x1] = 1
+    crop = plate.crop((0, 0, W, rows))
+    pipe = ZImageInpaintPipeline.from_pretrained("Tongyi-MAI/Z-Image-Turbo", torch_dtype=torch.bfloat16).to("cuda")
+    gen = pipe(prompt=CLEAR, image=crop, mask_image=Image.fromarray(hole * 255), strength=1.0, height=rows, width=W,
+               num_inference_steps=9, guidance_scale=0.0, generator=torch.Generator("cuda").manual_seed(seed)).images[0]
+    a = cv2.GaussianBlur(hole.astype(np.float32), (0, 0), 4)[..., None]
+    out = np.asarray(plate).copy()
+    out[:rows] = (np.asarray(crop, np.float32) * (1 - a) + np.asarray(gen, np.float32) * a).astype(np.uint8)
+    Image.fromarray(out).save(stem + "c.png")
+    shutil.copy(stem + ".npz", stem + "c.npz")
+    Image.fromarray(np.concatenate([np.asarray(crop), out[:rows]])[:, 1150:]).save(os.path.join(PREVIEW, f"desmoke-{name}.jpg"), quality=88)
+    print(f"DESMOKE {name}: {hole.mean():.1%} of the sky part painted over")
 
 
 def edit(name):
@@ -149,7 +221,7 @@ def edit(name):
     fire   flames and embers: very bright orange pixels, grown and
            feathered."""
     import cv2
-    stem = os.path.join(G.ROOT, "wip", "scene3d", f"terra_{name}")
+    stem = os.path.join(ROOT, "wip", "scene3d", f"terra_{name}")
     d = np.load(stem + ".npz")
     im = np.asarray(Image.open(stem + ".png").convert("RGB"))
     r0 = int(d["rows"][0])
@@ -197,7 +269,11 @@ if __name__ == "__main__":
             G.generate(f"plate_terra_{n}", tuple(int(a) for a in sys.argv[3:]) or (1, 2, 3, 4))
     elif cmd == "sheet":
         sheet()
+    elif cmd == "widen":
+        widen(sys.argv[2], int(sys.argv[3]))
     elif cmd == "pick":
         pick(sys.argv[2], int(sys.argv[3]))
     elif cmd == "edit":
         edit(sys.argv[2])
+    elif cmd == "desmoke":
+        desmoke(sys.argv[2], *(int(a) for a in sys.argv[3:4]))
