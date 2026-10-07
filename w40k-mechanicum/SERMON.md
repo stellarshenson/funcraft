@@ -1,6 +1,6 @@
 # w40k-mechanicum - Sermon page v2
 
-Status: DRAFT for internal review, 2026-10-05.
+Status: DRAFT for internal review, 2026-10-07.
 
 ## Contents
 
@@ -14,12 +14,13 @@ Status: DRAFT for internal review, 2026-10-05.
   - [2.6 Reward sermons changed](#2.6-Reward-sermons-changed)
   - [2.7 Service badges changed](#2.7-Service-badges-changed)
   - [2.8 Size and quality](#2.8-Size-and-quality)
+  - [2.9 Radio buttons changed](#2.9-Radio-buttons-changed)
 - [3. Check](#3.-Check)
 - [4. Publish](#4.-Publish)
 
 ## 1. Overview
 
-This document describes how to rebuild the sermon page after the sermons, the animations, the music, the prayer buttons, the reward sermons or the service badges change. The page is a package: the folder `out/15-sermon/` with `index.html` and a `resources` folder, and the same files as `out/15-sermon.zip`, 9.9 MB together. It shows a banner animation above the sermon of today's date with the service badge of the day, plays one music file once, and has three prayer buttons that each play a tune and one download button. `design-sermons-html.md` describes the design of the package. One command builds it in about 40 s:
+This document describes how to rebuild the sermon page after the sermons, the animations, the music, the prayer buttons, the radio buttons, the reward sermons or the service badges change. The page is a package: the folder `out/w40k-mechanicum-sermons/` with `index.html` and a `resources` folder, and the same files as `out/w40k-mechanicum-sermons.zip`, 9.9 MB together. It shows a banner animation above the sermon of today's date with the service badge of the day, plays one music file once, and has three prayer buttons that each play a tune, three radio buttons that each play the sound of a YouTube video, and one download button. `design-sermons-html.md` describes the design of the package. One command builds it in about 40 s:
 
 ```
 make sermon
@@ -35,7 +36,8 @@ The build writes every part as files into `resources/`. The page requests a file
 | Prayers | 3 mp3 files of `resources/assets/`, listed in `src/sermon.py` | `resources/prayers/<n>.mp3`, the files as they are | the tune of a button, when the button is pressed |
 | Rewards | `rewards.md`, 13 entries, and 13 seals of `resources/assets/` | the sermons in `resources/prayers.js`; `resources/seals/<number>.avif`, 0.29 MB together | a seal, when its reward is shown |
 | Service badges | `badges.md`, 366 lines, and 366 badges of `resources/assets/badges/` | `resources/badges/<mm-dd>.avif`, 4.06 MB together | the badge of the day |
-| Layout | `src/sermon.template.html` | `index.html` and five scripts `resources/<name>.js` | on every visit |
+| Radios | `RADIOS` in `src/sermon.template.html`, 3 rows | none: `resources/radio.js` holds the names of the videos | nothing of the package: the player and its sound come from YouTube when a radio button is pressed |
+| Layout | `src/sermon.template.html` | `index.html` and six scripts `resources/<name>.js` | on every visit |
 
 `out/` is not in git. The package is rebuilt from the sources, never edited by hand.
 
@@ -75,12 +77,12 @@ The page plays one music file once, without controls. The build copies the file 
 - **Size** - 1.69 MB. The workstation has no mp3 encoder, so the build cannot reduce the file
 - **Start** - a browser allows sound only after the first action of the reader on the page. The music starts on load where the browser allows it, and on the first click or key press elsewhere
 - **Once** - the audio element has no `loop` attribute. Add `loop` in `src/sermon.template.html` to repeat the music without end
-- **Again** - a click on the sermon, the red cloth with the title and the text, starts the music from the beginning when it has ended. While the music plays, the click changes nothing
+- **Again** - a click on the sermon, the red cloth with the title and the text, starts the music from the beginning when it has ended, and continues it after a radio has stopped it. While the music or a radio plays, the click changes nothing
 - **Licence** - the package contains the whole music file. Use a file whose licence allows the copy
 
 ### 2.4 Prayer buttons changed
 
-The page shows one thin button per prayer below the sermon. A button plays its tune over the music and over the other tunes.
+The page shows one thin button per prayer below the sermon. A button plays its tune over the music, over a radio and over the other tunes.
 
 - **List** - `PRAYERS` in `src/sermon.py` holds one row per button: the label, the path of the tune below the project folder and the gain
 - **Change** - edit, add or remove a row, then `make sermon`. The buttons share one row and wrap on a narrow page
@@ -167,13 +169,34 @@ Constants in `src/sermon.py` set the size of the images. The build prints the si
 
 With these values a banner is 0.13 MB to 0.26 MB. The same banner is 1.28 MB as animated WebP and about 7 MB as GIF.
 
+### 2.9 Radio buttons changed
+
+The page shows one thin button per radio in a row below the prayer buttons. A radio is the sound of a YouTube video: the package holds no file of it.
+
+| Button | Video | Start | Title on YouTube | Channel | Length |
+|---|---|---:|---|---|---:|
+| Holy Mars Radio | [`VMs_p5EWri4`](https://www.youtube.com/watch?v=VMs_p5EWri4) | 34 s | Holy Mars, ambient choir and organ music | Domains of Ambience | 3 h |
+| Holy Terra Radio | [`k5xDyG72wHE`](https://www.youtube.com/watch?v=k5xDyG72wHE) | 0 s | Holy Terra, choir and piano music | Domains of Ambience | 3 h |
+| Forge Radio | [`M3D9TYNRXwY`](https://www.youtube.com/watch?v=M3D9TYNRXwY) | 0 s | The Binaric Shroudpsalm - Adeptus Mechanicus, 22 tracks | OmniVox40k | 1 h |
+
+- **List** - `RADIOS` in the script block `radio` of `src/sermon.template.html` holds one row per button: the label, the name of the video and the second at which it starts. The name is the part after `v=` in the address of the video
+- **Change** - edit, add or remove a row, then `make sermon`
+- **Source** - the music stays on YouTube, and the table links the video of each radio. `resources/assets/music/` holds mp3 copies of such videos, 293 MiB together. They are not in git, which ignores `resources/` and every sound file, and the package does not use them
+- **Press** - a press starts the radio and lights the button, and the music of the page stops. A press of another radio button replaces the first radio. A second press of the lit button stops the radio
+- **After a radio** - the music of the page stays silent. A click on the sermon continues it
+- **Player** - the player of YouTube, in a frame that the reader does not see. It repeats the video without end. `design-sermons-html.md`, section 7.5, describes it
+- **Host** - the host that sends the page must allow the frame in its Content-Security-Policy: `frame-src https://www.youtube-nocookie.com`. Where it does not, as in the lab HTML viewer, the button goes out at once and the music plays on
+- **Lab viewer** - no radio plays in the HTML viewer of the lab, with any policy: the viewer shows the page from a `blob:` address, which sends no referrer, and YouTube refuses such a player. The radios need the page at an `http` or `https` address, as on the hub
+- **New video** - the owner of a video can forbid its use in a player on another page. Such a video leaves the button lit without sound. `wip/sermon/radio.py` checks that every radio plays; add the new row to its list `RADIOS`
+- **Terms** - the rules of YouTube for embedded players ask for a visible player of at least 200 px width and height, and YouTube can play advertisements in the player
+
 ## 3. Check
 
 This section lists the checks after a build.
 
-- **Build output** - the last line reads `wrote .../out/15-sermon and 15-sermon.zip: 408 files, 9.9 MB, zip 9.8 MB, 366 sermons, 7 banners, 3 prayers, 13 rewards, 366 badges`
-- **Scripted checks** - `wip/sermon/test.py` runs 71 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. The head of each script has its commands. `wip/` is not in git
-- **Today** - open `out/15-sermon/index.html` in the HTML viewer of the lab or through a web server. It shows the date, the day number, the title, the sermon and the badge of today. Opened as a local file, the browser blocks the request for the sermons
+- **Build output** - the last line reads `wrote .../out/w40k-mechanicum-sermons and w40k-mechanicum-sermons.zip: 409 files, 9.9 MB, zip 9.8 MB, 366 sermons, 7 banners, 3 prayers, 13 rewards, 366 badges`
+- **Scripted checks** - `wip/sermon/test.py` runs 74 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. `wip/sermon/radio.py` runs 19 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. The head of each script has its commands. `wip/` is not in git
+- **Today** - open `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab or through a web server. It shows the date, the day number, the title, the sermon and the badge of today. Opened as a local file, the browser blocks the request for the sermons
 - **Any date** - add `#MM-DD` to the address, for example `index.html#02-29`. Reload the page after a change of the address
 - **Banner** - the banner moves. It is the same on every load of one day and differs between days, for example `#10-02` and `#10-03`
 - **Badge** - the badge of the day stands at the right of the sermon text, and nothing moves when it arrives
@@ -182,8 +205,9 @@ This section lists the checks after a build.
 - **Answer strip** - after a press that starts a tune, a strip slides in at the top edge of the window and slides out after 4.5 s. Nothing on the page moves when it appears
 - **Reward** - open the page with `#reward-42` at the end of the address. The patch with the seal and the sermon fades in; a click or a key press fades it out
 - **Prayer buttons** - three buttons stand below the sermon, and the small download button at the end of their row. A press starts the tune and lights the button; a second press stops it; the light goes out at the end of the tune
+- **Radio buttons** - three buttons stand in a row below the prayer buttons. A press lights the button, stops the music and starts the sound of the radio within a few seconds; a second press stops the radio
 - **Download** - a press of the download button saves `sermon-<mm-dd>.png`. On a reward it saves `reward-<number>.png`, and the reward stays open
-- **Lab viewer** - in the HTML viewer of the lab press `Trust HTML`. Before that the viewer runs no scripts. After it the sermon shows and the music starts on load. A press of a prayer button shows the failed-call strip there, because the lab blocks the call
+- **Lab viewer** - in the HTML viewer of the lab press `Trust HTML`. Before that the viewer runs no scripts. After it the sermon shows and the music starts on load. A press of a prayer button shows the failed-call strip there, because the lab blocks the call. A press of a radio button lights nothing there, because the lab blocks the player of YouTube
 
 > [!WARNING]
 > The page needs scripts. Where scripts are switched off it shows the first banner and the text `The cogitator sleeps`, with no sermon, no badge and no buttons. There the music starts only if the browser allows sound without an action of the reader. The Welcome tab of GalaxaLab runs no scripts.
@@ -192,4 +216,4 @@ The page needs a browser that shows animated AVIF and has `DecompressionStream`.
 
 ## 4. Publish
 
-The package is complete in both forms. To publish, upload `out/15-sermon.zip` where a package is accepted, or copy the folder `out/15-sermon/` with its `resources` folder over the published copy. JupyterLab can add `.ipynb_checkpoints` folders to the folder; the zip holds only the files of the build. `design-sermons-html.md`, section 8, lists what the host must allow. The package contains the music file and the prayer tunes: publish it only where their licences allow that.
+The package is complete in both forms. To publish, upload `out/w40k-mechanicum-sermons.zip` where a package is accepted, or copy the folder `out/w40k-mechanicum-sermons/` with its `resources` folder over the published copy. JupyterLab can add `.ipynb_checkpoints` folders to the folder; the zip holds only the files of the build. `design-sermons-html.md`, section 8, lists what the host must allow. The package contains the music file and the prayer tunes: publish it only where their licences allow that.

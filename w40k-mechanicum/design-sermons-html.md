@@ -1,6 +1,6 @@
 # w40k-mechanicum - Sermon package design v1
 
-Status: DRAFT for internal review, 2026-10-05.
+Status: DRAFT for internal review, 2026-10-07.
 
 ## Contents
 
@@ -20,6 +20,7 @@ Status: DRAFT for internal review, 2026-10-05.
   - [7.2 Prayers and the prayer counter](#7.2-Prayers-and-the-prayer-counter)
   - [7.3 Rewards](#7.3-Rewards)
   - [7.4 Holy download](#7.4-Holy-download)
+  - [7.5 Radios](#7.5-Radios)
 - [8. Host requirements](#8.-Host-requirements)
 - [9. Build](#9.-Build)
 - [10. Checks](#10.-Checks)
@@ -29,12 +30,12 @@ Status: DRAFT for internal review, 2026-10-05.
 
 This document describes how the sermon package is designed: its files, the rule that decides what a browser transfers, its scripts, its data formats and what it needs from the host that serves it. `SERMON.md` describes the steps to rebuild the package after a change of its sources.
 
-The package is the page "Sermon of the Day". It shows a banner animation, the sermon of today's date with the service badge of that day, three prayer buttons and a download button, and it plays one piece of music. `make sermon` builds the package in two forms with the same files:
+The package is the page "Sermon of the Day". It shows a banner animation, the sermon of today's date with the service badge of that day, three prayer buttons, three radio buttons and a download button, and it plays one piece of music. `make sermon` builds the package in two forms with the same files:
 
-- **Folder** - `out/15-sermon/`, with `index.html` and the folder `resources/`
-- **Archive** - `out/15-sermon.zip`, with `index.html` at the root of the archive
+- **Folder** - `out/w40k-mechanicum-sermons/`, with `index.html` and the folder `resources/`
+- **Archive** - `out/w40k-mechanicum-sermons.zip`, with `index.html` at the root of the archive
 
-The package has 408 files of 9.9 MB together. A visit transfers 10 of them, about 2.1 MB, of which 1.7 MB is the music.
+The package has 409 files of 9.9 MB together. A visit transfers 11 of them, about 2.1 MB, of which 1.7 MB is the music.
 
 ## 2. Design rules
 
@@ -44,7 +45,7 @@ This section lists the six rules that every part of the package follows.
 - **Every other part is a file** - scripts, data, images and sound are files in `resources/`. No file is stored inside another file as base64, which adds one third to its size
 - **A file is requested when it is needed** - a visit requests the files of one day. A prayer tune is requested when its button is pressed, and a seal when its reward is shown
 - **Files are stored compressed** - the hub sends a package file as it is, without compression in transit. So the build gzips the sermons, and images and sound use formats that are compressed already: AVIF and mp3
-- **Scripts are independent** - each of the five scripts does one job. An error in one does not stop the others: the sermon shows where the banner fails
+- **Scripts are independent** - each of the six scripts does one job. An error in one does not stop the others: the sermon shows where the banner fails
 - **Nothing moves after the first layout** - the answer strip and the reward lie above the page and take no room in it, and the badge gets its width and height before its image arrives
 
 ## 3. Package layout
@@ -54,7 +55,7 @@ This section lists the files of the package, their size and when the page reques
 ```
 index.html
 resources/
-    sermon.js  banner.js  music.js  prayers.js  badge.js
+    sermon.js  banner.js  music.js  prayers.js  radio.js  badge.js
     music.mp3
     sermons/   01.json.gz ... 12.json.gz
     banners/   04-forge.avif ... 12-choir.avif
@@ -65,17 +66,17 @@ resources/
 
 | Path | Files | Size | Content | Requested |
 |---|---:|---:|---|---|
-| `index.html` | 1 | 13 kB | markup, styles, drawn ornaments | on every visit |
-| `resources/<name>.js` | 5 | 27 kB | the scripts and their small tables | on every visit |
+| `index.html` | 1 | 14 kB | markup, styles, drawn ornaments | on every visit |
+| `resources/<name>.js` | 6 | 30 kB | the scripts and their small tables | on every visit |
 | `resources/sermons/<mm>.json.gz` | 12 | 45 kB | title and text of the days of one month | the file of the current month |
 | `resources/banners/<name>.avif` | 7 | 1.20 MB | scene animations | one file, chosen by the day |
 | `resources/badges/<mm-dd>.avif` | 366 | 4.06 MB | service badges | the badge of the day |
 | `resources/seals/<number>.avif` | 13 | 0.29 MB | seals of the reward sermons | when a reward is shown |
 | `resources/music.mp3` | 1 | 1.69 MB | the music | on every visit |
 | `resources/prayers/<n>.mp3` | 3 | 2.55 MB | prayer tunes | when its button is pressed |
-| **Total** | **408** | **9.9 MB** | | |
+| **Total** | **409** | **9.9 MB** | | |
 
-A visit requests `index.html`, the five scripts, one month of sermons, one banner, one badge and the music. Without the music these are 0.2 MB to 0.3 MB.
+A visit requests `index.html`, the six scripts, one month of sermons, one banner, one badge and the music. Without the music these are 0.2 MB to 0.3 MB.
 
 ## 4. Page file
 
@@ -84,32 +85,34 @@ This section describes `index.html`, the only file outside `resources/`. The bui
 - **Banner area** - a box with the aspect ratio of the banners, 788 to 249, so the place is kept before the banner arrives. A `noscript` element holds the first banner for a browser that runs no scripts
 - **Cloth** - the patch with the sermon: the day line, the title, the invocation, the service badge, the sermon text and the blessing. Seam, corner cogs and bands are drawn with CSS and inline SVG
 - **Prayer row** - an empty row. The scripts put the three prayer buttons and the download button into it
+- **Radio row** - an empty row below the prayer row. The radio script puts the three radio buttons into it, and the player of the radio that plays
 - **Answer strip** - a strip at the top edge of the window for the answer of the prayer counter
 - **Reward** - a patch in the middle of the window, above the dimmed page, for a reward sermon with its seal
 - **Audio element** - the music, without controls
-- **Script tags** - five tags that load the scripts in a fixed order
+- **Script tags** - six tags that load the scripts in a fixed order
 
 The styles are one `style` block. The cloth textures and the page icon are SVG images written as `data:` addresses inside the page file, so they need no file of their own.
 
-| Page width | Badge | Prayer row |
-|---|---|---|
-| 1100 px and wider | 88 px high, raised beside the title, so a short sermon does not make the cloth higher | one row |
-| 521 px to 1099 px | 88 px high, at the right of the sermon text, which flows around it | one row |
-| 520 px and narrower | 72 px high, at the right of the sermon text | two rows |
+| Page width | Badge | Prayer row | Radio row |
+|---|---|---|---|
+| 1100 px and wider | 88 px high, raised beside the title, so a short sermon does not make the cloth higher | one row | one row |
+| 521 px to 1099 px | 88 px high, at the right of the sermon text, which flows around it | one row | one row |
+| 520 px and narrower | 72 px high, at the right of the sermon text | two rows | two rows |
 
 Where scripts do not run, the page shows the first banner and the text `The cogitator sleeps`, with no sermon, no badge and no buttons.
 
 ## 5. Scripts
 
-This section lists the five scripts. They are the script blocks of `src/sermon.template.html`; the build writes each block, named by its `data-name`, to one file.
+This section lists the six scripts. They are the script blocks of `src/sermon.template.html`; the build writes each block, named by its `data-name`, to one file.
 
 | File | Size | Job | Table it holds | Files it requests |
 |---|---:|---|---|---|
 | `sermon.js` | 2.3 kB | finds the day, gets the month of sermons, writes day line, title, invocation, sermon and blessing | 7 invocations, 7 blessings, the month names | `sermons/<mm>.json.gz` |
 | `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 7 banner names | one banner |
-| `music.js` | 0.7 kB | starts the music at the first click or key press where the browser blocked it at load | none | none |
+| `music.js` | 1.0 kB | starts the music at the first click or key press where the browser blocked it at load, and never while a radio plays | none | none |
 | `prayers.js` | 12.9 kB | prayer buttons, tunes, the call to the prayer counter, the answer strip, the reward | the 3 prayers, the 13 reward sermons | a tune, a seal |
-| `badge.js` | 9.8 kB | shows the badge of the day, draws the downloaded image, the download buttons | width and height of the 366 badges | the badge of the day |
+| `radio.js` | 2.3 kB | radio buttons; puts the YouTube player of the pressed radio into the page and stops the music | the 3 radios | none of the package: the player and its sound come from YouTube |
+| `badge.js` | 10.2 kB | shows the badge of the day, draws the downloaded image, the download buttons | width and height of the 366 badges | the badge of the day |
 
 - **Order** - the page loads the scripts in the order of the table. `sermon.js` defines the values of the day - `month`, `date`, `year` and `number`, the day of the year - and the other scripts read them
 - **Same banner for all** - the banner seed is the day of the year, so every reader sees the same banner on the same day
@@ -169,6 +172,7 @@ The sound files go into the package as they are.
 
 - **Music** - `resources/music.mp3`, 1.69 MB, played once
 - **Prayer tunes** - `resources/prayers/1.mp3` to `3.mp3`, 0.46 MB to 1.45 MB. `prayers.js` holds the label and the gain of each: 1.4, 1 and 0.7
+- **Radios** - no files. A radio is the sound of a YouTube video, played by the player of YouTube (7.5)
 
 ## 7. Behaviour
 
@@ -181,7 +185,7 @@ The page shows the sermon of today's date by the clock of the reader's browser.
 - **Any date** - the address `index.html#02-29` shows the sermon, the badge and the banner of that date
 - **Day line** - the date, the day number of the year and that number in binary
 - **Invocation and blessing** - one of seven lines each, chosen by the day number
-- **Music** - starts at load where the browser allows sound, else at the first click or key press. A click on the sermon starts it again after its end
+- **Music** - starts at load where the browser allows sound, else at the first click or key press. A click on the sermon starts it again after its end, or after a radio has stopped it. While a radio plays, the music does not start
 
 ### 7.2 Prayers and the prayer counter
 
@@ -212,29 +216,49 @@ The download button gives the reader one PNG image to keep: the sermon with its 
 - **File name** - `sermon-<mm-dd>.png` or `reward-<number>.png`
 - **Frame without downloads** - where the frame of the page has a sandbox without `allow-downloads`, the image opens in a new tab, and the reader saves it there. The page opens the tab empty inside the click handler and puts the image into it when the image is drawn: Safari lets a page open a tab only while it handles the click
 
+### 7.5 Radios
+
+A press of a radio button plays the sound of one YouTube video; a second press stops it.
+
+| Button | Video | Start | Title on YouTube | Channel | Length |
+|---|---|---:|---|---|---:|
+| Holy Mars Radio | [`VMs_p5EWri4`](https://www.youtube.com/watch?v=VMs_p5EWri4) | 34 s | Holy Mars, ambient choir and organ music | Domains of Ambience | 3 h |
+| Holy Terra Radio | [`k5xDyG72wHE`](https://www.youtube.com/watch?v=k5xDyG72wHE) | 0 s | Holy Terra, choir and piano music | Domains of Ambience | 3 h |
+| Forge Radio | [`M3D9TYNRXwY`](https://www.youtube.com/watch?v=M3D9TYNRXwY) | 0 s | The Binaric Shroudpsalm - Adeptus Mechanicus, 22 tracks | OmniVox40k | 1 h |
+
+- **Player** - the player of `www.youtube-nocookie.com`, in a frame of 1 px width and height without opacity. The reader does not see it and cannot press it. The page loads no script of YouTube and stores no sound of a radio: the table links the video of each radio, and that video is the only source of its sound
+- **Start** - a browser lets a page start sound after an action of the reader. The press of the button is that action, and the frame passes the right to the player with `allow="autoplay"`
+- **Repeat** - the player repeats the video without end
+- **One at a time** - a press of another radio button replaces the player. The music of the page stops when a radio starts and stays silent after it; a click on the sermon starts it again. A prayer tune plays over a radio
+- **State** - a button is lit while its player is in the page. The page does not read the state of the player: a video that YouTube refuses to play leaves the button lit without sound
+- **Referrer** - the frame sends the host of the page to YouTube (`referrerpolicy="strict-origin-when-cross-origin"`), because YouTube refuses a player that does not name its page
+- **Host without the frame rule** - where the content policy of the host forbids the frame (section 8), the button goes out at once, and music that the press stopped plays on. The HTML viewer of the lab is such a host
+- **Lab viewer** - no radio plays in the HTML viewer of the lab, also where the policy of the lab allows the frame. The viewer shows the page from a `blob:` address, a page with such an address sends no referrer, and YouTube answers `Video player configuration error`. Measured on 2026-10-07 in a test browser whose copy of the lab's policy header had the frame rule (`wip/sermon/lab-radio.py`). The button stays lit without sound there
+
 ## 8. Host requirements
 
 This section lists what the package needs from the host that serves it and from the browser.
 
 - **Archive** - `index.html` at the root, entries for files only, 9.4 MiB unpacked. The welcome page store of GalaxaHub accepts a package up to 16 MiB unpacked
 - **Files as they are** - the host sends `sermons/<mm>.json.gz` without a `Content-Encoding` header. With that header the browser inflates the file first, and the inflate of the page then fails
-- **Frame** - a frame that shows the page needs `allow-scripts` and `allow-same-origin` in its sandbox, and `allow-downloads` for a download or `allow-popups` for the new tab
-- **Browser** - animated AVIF and `DecompressionStream`. Checked in Chrome 154
+- **Frame** - a frame that shows the page needs `allow-scripts` and `allow-same-origin` in its sandbox, and `allow-downloads` for a download or `allow-popups` for the new tab. The player of a radio runs under the same sandbox; it played under the sandbox of the hub's Welcome frame
+- **Browser** - animated AVIF and `DecompressionStream`. Checked in Chrome 154, the radios in Chrome 155
 
 The content policy of the host must allow the following.
 
 | Directive | Needed value | For |
 |---|---|---|
-| `script-src` | `'self'` | the five scripts |
+| `script-src` | `'self'` | the six scripts |
 | `style-src` | `'self' 'unsafe-inline'` | the `style` block and two `style` attributes |
 | `img-src` | `'self' data:` | banner, badge and seals; the page icon and the cloth textures are `data:` addresses |
 | `media-src` | `'self'` | the music and the prayer tunes |
 | `connect-src` | `'self' https://prayer-counter.<host>` | the month of sermons; the prayer counter |
+| `frame-src` | `https://www.youtube-nocookie.com` | the YouTube player of the radio buttons |
 
 One policy that holds every row, with the frame rule of the hub:
 
 ```
-default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://prayer-counter.<host>; frame-ancestors 'self'
+default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://prayer-counter.<host>; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'
 ```
 
 `blob:` in `img-src` is for the downloaded image when it opens in a new tab. Whether Chrome needs it there is not measured.
@@ -254,7 +278,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 | `rewards.md` and `resources/assets/seal_<number>.png` | sermons into the page, seals as AVIF | `resources/seals/<number>.avif` |
 | mp3 files of `resources/assets/` | copied | `resources/music.mp3`, `resources/prayers/<n>.mp3` |
 | `src/sermon.template.html` | placeholders filled; every script block written to a file | `index.html`, `resources/<name>.js` |
-| the files this build wrote | sorted, deflated. A file that JupyterLab adds to the folder, such as a checkpoint copy, is left out | `out/15-sermon.zip` |
+| the files this build wrote | sorted, deflated. A file that JupyterLab adds to the folder, such as a checkpoint copy, is left out | `out/w40k-mechanicum-sermons.zip` |
 
 - **Clean start** - the build removes the folder of the build before it, so no file of an old build stays in the package
 - **Complete or nothing** - the build stops when a month has a missing day, when `rewards.md` has one number twice, or when a placeholder or an inline script is left in the page
@@ -265,8 +289,9 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 This section lists the checks that run after a build. Their scripts are in `wip/sermon/`, which is not in git.
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
-- **Page checks** - `test.py` runs 71 checks in headless Chrome at 1440, 720 and 390 px width: the 10 requested files, the badge, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
-- **Lab viewer** - `lab.py` opens `out/15-sermon/index.html` in the HTML viewer of the lab and checks the sermon, the badge and one download
+- **Page checks** - `test.py` runs 74 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
+- **Radio checks** - `radio.py` runs 19 checks in headless Chrome with the browser's own rule for sound, and it needs the network, because the radios play from YouTube: each radio plays with sound after one press, also in a frame with the sandbox of the hub; the music stops and starts as section 7.5 says; under a policy without `frame-src` the button goes out
+- **Lab viewer** - `lab.py` opens `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab and checks the sermon, the badge, one press of a radio button and one download
 - **Calendar** - `python3 src/liturgy.py` checks the form of the 366 entries
 
 ## 11. Open points
@@ -275,3 +300,5 @@ This section lists what is not settled.
 
 - **Reader's total** - the page takes `yours` of the prayer counter as the reader's total over all prayers. The counter answers the count of the pressed prayer, measured on 2026-10-05. Until one of them changes, a reward appears when one prayer alone reaches the number. The counter gives the total as `count` of `GET /api/report?user=<name>`
 - **Hub policy** - the policy of section 8 is derived from the files the built package loads. It has not been run on the hub
+- **Radios in Safari** - not checked. Safari may refuse sound from a player that the reader did not press, and the reader cannot press the hidden player
+- **YouTube terms** - the rules of YouTube for embedded players ask for a visible player of at least 200 px width and height. The player of the radios is hidden. YouTube can also play advertisements in it, which the reader hears and cannot skip

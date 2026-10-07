@@ -99,9 +99,11 @@
      badge script gives it the badge of the day together with its size, so the text is laid out once */
   .badge { float: right; width: auto; height: 88px; margin: 4px 0 4px 16px; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .55)); }
 
-  /* the prayer buttons: thin, in one row below the cloth; a button is lit while its tune plays */
-  .prayers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .prayers button, .keep {
+  /* the prayer buttons: thin, in one row below the cloth; a button is lit while its tune plays. The radio buttons are
+     a second row of the same buttons; a button is lit while its radio plays */
+  .prayers, .radios { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .radios { margin-top: 8px; }
+  :is(.prayers, .radios) button, .keep {
     flex: 1 1 160px;
     padding: 3px 10px;
     background: var(--velvet-dark);
@@ -114,13 +116,15 @@
     white-space: nowrap;                  /* a label stays on one line; a button that does not fit moves to the next row */
     cursor: pointer;
   }
-  .prayers button:hover { border-color: var(--gold); }
+  :is(.prayers, .radios) button:hover { border-color: var(--gold); }
   /* the holy download button, at the end of the prayer row and on a reward: small, with an arrow and no label. It
      gives the reader the sermon with its badge as one image */
   .prayers .keep, .keep { flex: none; border-color: var(--gold); color: var(--bone); }
   .keep:hover { background: var(--velvet); }
   .keep svg { display: block; width: 1.15em; height: 1.15em; }
-  .prayers button[aria-pressed="true"] { background: var(--velvet); border-color: var(--gold); color: var(--bone); }
+  :is(.prayers, .radios) button[aria-pressed="true"] { background: var(--velvet); border-color: var(--gold); color: var(--bone); }
+  /* the player of a radio: a YouTube frame that the reader does not see and cannot reach. The page uses its sound only */
+  .radios iframe { position: absolute; width: 1px; height: 1px; border: 0; opacity: 0; pointer-events: none; }
 
   /* the answer of the prayer counter: a strip at the top edge of the window, with a headline and one line of counts.
      It takes no room in the page, lets every click through and lies above the dimmed page of a reward. A script
@@ -245,6 +249,8 @@
   </article>
   <!-- the prayer script puts one button per prayer here; where scripts are switched off there are no buttons -->
   <div class="prayers"></div>
+  <!-- the radio script puts one button per radio here; where scripts are switched off there are no buttons -->
+  <div class="radios"></div>
 </main>
 <!-- the answer of the prayer counter to a prayer: the prayer script writes the headline and the counts into it -->
 <p class="heard" id="heard" role="status"><svg aria-hidden="true"><use href="#cog"/></svg><strong></strong><span></span><svg aria-hidden="true"><use href="#cog"/></svg></p>
@@ -336,18 +342,21 @@
   // a script of its own. A browser blocks sound before the first action of the reader on the page:
   // then the first click or key press starts the music
   const music = document.getElementById("music");
+  // starts the music, except while a radio plays: the radio script keeps the player of that radio in the radio row
+  const sound = () => { if (!document.querySelector(".radios iframe")) music.play(); };
   music.play().catch(() => {
-    const start = () => {
+    const start = event => {
       removeEventListener("pointerdown", start);
       removeEventListener("keydown", start);
-      music.play();
+      if (!event.target.closest?.(".radios")) sound();      // a press of a radio button starts the radio, not the music
     };
     addEventListener("pointerdown", start);
     addEventListener("keydown", start);
   });
-  // a click on the sermon starts the music again when it has ended; while it plays the click changes nothing
+  // a click on the sermon starts the music again when it has ended or a radio has stopped it; while the music or a
+  // radio plays the click changes nothing
   document.querySelector(".cloth").addEventListener("click", () => {
-    if (music.paused) music.play();
+    if (music.paused) sound();
   });
 </script>
 <script data-name="prayers">
@@ -461,6 +470,48 @@
       if (tune.paused) { tune.currentTime = 0; tune.play(); report(label, "start"); } else { tune.pause(); report(label, "stop"); }
     });
     document.querySelector(".prayers").append(button);
+  }
+</script>
+<script data-name="radio">
+  // a script of its own: one thin button per radio, [label, YouTube video, second of the video at which it starts].
+  // A radio is the sound of a YouTube video. A press of its button puts the YouTube player into the page, in a frame
+  // that the reader does not see; the player starts the video and repeats it without end. One radio plays at a
+  // time, and the music of the page stops when a radio starts. A second press of the button removes the player
+  const RADIOS = [["Holy Mars Radio", "VMs_p5EWri4", 34], ["Holy Terra Radio", "k5xDyG72wHE", 0],
+                  ["Forge Radio", "M3D9TYNRXwY", 0]];
+  const radios = document.querySelector(".radios");
+  const player = document.createElement("iframe");
+  player.title = "Radio";
+  player.allow = "autoplay";                  // the player may start with sound after the press of a button in this page
+  player.referrerPolicy = "strict-origin-when-cross-origin";      // YouTube refuses a player that does not name the host of its page
+  let stopped;                                // whether the last press of a radio button stopped the music of the page
+
+  // plays the radio of one button and no other; without a button no radio plays
+  function listen(button, video, start) {
+    for (const other of radios.querySelectorAll("button")) other.setAttribute("aria-pressed", other === button);
+    player.remove();
+    if (!button) return;
+    const music = document.getElementById("music");
+    stopped = !music.paused;
+    music.pause();
+    player.src = `https://www.youtube-nocookie.com/embed/${video}?autoplay=1&loop=1&playlist=${video}&start=${start}`;
+    radios.append(player);
+  }
+  // a host whose content policy forbids the frame of the player, as the lab viewer does, leaves the radio silent: the
+  // button then goes out, and the music that the press stopped plays on
+  document.addEventListener("securitypolicyviolation", event => {
+    if (event.effectiveDirective !== "frame-src") return;
+    listen();
+    if (stopped) document.getElementById("music").play();
+  });
+
+  for (const [label, video, start] of RADIOS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => button.getAttribute("aria-pressed") === "true" ? listen() : listen(button, video, start));
+    radios.append(button);
   }
 </script>
 <script data-name="badge">

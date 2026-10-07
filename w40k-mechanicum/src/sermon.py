@@ -1,5 +1,5 @@
-"""Builds the sermon page as a package: the folder out/15-sermon/ with index.html and a resources folder, and the
-same files as out/15-sermon.zip, with index.html at the root of the archive.
+"""Builds the sermon page as a package: the folder out/w40k-mechanicum-sermons/ with index.html and a resources
+folder, and the same files as out/w40k-mechanicum-sermons.zip, with index.html at the root of the archive.
 
     python3 src/sermon.py
 
@@ -35,7 +35,7 @@ import zipfile
 from PIL import Image, ImageSequence
 
 ROOT = pathlib.Path(__file__).parent.parent
-OUT = ROOT / "out/15-sermon"              # the package as a folder; out/15-sermon.zip holds the same files
+OUT = ROOT / "out/w40k-mechanicum-sermons"      # the package as a folder; the zip beside it holds the same files
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
 BANNERS = ["12-choir", "10-foundry", "09-reliquary", "08-hall", "06-street", "05-vault", "04-forge"]
