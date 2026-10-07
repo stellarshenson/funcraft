@@ -30,7 +30,7 @@ Status: DRAFT for internal review, 2026-10-07.
 
 This document describes how the sermon package is designed: its files, the rule that decides what a browser transfers, its scripts, its data formats and what it needs from the host that serves it. `SERMON.md` describes the steps to rebuild the package after a change of its sources.
 
-The package is the page "Sermon of the Day". It shows a banner animation, the sermon of today's date with the service badge of that day, three prayer buttons, three radio buttons and a download button, and it plays one piece of music. `make sermon` builds the package in two forms with the same files:
+The package is the page "Sermon of the Day". It shows a banner animation, the sermon of today's date with the service badge of that day, three prayer buttons, four radio buttons and a download button, and it plays one piece of music. `make sermon` builds the package in two forms with the same files:
 
 - **Folder** - `out/w40k-mechanicum-sermons/`, with `index.html` and the folder `resources/`
 - **Archive** - `out/w40k-mechanicum-sermons.zip`, with `index.html` at the root of the archive
@@ -67,7 +67,7 @@ resources/
 | Path | Files | Size | Content | Requested |
 |---|---:|---:|---|---|
 | `index.html` | 1 | 14 kB | markup, styles, drawn ornaments | on every visit |
-| `resources/<name>.js` | 6 | 30 kB | the scripts and their small tables | on every visit |
+| `resources/<name>.js` | 6 | 31 kB | the scripts and their small tables | on every visit |
 | `resources/sermons/<mm>.json.gz` | 12 | 45 kB | title and text of the days of one month | the file of the current month |
 | `resources/banners/<name>.avif` | 7 | 1.20 MB | scene animations | one file, chosen by the day |
 | `resources/badges/<mm-dd>.avif` | 366 | 4.06 MB | service badges | the badge of the day |
@@ -85,11 +85,12 @@ This section describes `index.html`, the only file outside `resources/`. The bui
 - **Banner area** - a box with the aspect ratio of the banners, 788 to 249, so the place is kept before the banner arrives. A `noscript` element holds the first banner for a browser that runs no scripts
 - **Cloth** - the patch with the sermon: the day line, the title, the invocation, the service badge, the sermon text and the blessing. Seam, corner cogs and bands are drawn with CSS and inline SVG
 - **Prayer row** - an empty row. The scripts put the three prayer buttons and the download button into it
-- **Radio row** - an empty row below the prayer row. The radio script puts the three radio buttons into it, and the player of the radio that plays
+- **Radio row** - an empty row below the prayer row. The radio script puts the four radio buttons into it, and the player of the radio that plays
 - **Answer strip** - a strip at the top edge of the window for the answer of the prayer counter
 - **Reward** - a patch in the middle of the window, above the dimmed page, for a reward sermon with its seal
 - **Audio element** - the music, without controls
 - **Script tags** - six tags that load the scripts in a fixed order
+- **Focus** - a button that has the focus, by the Tab key or by a click, shows no frame of the browser. It shows the gold border that it has under the pointer
 
 The styles are one `style` block. The cloth textures and the page icon are SVG images written as `data:` addresses inside the page file, so they need no file of their own.
 
@@ -109,9 +110,9 @@ This section lists the six scripts. They are the script blocks of `src/sermon.te
 |---|---:|---|---|---|
 | `sermon.js` | 2.3 kB | finds the day, gets the month of sermons, writes day line, title, invocation, sermon and blessing | 7 invocations, 7 blessings, the month names | `sermons/<mm>.json.gz` |
 | `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 7 banner names | one banner |
-| `music.js` | 1.0 kB | starts the music at the first click or key press where the browser blocked it at load, and never while a radio plays | none | none |
+| `music.js` | 1.8 kB | starts the music at the first click or key press where the browser blocked it at load, and never while a radio plays; stops it and plays it on at a click on the banner, which also stops a radio | none | none |
 | `prayers.js` | 12.9 kB | prayer buttons, tunes, the call to the prayer counter, the answer strip, the reward | the 3 prayers, the 13 reward sermons | a tune, a seal |
-| `radio.js` | 2.3 kB | radio buttons; puts the YouTube player of the pressed radio into the page and stops the music | the 3 radios | none of the package: the player and its sound come from YouTube |
+| `radio.js` | 2.6 kB | radio buttons; puts the YouTube player of the pressed radio into the page at a start drawn at random, and stops the music | the 4 radios with their lengths | none of the package: the player and its sound come from YouTube |
 | `badge.js` | 10.2 kB | shows the badge of the day, draws the downloaded image, the download buttons | width and height of the 366 badges | the badge of the day |
 
 - **Order** - the page loads the scripts in the order of the table. `sermon.js` defines the values of the day - `month`, `date`, `year` and `number`, the day of the year - and the other scripts read them
@@ -185,7 +186,7 @@ The page shows the sermon of today's date by the clock of the reader's browser.
 - **Any date** - the address `index.html#02-29` shows the sermon, the badge and the banner of that date
 - **Day line** - the date, the day number of the year and that number in binary
 - **Invocation and blessing** - one of seven lines each, chosen by the day number
-- **Music** - starts at load where the browser allows sound, else at the first click or key press. A click on the sermon starts it again after its end, or after a radio has stopped it. While a radio plays, the music does not start
+- **Music** - starts at load where the browser allows sound, else at the first click or key press. A click on the banner stops it, and the next click on the banner plays it on from the same place. A click on the sermon starts it again after its end, and plays it on after a click on the banner or a radio has stopped it; while the music plays, a click on the sermon changes nothing. While a radio plays, a click on the banner stops the radio and the music plays on, and a click on the sermon changes nothing. A click that closes a reward does not stop the music. The music plays once: after its end the page is silent
 
 ### 7.2 Prayers and the prayer counter
 
@@ -220,16 +221,18 @@ The download button gives the reader one PNG image to keep: the sermon with its 
 
 A press of a radio button plays the sound of one YouTube video; a second press stops it.
 
-| Button | Video | Start | Title on YouTube | Channel | Length |
+| Button | Video | Earliest start | Title on YouTube | Channel | Length |
 |---|---|---:|---|---|---:|
-| Holy Mars Radio | [`VMs_p5EWri4`](https://www.youtube.com/watch?v=VMs_p5EWri4) | 34 s | Holy Mars, ambient choir and organ music | Domains of Ambience | 3 h |
-| Holy Terra Radio | [`k5xDyG72wHE`](https://www.youtube.com/watch?v=k5xDyG72wHE) | 0 s | Holy Terra, choir and piano music | Domains of Ambience | 3 h |
-| Forge Radio | [`M3D9TYNRXwY`](https://www.youtube.com/watch?v=M3D9TYNRXwY) | 0 s | The Binaric Shroudpsalm - Adeptus Mechanicus, 22 tracks | OmniVox40k | 1 h |
+| Holy Mars Radio | [`VMs_p5EWri4`](https://www.youtube.com/watch?v=VMs_p5EWri4) | 34 s | Holy Mars, ambient choir and organ music | Domains of Ambience | 10825 s |
+| Holy Terra Radio | [`k5xDyG72wHE`](https://www.youtube.com/watch?v=k5xDyG72wHE) | 0 s | Holy Terra, choir and piano music | Domains of Ambience | 10839 s |
+| Forge Radio | [`M3D9TYNRXwY`](https://www.youtube.com/watch?v=M3D9TYNRXwY) | 0 s | The Binaric Shroudpsalm - Adeptus Mechanicus, 22 tracks | OmniVox40k | 4633 s |
+| Cogitator Radio | [`M3D9TYNRXwY`](https://www.youtube.com/watch?v=M3D9TYNRXwY&t=319s) | 319 s | the same video as Forge Radio | OmniVox40k | 4633 s |
 
 - **Player** - the player of `www.youtube-nocookie.com`, in a frame of 1 px width and height without opacity. The reader does not see it and cannot press it. The page loads no script of YouTube and stores no sound of a radio: the table links the video of each radio, and that video is the only source of its sound
 - **Start** - a browser lets a page start sound after an action of the reader. The press of the button is that action, and the frame passes the right to the player with `allow="autoplay"`
-- **Repeat** - the player repeats the video without end
-- **One at a time** - a press of another radio button replaces the player. The music of the page stops when a radio starts and stays silent after it; a click on the sermon starts it again. A prayer tune plays over a radio
+- **Place of the start** - at every press the page draws the second of the start at random between the earliest start of the radio and the end of its video. The table of the radios in `radio.js` holds both
+- **Repeat** - at the end of the video the player starts the same video again, from second 0. Measured with a radio that started 12 s before the end of its video
+- **One at a time** - a press of another radio button replaces the player. The music of the page stops when a radio starts and stays silent after it; a click on the banner or on the sermon plays it on. A click on the banner while a radio plays stops the radio, and the music plays on. A prayer tune plays over a radio
 - **State** - a button is lit while its player is in the page. The page does not read the state of the player: a video that YouTube refuses to play leaves the button lit without sound
 - **Referrer** - the frame sends the host of the page to YouTube (`referrerpolicy="strict-origin-when-cross-origin"`), because YouTube refuses a player that does not name its page
 - **Host without the frame rule** - where the content policy of the host forbids the frame (section 8), the button goes out at once, and music that the press stopped plays on. The HTML viewer of the lab is such a host
@@ -289,8 +292,8 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 This section lists the checks that run after a build. Their scripts are in `wip/sermon/`, which is not in git.
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
-- **Page checks** - `test.py` runs 74 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
-- **Radio checks** - `radio.py` runs 19 checks in headless Chrome with the browser's own rule for sound, and it needs the network, because the radios play from YouTube: each radio plays with sound after one press, also in a frame with the sandbox of the hub; the music stops and starts as section 7.5 says; under a policy without `frame-src` the button goes out
+- **Page checks** - `test.py` runs 78 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
+- **Radio checks** - `radio.py` runs 35 checks in headless Chrome with the browser's own rule for sound, and it needs the network, because the radios play from YouTube: each radio plays with sound after one press, from a start inside its video, also in a frame with the sandbox of the hub; the length of each video is the one in the table; a radio starts again after the end of its video; the music stops and starts as section 7.5 says; under a policy without `frame-src` the button goes out
 - **Lab viewer** - `lab.py` opens `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab and checks the sermon, the badge, one press of a radio button and one download
 - **Calendar** - `python3 src/liturgy.py` checks the form of the 366 entries
 

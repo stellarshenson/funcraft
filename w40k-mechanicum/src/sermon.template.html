@@ -116,11 +116,14 @@
     white-space: nowrap;                  /* a label stays on one line; a button that does not fit moves to the next row */
     cursor: pointer;
   }
-  :is(.prayers, .radios) button:hover { border-color: var(--gold); }
+  /* a button that has the focus, by the Tab key or by a click, shows no frame of the browser: it looks as it does
+     under the pointer */
+  button:focus { outline: none; }
+  :is(.prayers, .radios) button:is(:hover, :focus-visible) { border-color: var(--gold); }
   /* the holy download button, at the end of the prayer row and on a reward: small, with an arrow and no label. It
      gives the reader the sermon with its badge as one image */
   .prayers .keep, .keep { flex: none; border-color: var(--gold); color: var(--bone); }
-  .keep:hover { background: var(--velvet); }
+  .keep:is(:hover, :focus-visible) { background: var(--velvet); }
   .keep svg { display: block; width: 1.15em; height: 1.15em; }
   :is(.prayers, .radios) button[aria-pressed="true"] { background: var(--velvet); border-color: var(--gold); color: var(--bone); }
   /* the player of a radio: a YouTube frame that the reader does not see and cannot reach. The page uses its sound only */
@@ -344,17 +347,27 @@
   const music = document.getElementById("music");
   // starts the music, except while a radio plays: the radio script keeps the player of that radio in the radio row
   const sound = () => { if (!document.querySelector(".radios iframe")) music.play(); };
-  music.play().catch(() => {
+  music.play().catch(error => {
+    if (error.name !== "NotAllowedError") return;      // the reader stopped the music before it began: nothing was blocked
     const start = event => {
       removeEventListener("pointerdown", start);
       removeEventListener("keydown", start);
-      if (!event.target.closest?.(".radios")) sound();      // a press of a radio button starts the radio, not the music
+      // a press of a radio button starts the radio, not the music; a press on the banner reaches the handler below
+      if (!event.target.closest?.(".radios, .banner")) sound();
     };
     addEventListener("pointerdown", start);
     addEventListener("keydown", start);
   });
-  // a click on the sermon starts the music again when it has ended or a radio has stopped it; while the music or a
-  // radio plays the click changes nothing
+  // a click on the banner stops the music while it plays, and the next click on the banner plays it on. While a radio
+  // plays, the click stops the radio, as a press of its lit button does, and the music plays on. A click that closes
+  // a reward is not such a click: the reward lets clicks through to the page below it
+  document.querySelector(".banner").addEventListener("click", () => {
+    if (getComputedStyle(document.getElementById("reward")).visibility === "visible") return;
+    document.querySelector('.radios [aria-pressed="true"]')?.click();
+    if (music.paused) sound(); else music.pause();
+  });
+  // a click on the sermon starts the music when it has ended or was stopped, and changes nothing while it plays or
+  // while a radio plays
   document.querySelector(".cloth").addEventListener("click", () => {
     if (music.paused) sound();
   });
@@ -473,12 +486,13 @@
   }
 </script>
 <script data-name="radio">
-  // a script of its own: one thin button per radio, [label, YouTube video, second of the video at which it starts].
-  // A radio is the sound of a YouTube video. A press of its button puts the YouTube player into the page, in a frame
-  // that the reader does not see; the player starts the video and repeats it without end. One radio plays at a
-  // time, and the music of the page stops when a radio starts. A second press of the button removes the player
-  const RADIOS = [["Holy Mars Radio", "VMs_p5EWri4", 34], ["Holy Terra Radio", "k5xDyG72wHE", 0],
-                  ["Forge Radio", "M3D9TYNRXwY", 0]];
+  // a script of its own: one thin button per radio, [label, YouTube video, earliest second of a start, length of the
+  // video in seconds]. A radio is the sound of a YouTube video. A press of its button puts the YouTube player into the
+  // page, in a frame that the reader does not see; the player starts the video at a second drawn at random between
+  // the earliest second and the end, and repeats the video without end. One radio plays at a time, and the music of
+  // the page stops when a radio starts. A second press of the button removes the player
+  const RADIOS = [["Holy Mars Radio", "VMs_p5EWri4", 34, 10825], ["Holy Terra Radio", "k5xDyG72wHE", 0, 10839],
+                  ["Forge Radio", "M3D9TYNRXwY", 0, 4633], ["Cogitator Radio", "M3D9TYNRXwY", 319, 4633]];
   const radios = document.querySelector(".radios");
   const player = document.createElement("iframe");
   player.title = "Radio";
@@ -487,13 +501,14 @@
   let stopped;                                // whether the last press of a radio button stopped the music of the page
 
   // plays the radio of one button and no other; without a button no radio plays
-  function listen(button, video, start) {
+  function listen(button, video, earliest, length) {
     for (const other of radios.querySelectorAll("button")) other.setAttribute("aria-pressed", other === button);
     player.remove();
     if (!button) return;
     const music = document.getElementById("music");
     stopped = !music.paused;
     music.pause();
+    const start = Math.floor(earliest + Math.random() * (length - earliest));
     player.src = `https://www.youtube-nocookie.com/embed/${video}?autoplay=1&loop=1&playlist=${video}&start=${start}`;
     radios.append(player);
   }
@@ -505,12 +520,12 @@
     if (stopped) document.getElementById("music").play();
   });
 
-  for (const [label, video, start] of RADIOS) {
+  for (const [label, video, earliest, length] of RADIOS) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = label;
     button.setAttribute("aria-pressed", "false");
-    button.addEventListener("click", () => button.getAttribute("aria-pressed") === "true" ? listen() : listen(button, video, start));
+    button.addEventListener("click", () => button.getAttribute("aria-pressed") === "true" ? listen() : listen(button, video, earliest, length));
     radios.append(button);
   }
 </script>
