@@ -13,3 +13,10 @@ __pycache__/
 .playwright-mcp/
 */src/_probe.py
 !*/src/*.sh
+# music and other sound files stay out of git in every folder; the documents link their sources
+*.mp3
+*.m4a
+*.opus
+*.ogg
+*.wav
+*.flac
