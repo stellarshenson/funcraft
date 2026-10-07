@@ -62,11 +62,13 @@
     background: repeating-linear-gradient(-45deg, var(--orange) 0 14px, #141a22 14px 28px);
     background-size: 39.6px 100%;
   }
+  /* the two badges, the wheel on the hazard strip and the cog with the skull over the litany, have one side at every page
+     width. src/welcome.py gives the visible part of each the same share of its picture, so the two look equally large */
+  .crest, .seal { --side: clamp(40px, 4.8vw, 54px); width: var(--side); }
   /* the wheel of Stellars Tech: a bone cog wheel that holds the two halves of the mark on a disc parted in red and bone. Its
      centre is on the middle of the hazard strip, 4px over its lower edge: as much of it is over the banner as is under the strip */
   .crest {
-    --side: clamp(40px, 4.8vw, 54px);
-    display: block; position: relative; width: var(--side); height: auto; aspect-ratio: 1; margin: calc(var(--side) / -2 - 4px) auto -6px;
+    display: block; position: relative; height: auto; aspect-ratio: 1; margin: calc(var(--side) / -2 - 4px) auto -6px;
     filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
   }
 
@@ -192,7 +194,7 @@
   }
   .litany b { font-weight: inherit; color: var(--red); }
   /* the cog with the skull closes the page, over the litany */
-  .seal { display: block; width: 56px; height: auto; aspect-ratio: 1; margin: 26px auto 0; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7)); }
+  .seal { display: block; height: auto; aspect-ratio: 1; margin: 26px auto 0; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7)); }
   .seal + .litany { margin-top: 10px; }
   /* machine cant: AVE OMNISSIAH, one byte per letter */
   .cant { margin: 6px 0 0; text-align: center; text-wrap: balance; font: 0.68rem/1.6 var(--mono); letter-spacing: 0.12em; color: #4a5c72; }
