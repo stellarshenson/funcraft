@@ -20,7 +20,7 @@ Status: DRAFT for internal review, 2026-10-09.
 
 ## 1. Overview
 
-This document describes how to rebuild the sermon page after the sermons, the animations, the music, the prayer buttons, the radio buttons, the reward sermons or the service badges change. The page is a package: the folder `out/w40k-mechanicum-sermons/` with `index.html` and a `resources` folder, and the same files as `out/w40k-mechanicum-sermons.zip`, 9.9 MB together. It shows a banner animation above the sermon of today's date with the service badge of the day, plays one music file once, and has three prayer buttons that each play a tune, four radio buttons that each play the sound of a YouTube video, and one download button. `design-sermons-html.md` describes the design of the package. One command builds it in about 40 s:
+This document describes how to rebuild the sermon page after the sermons, the animations, the music, the prayer buttons, the radio buttons, the reward sermons or the service badges change. The page is a package: the folder `out/w40k-mechanicum-sermons/` with `index.html` and a `resources` folder, and the same files as `out/w40k-mechanicum-sermons.zip`, 10.2 MB together. It shows a banner animation above the sermon of today's date with the service badge of the day, plays one music file once, and has three prayer buttons that each play a tune, four radio buttons that each play the sound of a YouTube video, and one download button. `design-sermons-html.md` describes the design of the package. One command builds it in about 40 s:
 
 ```
 make sermon
@@ -31,7 +31,7 @@ The build writes every part as files into `resources/`. The page requests a file
 | Part | Source | Files in the package | Requested by the page |
 |---|---|---|---|
 | Sermons | `calendar/`, 12 month files with 366 entries | `resources/sermons/<mm>.json.gz`, 12 files: JSON, gzipped | the file of the current month |
-| Banners | 7 scene GIFs of `out/`, listed in `src/sermon.py` | `resources/banners/<name>.avif`, 7 animated AVIF files | one file, chosen by the day of the year |
+| Banners | 8 scene animations of `out/`, 7 GIFs and 1 animated AVIF, listed in `src/sermon.py` | `resources/banners/<name>.avif`, 8 animated AVIF files | one file, chosen by the day of the year |
 | Music | one mp3 file of `resources/assets/`, named in `src/sermon.py` | `resources/music.mp3`, the file as it is | on every visit |
 | Prayers | 3 mp3 files of `resources/assets/`, listed in `src/sermon.py` | `resources/prayers/<n>.mp3`, the files as they are | the tune of a button, when the button is pressed |
 | Rewards | `rewards.md`, 13 entries, and 13 seals of `resources/assets/` | the sermons in `resources/prayers.js`; `resources/seals/<number>.avif`, 0.29 MB together | a seal, when its reward is shown |
@@ -59,13 +59,14 @@ The invocation above the sermon and the blessing below it are two lists of seven
 
 ### 2.2 Animations changed
 
-The build reads the scene GIFs each time, so a new render reaches the page on the next build.
+The build reads the scene animations each time, so a new render reaches the page on the next build.
 
-- **Scene rendered again** - `out/<name>.gif` is replaced by the render pipeline (`DESIGN.md`). Run `make sermon`
-- **Banner added or removed** - edit the list `BANNERS` in `src/sermon.py`, then `make sermon`. A name is the GIF file name without `.gif`
+- **Scene rendered again** - `out/<name>.gif` or `out/<name>.avif` is replaced by the render pipeline (`DESIGN.md`). Run `make sermon`
+- **Banner added or removed** - edit the list `BANNERS` in `src/sermon.py`, then `make sermon`. A name is the file name in `out/` without `.gif` or `.avif`; the build takes the GIF where both exist. Then run `wip/sermon/banners.py` (section 3)
 - **First banner** - the first name of `BANNERS` is the banner shown where scripts are switched off
-- **Banner of the day** - the page draws the banner with a generator whose seed is the day number of the year. Every reader sees the same banner on the same day. A change of the number or of the order of `BANNERS` changes the banner of every day
-- **Aspect ratio** - every GIF of the list must have the same width and height. The page reserves one box, with the ratio of the first banner
+- **Banner of the day** - the page draws the banner with a generator whose seed is the day number of the year. Every reader sees the same banner on the same day. A change of the number or of the order of `BANNERS` changes the banner of every day. With the 8 banners a banner is the banner of 41 to 53 days of a year of 366 days, and on 51 days the banner is the one of the day before
+- **Aspect ratio** - every animation of the list must have the same ratio of width to height, 19 to 6. The page reserves one box, with the ratio of the first banner
+- **Loop length** - a banner keeps the loop length of its scene: the GIFs loop in 4 s, the muster in 12 s
 
 ### 2.3 Music changed
 
@@ -164,12 +165,12 @@ Constants in `src/sermon.py` set the size of the images. The build prints the si
 | Constant | Value | Effect |
 |---|---|---|
 | `WIDTH` | 788 | width of the stored banner in pixels. The page scales the banner to its own width |
-| `STEP` | 2 | every second frame of the GIF is kept: 40 frames of 100 ms from 80 frames of 50 ms |
+| `STEP` | 2 | every second frame of the scene is kept and shown for the time of both: 40 frames of 100 ms from the 80 frames of a GIF, 180 frames of 66 or 67 ms from the 360 frames of the muster |
 | `QUALITY` | 60 | AVIF quality of the banners, 0 to 100. At 50 the choir banner is 0.18 MB, at 60 it is 0.26 MB |
 | `SEAL_QUALITY` | 70 | AVIF quality of the seals: 22 kB per seal on average |
 | `BADGE_QUALITY` | 55 | AVIF quality of the service badges: about 11 kB per badge |
 
-With these values a banner is 0.13 MB to 0.26 MB. The same banner is 1.28 MB as animated WebP and about 7 MB as GIF.
+With these values a banner is 0.13 MB to 0.29 MB. The same banner of a GIF scene is 1.28 MB as animated WebP and about 7 MB as GIF.
 
 ### 2.9 Radio buttons changed
 
@@ -200,8 +201,8 @@ The page shows one thin button per radio in a row below the prayer buttons. A ra
 
 This section lists the checks after a build.
 
-- **Build output** - the last line reads `wrote .../out/w40k-mechanicum-sermons and w40k-mechanicum-sermons.zip: 409 files, 9.9 MB, zip 9.8 MB, 366 sermons, 7 banners, 3 prayers, 13 rewards, 366 badges`
-- **Scripted checks** - `wip/sermon/test.py` runs 81 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. `wip/sermon/radio.py` runs 35 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. The head of each script has its commands. `wip/` is not in git
+- **Build output** - the last line reads `wrote .../out/w40k-mechanicum-sermons and w40k-mechanicum-sermons.zip: 410 files, 10.2 MB, zip 10.0 MB, 366 sermons, 8 banners, 3 prayers, 13 rewards, 366 badges`
+- **Scripted checks** - `wip/sermon/test.py` runs 81 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. `wip/sermon/radio.py` runs 35 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. `wip/sermon/banners.py` runs 28 checks of the banners against the same stand-in: the page's own choice for each of the 366 day numbers, the file of every banner, and one day per banner opened by its date, with the banner shown and moving. The head of each script has its commands. `wip/` is not in git
 - **Today** - open `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab or through a web server. It shows the date, the day number, the title, the sermon and the badge of today. Opened as a local file, the browser blocks the request for the sermons
 - **Any date** - add `#MM-DD` to the address, for example `index.html#02-29`. Reload the page after a change of the address
 - **Banner** - the banner moves. It is the same on every load of one day and differs between days, for example `#10-02` and `#10-03`

@@ -35,7 +35,7 @@ The package is the page "Sermon of the Day". It shows a banner animation, the se
 - **Folder** - `out/w40k-mechanicum-sermons/`, with `index.html` and the folder `resources/`
 - **Archive** - `out/w40k-mechanicum-sermons.zip`, with `index.html` at the root of the archive
 
-The package has 409 files of 9.9 MB together. A visit transfers 11 of them, about 2.1 MB, of which 1.7 MB is the music.
+The package has 410 files of 10.2 MB together. A visit transfers 11 of them, about 2.1 MB, of which 1.7 MB is the music.
 
 ## 2. Design rules
 
@@ -58,7 +58,7 @@ resources/
     sermon.js  banner.js  music.js  prayers.js  radio.js  badge.js
     music.mp3
     sermons/   01.json.gz ... 12.json.gz
-    banners/   04-forge.avif ... 12-choir.avif
+    banners/   04-forge.avif ... 16-muster.avif
     badges/    01-01.avif ... 12-31.avif
     seals/     4.avif ... 40000.avif
     prayers/   1.mp3  2.mp3  3.mp3
@@ -69,12 +69,12 @@ resources/
 | `index.html` | 1 | 14 kB | markup, styles, drawn ornaments | on every visit |
 | `resources/<name>.js` | 6 | 32 kB | the scripts and their small tables | on every visit |
 | `resources/sermons/<mm>.json.gz` | 12 | 45 kB | title and text of the days of one month | the file of the current month |
-| `resources/banners/<name>.avif` | 7 | 1.20 MB | scene animations | one file, chosen by the day |
+| `resources/banners/<name>.avif` | 8 | 1.49 MB | scene animations | one file, chosen by the day |
 | `resources/badges/<mm-dd>.avif` | 366 | 4.06 MB | service badges | the badge of the day |
 | `resources/seals/<number>.avif` | 13 | 0.29 MB | seals of the reward sermons | when a reward is shown |
 | `resources/music.mp3` | 1 | 1.69 MB | the music | on every visit |
 | `resources/prayers/<n>.mp3` | 3 | 2.55 MB | prayer tunes | when its button is pressed |
-| **Total** | **409** | **9.9 MB** | | |
+| **Total** | **410** | **10.2 MB** | | |
 
 A visit requests `index.html`, the six scripts, one month of sermons, one banner, one badge and the music. Without the music these are 0.2 MB to 0.3 MB.
 
@@ -109,7 +109,7 @@ This section lists the six scripts. They are the script blocks of `src/sermon.te
 | File | Size | Job | Table it holds | Files it requests |
 |---|---:|---|---|---|
 | `sermon.js` | 2.3 kB | finds the day, gets the month of sermons, writes day line, title, invocation, sermon and blessing | 7 invocations, 7 blessings, the month names | `sermons/<mm>.json.gz` |
-| `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 7 banner names | one banner |
+| `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 8 banner names | one banner |
 | `music.js` | 1.8 kB | starts the music at the first click or key press where the browser blocked it at load, and never while a radio plays; stops it and plays it on at a click on the banner, which also stops a radio | none | none |
 | `prayers.js` | 13.9 kB | prayer buttons, tunes, the calls to the prayer counter, the reader's total, the answer strip, the reward | the 3 prayers, the 13 reward sermons | a tune, a seal |
 | `radio.js` | 2.6 kB | radio buttons; puts the YouTube player of the pressed radio into the page at a start drawn at random, and stops the music | the 4 radios with their lengths | none of the package: the player and its sound come from YouTube |
@@ -136,9 +136,10 @@ The sermons are one file per month, so a visit transfers one twelfth of them.
 
 The banners are the scene animations of the project, reduced for the page.
 
-- **Format** - animated AVIF, 788 px wide, 40 frames of 100 ms: every second frame of the scene GIF, quality 60
-- **Size** - 0.13 MB to 0.26 MB each. The same banner is about 7 MB as GIF
-- **Source** - the scene GIFs `out/<name>.gif`, listed in `BANNERS` of `src/sermon.py`
+- **Format** - animated AVIF, 788 px wide, quality 60, every second frame of the scene, shown for the time of both: 40 frames of 100 ms for a scene GIF, 180 frames of 66 or 67 ms for the muster. A banner keeps the loop length of its scene, 4 s or 12 s
+- **Size** - 0.13 MB to 0.29 MB each. The banner of a scene GIF is about 7 MB as GIF
+- **Source** - the scene animations `out/<name>.gif` and the animated AVIF `out/16-muster.avif`, listed in `BANNERS` of `src/sermon.py`. The build reduces each frame as it reads it: the 360 frames of the muster at 2432 × 768 do not fit into memory whole
+- **Choice** - the page takes one number in [0, 1) from a generator whose seed is the day number of the year and multiplies it by the number of banners. Over the 366 day numbers each of the 8 banners is chosen on 41 to 53 days; on 51 days the banner is the one of the day before, and no banner stays longer than 3 days
 
 ### 6.3 Service badges
 
@@ -278,7 +279,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 | Source | Step | Output |
 |---|---|---|
 | `calendar/*.md`, 366 entries | title and Context of every entry, per month, as JSON, gzipped | `resources/sermons/<mm>.json.gz` |
-| `out/<name>.gif`, 7 scenes | reduced to 788 px and every second frame, as animated AVIF | `resources/banners/<name>.avif` |
+| `out/<name>.gif`, 7 scenes, and `out/16-muster.avif` | reduced to 788 px and every second frame, as animated AVIF | `resources/banners/<name>.avif` |
 | `resources/assets/badges/<mm-dd>.png`, from `src/badges.py` | as AVIF; the sizes go into the page | `resources/badges/<mm-dd>.avif` |
 | `rewards.md` and `resources/assets/seal_<number>.png` | sermons into the page, seals as AVIF | `resources/seals/<number>.avif` |
 | mp3 files of `resources/assets/` | copied | `resources/music.mp3`, `resources/prayers/<n>.mp3` |
@@ -295,6 +296,7 @@ This section lists the checks that run after a build. Their scripts are in `wip/
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
 - **Page checks** - `test.py` runs 81 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip with the reader's total over all prayers, a report that fails, every reward, a frame without downloads and a frame without scripts
+- **Banner checks** - `banners.py` runs 28 checks in headless Chrome: the page's own choice for each of the 366 day numbers is a banner of the package, every banner is chosen on some day, every banner file is served, and for one day per banner the page opened with that date shows that banner, 788 × 249 pixels and moving
 - **Radio checks** - `radio.py` runs 35 checks in headless Chrome with the browser's own rule for sound, and it needs the network, because the radios play from YouTube: each radio plays with sound after one press, from a start inside its video, also in a frame with the sandbox of the hub; the length of each video is the one in the table; a radio starts again after the end of its video; the music stops and starts as section 7.5 says; under a policy without `frame-src` the button goes out
 - **Lab viewer** - `lab.py` opens `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab and checks the sermon, the badge, one press of a radio button and one download
 - **Calendar** - `python3 src/liturgy.py` checks the form of the 366 entries

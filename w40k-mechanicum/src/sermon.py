@@ -11,9 +11,9 @@ the page asks for a file only when it needs it:
                          size of every badge
   sermons/<mm>.json.gz   the title and the Context of every entry of calendar/ for one month: JSON, gzipped. The
                          page gets the file of the current month and inflates it
-  banners/<name>.avif    the scene GIFs of BANNERS, each reduced to WIDTH pixels and to every STEP-th frame, as an
-                         animated AVIF, about a twentieth of the size of the same GIF. The page draws one with the
-                         day of the year as the seed
+  banners/<name>.avif    the scene animations of BANNERS (out/<name>.gif or out/<name>.avif), each reduced to WIDTH
+                         pixels and to every STEP-th frame, as an animated AVIF, about a twentieth of the size of
+                         the same GIF. The page draws one with the day of the year as the seed
   badges/<mm-dd>.avif    the service badge of every day, from resources/assets/badges/ (src/badges.py). The page
                          shows the badge of the day
   seals/<number>.avif    the seal of every reward sermon, from resources/assets/seal_<number>.png (src/seals.py).
@@ -38,7 +38,7 @@ ROOT = pathlib.Path(__file__).parent.parent
 OUT = ROOT / "out/w40k-mechanicum-sermons"      # the package as a folder; the zip beside it holds the same files
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
-BANNERS = ["12-choir", "10-foundry", "09-reliquary", "08-hall", "06-street", "05-vault", "04-forge"]
+BANNERS = ["12-choir", "10-foundry", "09-reliquary", "08-hall", "06-street", "05-vault", "04-forge", "16-muster"]
 WIDTH, STEP, QUALITY = 788, 2, 60         # banner width in pixels; every STEP-th frame is kept; AVIF quality
 SEAL_QUALITY = 70                         # AVIF quality of the seals of the reward sermons
 BADGE_QUALITY = 55                        # AVIF quality of the service badges of the days
@@ -71,14 +71,22 @@ def avif(image, quality, **options):
 
 
 def banner(name):
-    """Writes the GIF out/<name>.gif, reduced, as an animated AVIF and returns its size in pixels."""
-    scene = Image.open(ROOT / f"out/{name}.gif")
+    """Writes the animation out/<name>.gif or out/<name>.avif, reduced, as an animated AVIF and returns its size in pixels."""
+    scene = Image.open(next(path for path in (ROOT / f"out/{name}.gif", ROOT / f"out/{name}.avif") if path.exists()))
     size = (WIDTH, round(scene.height * WIDTH / scene.width))
-    frames = [f.convert("RGB") for f in ImageSequence.Iterator(scene)][::STEP]      # copies: the iterator reuses one image
-    frames = [f.resize(size, Image.LANCZOS) for f in frames]
-    data = avif(frames[0], QUALITY, save_all=True, append_images=frames[1:], duration=scene.info["duration"] * STEP)
+    # each kept frame is reduced as it is read: the 360 frames of a scene of 2432 x 768 pixels do not fit into memory
+    # whole. A reduced frame is a copy; the iterator reuses one image. A kept frame is shown for as long as the STEP
+    # frames it stands for: the frames of a scene at 30 frames per second last 33 and 34 ms in turn
+    frames, times = [], []
+    for n, frame in enumerate(ImageSequence.Iterator(scene)):
+        frame.load()                                                  # an AVIF frame has its time only once it is read
+        times.append(frame.info["duration"])
+        if n % STEP == 0:
+            frames.append(frame.convert("RGB").resize(size, Image.LANCZOS))
+    shown = [sum(times[n:n + STEP]) for n in range(0, len(times), STEP)]
+    data = avif(frames[0], QUALITY, save_all=True, append_images=frames[1:], duration=shown)
     write(f"resources/banners/{name}.avif", data)
-    print(f"{name}: {size[0]} x {size[1]}, {len(frames)} frames, {len(data) / 1e6:.2f} MB")
+    print(f"{name}: {size[0]} x {size[1]}, {len(frames)} frames, {sum(shown) / 1000:.1f} s, {len(data) / 1e6:.2f} MB")
     return size
 
 
