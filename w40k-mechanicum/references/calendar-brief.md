@@ -13,7 +13,7 @@ The calendar gives one entry for each of the 366 days of a leap year. Each entry
 - **Month files** - `calendar/01-january.md` to `calendar/12-december.md`, one per month
 - **Day plan** - `references/calendar-plan.md`: the title and the fact of every day, month by month
 - **Check** - `python3 src/liturgy.py 09 10` from `w40k-mechanicum/`, with the numbers of the months to check; it must end with `0 faults`
-- **Whole year in one file** - `python3 src/liturgy.py` without numbers checks all months and, with 0 faults, writes `out/14-calendar.md`
+- **Whole year in one file** - `python3 src/liturgy.py` without numbers checks all months and, with 0 faults, writes `out/sermons-calendar.md`
 
 ## 3. Format
 

@@ -1,6 +1,6 @@
 """Checks the month files of the Cult Mechanicus calendar, calendar/MM-<month>.md.
 
-    python3 src/liturgy.py            # all twelve months; with 0 faults it writes the whole year to out/14-calendar.md
+    python3 src/liturgy.py            # all twelve months; with 0 faults it writes the whole year to out/sermons-calendar.md
     python3 src/liturgy.py 09 10      # reports on these months only
 
 An entry is three blocks, each followed by a blank line:
@@ -101,6 +101,6 @@ for m, name in enumerate(MONTHS, 1):
     text = (ROOT / f"{m:02d}-{name}.md").read_text()
     text = text.replace("\n## ", "\n### ").replace("# Cult Mechanicus Liturgical Calendar - ", "## ", 1)
     year.append(text.strip() + "\n")
-out = ROOT.parent / "out" / "14-calendar.md"
+out = ROOT.parent / "out" / "sermons-calendar.md"
 out.write_text("\n".join(year))
 print("wrote", out)

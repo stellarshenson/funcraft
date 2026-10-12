@@ -50,7 +50,7 @@ This section lists the steps for each kind of change. Every change ends with `ma
 The page shows the title and the Context of one entry of `calendar/`, the month files `calendar/MM-<month>.md`. It does not show the Purpose line, and it does not read `references/calendar-plan.md`.
 
 - **Edit** - change the title in the heading or the text of the `**Context**` line of the entry. The rules are in `references/calendar-brief.md`; its section 5 demands that every statement of an entry follows from the one before it
-- **Check** - `python3 src/liturgy.py`. It must end with 0 faults; it also writes `out/14-calendar.md`
+- **Check** - `python3 src/liturgy.py`. It must end with 0 faults; it also writes `out/sermons-calendar.md`
 - **Build** - `make sermon`
 - **Entry format** - `## <Month> <day> - <title>`, an empty line, `**Purpose** - <text>`, an empty line, `**Context** - <text>`. The build takes only entries of this form
 - **Completeness** - the build stops with an assertion when a month has a missing day, a day out of order or a wrong number of days
