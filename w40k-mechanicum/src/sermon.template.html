@@ -381,9 +381,11 @@
   // the prayer counter: a service on a host of its own, the host of this page with prayer-counter as its first
   // label. Every press of a prayer button is reported to it, and the page does not wait for the answer. The call
   // carries no cookie and no header but Content-Type, so the service knows the reader only by the name in the body.
+  // After a counted start the page asks the service for the reader's total over all prayers.
   // The address comes from the base address of the page, because in the lab viewer the page address is a blob
   const home = new URL(document.baseURI);
-  const COUNTER = home.protocol + "//" + home.host.replace(/^[^.]+/, "prayer-counter") + "/api/prayers";
+  const SERVICE = home.protocol + "//" + home.host.replace(/^[^.]+/, "prayer-counter") + "/api/";
+  const COUNTER = SERVICE + "prayers";
 
   // the user name where the page can read it: the lab address /user/<name>/ of this page or of a page that frames it
   function reader() {
@@ -397,8 +399,9 @@
   }
 
   // the holy numbers, from the entries of rewards.md: [prayers of the reader, rank, title of the sermon, the sermon].
-  // The seal of a number is the file resources/seals/<number>.avif. The count of the reader is the total over all prayers. When it reaches one of the
-  // numbers, the reader receives the seal of that number and a sermon of their own
+  // The seal of a number is the file resources/seals/<number>.avif. The count of the reader is the total over all
+  // prayers, which tally() reads. When it reaches one of the numbers, the reader receives the seal of that number and
+  // a sermon of their own
   const HOLY = {{REWARDS}};
 
   // shows the answer of the prayer counter in the strip at the top edge of the window: a headline and one line of
@@ -439,6 +442,22 @@
   const look = location.hash.match(/^#reward-(\d+)$/);
   if (look) reward(+look[1]);
 
+  // the reader's total over all prayers: the count of the service's report for this reader. The answer to a press
+  // holds the reader's count of the pressed prayer only. A reader without a name, or a failed call, has no total
+  async function tally(user) {
+    if (!user) return null;
+    try {
+      const answer = await fetch(SERVICE + "report?user=" + encodeURIComponent(user), { credentials: "omit" });
+      if (!answer.ok) throw new Error(`the service answered ${answer.status}`);
+      const total = (await answer.json()).count;
+      console.info(`[prayer counter] total of ${user} over all prayers: ${total}`);
+      return total;
+    } catch (error) {
+      console.info(`[prayer counter] total not read: ${error.message}`);
+      return null;
+    }
+  }
+
   // reports one press, writes to the console what was sent and what came back, and shows the answer to a start
   async function report(prayer, action) {
     const press = { prayer, action, user: reader(), time: new Date().toISOString(),
@@ -457,9 +476,11 @@
     }
     if (action !== "start") return;           // the service counts only a start
     if (!counted) return hear("Prayer not recorded", "The noosphere did not answer.", true);
-    // count: the presses of this prayer by all readers; yours: the presses of all prayers by this reader
-    hear("Prayer recorded", `This prayer: ${counted.count} by the congregation` + (counted.yours > 0 ? ` · Your prayers: ${counted.yours}` : ""));
-    setTimeout(reward, 1200, counted.yours);      // the reader sees the strip first; it stays above the reward
+    // count: the presses of this prayer by all readers. yours, the presses of this prayer by this reader, is not
+    // used: the strip and the rewards take the reader's total over all prayers
+    const total = await tally(press.user);
+    hear("Prayer recorded", `This prayer: ${counted.count} by the congregation` + (total > 0 ? ` · Your prayers: ${total}` : ""));
+    setTimeout(reward, 1200, total);          // the reader sees the strip first; it stays above the reward
   }
 
   for (const [label, store, gain] of PRAYERS) {

@@ -1,6 +1,6 @@
 # w40k-mechanicum - Sermon page v2
 
-Status: DRAFT for internal review, 2026-10-07.
+Status: DRAFT for internal review, 2026-10-09.
 
 ## Contents
 
@@ -102,22 +102,23 @@ The page reports every press of a prayer button to the prayer counter, a service
 - **Call** - `POST /api/prayers` with the header `Content-Type: application/json`, no cookie and no other header
 - **Body** - JSON with `prayer` (the label of the button), `action` (`start` or `stop`), `user`, `time` (UTC), `day` (`MM-DD`) and `sermon` (the title the page shows). The service counts only `start`
 - **User** - the page reads the name from the lab address `/user/<name>/` of the page itself or of a page that frames it. Opened from another address, `user` is `null`. The service has no other knowledge of the reader, so anybody can send any name
-- **Answer** - `200` with `{"prayer", "count", "yours"}`: `count` is the number of presses of this prayer by all readers, `yours` the number of presses by this reader, which the page reads as the reader's total over all prayers. On 2026-10-05 the counter answered the count of the pressed prayer only (`design-sermons-html.md`, section 11); `400` for an invalid field, `413` for a body over 4096 bytes
+- **Answer** - `200` with `{"prayer", "count", "yours"}`: `count` is the number of starts of this prayer by all readers, `yours` the number of starts of this prayer by this reader. The page does not use `yours`; `400` for an invalid field, `413` for a body over 4096 bytes
+- **Reader's total** - after a counted `start` the page calls `GET /api/report?user=<name>` and takes `count` of the answer: the starts of this reader over all prayers. The answer strip and the rewards use this total. A reader without a name has no total
 - **No waiting** - the tune starts or stops at once. The page does not wait for the answer
-- **Answer strip** - after the answer to a `start` the page shows a strip at the top edge of the window, as wide as the window: the headline `Prayer recorded` and the line `This prayer: 42 by the congregation · Your prayers: 3`, with `count` and `yours` of the answer. The strip is bright crimson with a gold edge and a gold glow. It slides in, stays and slides out in 4.5 s
+- **Answer strip** - after the answer to a `start` the page shows a strip at the top edge of the window, as wide as the window: the headline `Prayer recorded` and the line `This prayer: 42 by the congregation · Your prayers: 3`, with `count` of the answer and the reader's total. Where the total cannot be read, the line ends after `congregation`. The strip is bright crimson with a gold edge and a gold glow. It slides in, stays and slides out in 4.5 s
 - **Failed call** - when the call fails or the answer is not `200`, the strip is dark, without the glow, and reads `Prayer not recorded` and `The noosphere did not answer.`
 - **Room** - the strip lies over the page and takes no room, so nothing moves when it appears
 - **With a reward** - at a holy number the strip comes first and the reward follows 1.2 s later. The strip lies above the dimmed page of the reward, so both are readable
-- **Console** - one line per press, `[prayer counter] <user> pressed "<prayer>" (<action>): POST ...`, then `[prayer counter] counted: ...` or `[prayer counter] not counted: <reason>`
+- **Console** - one line per press, `[prayer counter] <user> pressed "<prayer>" (<action>): POST ...`, then `[prayer counter] counted: ...` or `[prayer counter] not counted: <reason>`. After a counted start a third line follows: `[prayer counter] total of <user> over all prayers: <n>` or `[prayer counter] total not read: <reason>`
 - **Policy** - the call goes to another host, so the server that sends the page must allow it in its Content-Security-Policy (`connect-src`). The lab allows only its own host: in the lab HTML viewer the browser blocks the call and the console reads `not counted: Failed to fetch`
-- **Not used by the page** - `GET /api/prayers` answers the counts per prayer, `GET /api/report` answers the counts by sermon, prayer, user and date as JSON, with the filter `?user=<name>`, and `POST /api/reset` deletes the counts
+- **Not used by the page** - `GET /api/prayers` answers the counts per prayer, and `POST /api/reset` deletes the counts. `GET /api/report` answers the counts by sermon, prayer, user and date as JSON; the page uses it only with the filter `?user=<name>`
 - **Report** - `python3 src/counter.py` reads `GET /api/report` and prints the totals, the prayers of every reader and the prayers of every day as Markdown tables. The command `/prayer-counter` runs it
 
 ### 2.6 Reward sermons changed
 
 The page rewards a reader whose total of prayers reaches a holy number: it shows the seal of that number and a sermon for this reader. The sermons are the entries of `rewards.md`, and every entry has a seal of its own design.
 
-- **When** - the answer of the prayer counter to a `start` has `yours` equal to the number of an entry. `yours` is the reader's total over all prayers, so a reader receives each reward once
+- **When** - after a counted `start` the reader's total over all prayers is equal to the number of an entry (2.5, Reader's total). The total grows by one with every start of any prayer, so a reader receives each reward once
 - **What** - a patch in the middle of the window, above the page, which is dimmed while the patch shows: the seal, the rank with the number and its binary form, the title, the line `For <user>, who has said <n> prayers.` and the sermon. It takes no room in the page, so nothing moves
 - **Closing** - the patch fades in and stays. The next click or key press of the reader outside the download button fades it out
 - **Download** - the small button with the arrow on the patch gives the reward sermon with its seal as one PNG image (2.7)
@@ -200,13 +201,13 @@ The page shows one thin button per radio in a row below the prayer buttons. A ra
 This section lists the checks after a build.
 
 - **Build output** - the last line reads `wrote .../out/w40k-mechanicum-sermons and w40k-mechanicum-sermons.zip: 409 files, 9.9 MB, zip 9.8 MB, 366 sermons, 7 banners, 3 prayers, 13 rewards, 366 badges`
-- **Scripted checks** - `wip/sermon/test.py` runs 78 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. `wip/sermon/radio.py` runs 35 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. The head of each script has its commands. `wip/` is not in git
+- **Scripted checks** - `wip/sermon/test.py` runs 81 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. `wip/sermon/radio.py` runs 35 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. The head of each script has its commands. `wip/` is not in git
 - **Today** - open `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab or through a web server. It shows the date, the day number, the title, the sermon and the badge of today. Opened as a local file, the browser blocks the request for the sermons
 - **Any date** - add `#MM-DD` to the address, for example `index.html#02-29`. Reload the page after a change of the address
 - **Banner** - the banner moves. It is the same on every load of one day and differs between days, for example `#10-02` and `#10-03`
 - **Badge** - the badge of the day stands at the right of the sermon text, and nothing moves when it arrives
 - **Music** - the music starts after the first click or key press on the page, plays to its end and does not start again by itself. After its end a click on the sermon starts it again; a click on the sermon while it plays does not stop it. A click on the banner stops it, and the next click on the banner plays it on
-- **Prayer counter** - open the browser console and press a prayer button. Two lines that start with `[prayer counter]` appear; the second reads `counted` with the count where the page may reach the service, and `not counted` with the reason elsewhere
+- **Prayer counter** - open the browser console and press a prayer button. Two lines that start with `[prayer counter]` appear; the second reads `counted` with the count where the page may reach the service, and `not counted` with the reason elsewhere. After a counted start a third line gives the reader's total over all prayers, and the answer strip shows the same number after `Your prayers:`
 - **Answer strip** - after a press that starts a tune, a strip slides in at the top edge of the window and slides out after 4.5 s. Nothing on the page moves when it appears
 - **Reward** - open the page with `#reward-42` at the end of the address. The patch with the seal and the sermon fades in; a click or a key press fades it out
 - **Prayer buttons** - three buttons stand below the sermon, and the small download button at the end of their row. A press starts the tune and lights the button; a second press stops it; the light goes out at the end of the tune

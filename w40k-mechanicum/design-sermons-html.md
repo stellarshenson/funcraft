@@ -1,6 +1,6 @@
 # w40k-mechanicum - Sermon package design v1
 
-Status: DRAFT for internal review, 2026-10-07.
+Status: DRAFT for internal review, 2026-10-09.
 
 ## Contents
 
@@ -67,7 +67,7 @@ resources/
 | Path | Files | Size | Content | Requested |
 |---|---:|---:|---|---|
 | `index.html` | 1 | 14 kB | markup, styles, drawn ornaments | on every visit |
-| `resources/<name>.js` | 6 | 31 kB | the scripts and their small tables | on every visit |
+| `resources/<name>.js` | 6 | 32 kB | the scripts and their small tables | on every visit |
 | `resources/sermons/<mm>.json.gz` | 12 | 45 kB | title and text of the days of one month | the file of the current month |
 | `resources/banners/<name>.avif` | 7 | 1.20 MB | scene animations | one file, chosen by the day |
 | `resources/badges/<mm-dd>.avif` | 366 | 4.06 MB | service badges | the badge of the day |
@@ -111,7 +111,7 @@ This section lists the six scripts. They are the script blocks of `src/sermon.te
 | `sermon.js` | 2.3 kB | finds the day, gets the month of sermons, writes day line, title, invocation, sermon and blessing | 7 invocations, 7 blessings, the month names | `sermons/<mm>.json.gz` |
 | `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 7 banner names | one banner |
 | `music.js` | 1.8 kB | starts the music at the first click or key press where the browser blocked it at load, and never while a radio plays; stops it and plays it on at a click on the banner, which also stops a radio | none | none |
-| `prayers.js` | 12.9 kB | prayer buttons, tunes, the call to the prayer counter, the answer strip, the reward | the 3 prayers, the 13 reward sermons | a tune, a seal |
+| `prayers.js` | 13.9 kB | prayer buttons, tunes, the calls to the prayer counter, the reader's total, the answer strip, the reward | the 3 prayers, the 13 reward sermons | a tune, a seal |
 | `radio.js` | 2.6 kB | radio buttons; puts the YouTube player of the pressed radio into the page at a start drawn at random, and stops the music | the 4 radios with their lengths | none of the package: the player and its sound come from YouTube |
 | `badge.js` | 10.2 kB | shows the badge of the day, draws the downloaded image, the download buttons | width and height of the 366 badges | the badge of the day |
 
@@ -195,12 +195,14 @@ A press of a prayer button starts its tune and reports the press to the prayer c
 - **Address** - the host of the page with `prayer-counter` as its first label, path `/api/prayers`
 - **Call** - `POST` with `{prayer, action, user, time, day, sermon}`, no cookie, and no header but `Content-Type`. `action` is `start` or `stop`; the counter counts a `start`
 - **Reader** - the user name from the lab address `/user/<name>/` of the page or of a page that frames it; without such an address the call carries no name
-- **Answer** - `{prayer, count, yours}`. The answer strip shows `Prayer recorded` with the counts for 4.5 s
+- **Answer** - `{prayer, count, yours}`: `count` is the starts of this prayer by all readers, `yours` the starts of this prayer by this reader. The page does not use `yours`
+- **Reader's total** - after a counted `start` the page reads `count` of `GET /api/report?user=<name>`: the starts of this reader over all prayers. The call carries no cookie and no header. On 2026-10-09 the counter answered 8, 4 and 2 as `yours` of the three prayers of one reader, and 14 as `count` of that reader's report
+- **Answer strip** - `Prayer recorded` with `count` of the prayer and the reader's total, for 4.5 s. For a reader without a name, or where the report cannot be read, the strip shows `count` of the prayer alone, and no reward comes
 - **Failed call** - a dark strip with `Prayer not recorded`. The tune plays in both cases
 
 ### 7.3 Rewards
 
-When the reader's count of prayers reaches the number of a reward sermon, the page shows that sermon with its seal 1.2 s after the answer strip.
+When the reader's total over all prayers reaches the number of a reward sermon, the page shows that sermon with its seal 1.2 s after the answer strip.
 
 - **Numbers** - 4, 42, 64, 137, 256, 314, 666, 1024, 1729, 6174, 8128, 27182 and 40000
 - **Leaving** - the next click or key press outside the download button closes the reward
@@ -292,7 +294,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 This section lists the checks that run after a build. Their scripts are in `wip/sermon/`, which is not in git.
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
-- **Page checks** - `test.py` runs 78 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip, every reward, a frame without downloads and a frame without scripts
+- **Page checks** - `test.py` runs 81 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip with the reader's total over all prayers, a report that fails, every reward, a frame without downloads and a frame without scripts
 - **Radio checks** - `radio.py` runs 35 checks in headless Chrome with the browser's own rule for sound, and it needs the network, because the radios play from YouTube: each radio plays with sound after one press, from a start inside its video, also in a frame with the sandbox of the hub; the length of each video is the one in the table; a radio starts again after the end of its video; the music stops and starts as section 7.5 says; under a policy without `frame-src` the button goes out
 - **Lab viewer** - `lab.py` opens `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab and checks the sermon, the badge, one press of a radio button and one download
 - **Calendar** - `python3 src/liturgy.py` checks the form of the 366 entries
@@ -301,7 +303,8 @@ This section lists the checks that run after a build. Their scripts are in `wip/
 
 This section lists what is not settled.
 
-- **Reader's total** - the page takes `yours` of the prayer counter as the reader's total over all prayers. The counter answers the count of the pressed prayer, measured on 2026-10-05. Until one of them changes, a reward appears when one prayer alone reaches the number. The counter gives the total as `count` of `GET /api/report?user=<name>`
+- **Size of the report** - the page reads the whole report of the reader after every counted start. The report has one row per day and per sermon of that reader: 4.8 kB for 5 days on 2026-10-09. It grows with the days on which the reader prays. An answer of the counter that holds the reader's total would remove the second call
+- **Origins of the counter** - the counter allows calls from the origin `https://workbench.lab.stellars-tech.eu` and answered no permission for three other origins, measured on 2026-10-09. A page on another host gets no count and no total
 - **Hub policy** - the policy of section 8 is derived from the files the built package loads. It has not been run on the hub
 - **Radios in Safari** - not checked. Safari may refuse sound from a player that the reader did not press, and the reader cannot press the hidden player
 - **YouTube terms** - the rules of YouTube for embedded players ask for a visible player of at least 200 px width and height. The player of the radios is hidden. YouTube can also play advertisements in it, which the reader hears and cannot skip
