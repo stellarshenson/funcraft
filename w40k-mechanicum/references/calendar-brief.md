@@ -6,6 +6,7 @@ The calendar gives one entry for each of the 366 days of a leap year. Each entry
 
 - **Who** - data scientists and engineers. English is not their first language. Most of them do not know Warhammer 40,000
 - **What they must get** - the technical point, at first reading, without translating anything
+- **What it must give them** - a practice to apply, or a fact they are likely to lack. A definition that every data scientist knows is not enough, and neither is a coincidence of the date: "the date reads 1010, binary for ten" gives nothing. The entry of that day now says that a 64-bit float keeps 53 binary digits, so long identifiers are read as text
 - **What makes it fun** - the title, and a light touch of the cult in the text: a tech-priest does it, the Magos demands it, the cult calls the bad practice heresy
 
 ## 2. Files

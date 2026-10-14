@@ -32,9 +32,9 @@
 
 ## June 6 - Rite of the Pseudo-Random
 
-**Purpose** - Setting the seed to repeat a random experiment.
+**Purpose** - Passing a seeded generator instead of setting a global seed.
 
-**Context** - The cogitator's random numbers are a deterministic sequence that only looks random. The seed selects the sequence. Count this as a blessing, because it lets an experiment that involves chance be repeated exactly.
+**Context** - The cogitator's random numbers are a fixed sequence chosen by the seed. np.random.seed sets one hidden generator shared by every call in the program, so one added call shifts all numbers after it. Create a generator with default_rng and a seed, and pass it to each function that needs chance.
 
 ## June 7 - Feast of the Cosine Similarity
 

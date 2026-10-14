@@ -50,9 +50,9 @@
 
 ## April 9 - Rite of the Transformer Block
 
-**Purpose** - Knowing the parts of a transformer block.
+**Purpose** - Placing the layer normalisation before each part of a block.
 
-**Context** - The adepts build a transformer as a stack of identical blocks. In each block, a self-attention layer and a small feed-forward network are each wrapped in a residual connection with a layer normalisation. Attention moves information between tokens; the feed-forward network works on each token alone.
+**Context** - The adepts build a transformer as a stack of identical blocks: self-attention, then a small feed-forward network, each inside a residual connection. Place the layer normalisation before each of the two, not after. Deep stacks then usually train more stably and depend less on warm-up.
 
 ## April 10 - Observance of the Returning Mean
 
@@ -74,9 +74,9 @@
 
 ## April 13 - Feast of the Random Forest
 
-**Purpose** - Understanding why many trees vote better than one.
+**Purpose** - Reading the out-of-bag score of a random forest.
 
-**Context** - A random forest grows many trees, each on a different bootstrap sample and a random subset of features. The trees vote together. Their errors are partly independent, so the forest is steadier than any single tree. The Magos prefers a forest to a lone tree.
+**Context** - A random forest grows each tree on a bootstrap sample, which leaves out about 37 percent of the rows. Score every row with the trees that never saw it. This out-of-bag score estimates the error on new data without a separate validation set. The Magos reads it first.
 
 ## April 14 - Observance of the Peeked Result
 

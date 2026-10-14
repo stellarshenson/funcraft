@@ -56,9 +56,9 @@
 
 ## October 10 - Feast of the Binary Ten
 
-**Purpose** - Reading 1010 as the binary number ten.
+**Purpose** - Reading long identifiers as text, not as numbers.
 
-**Context** - On the tenth of October the date reads 1010. Read as binary, that is ten: one eight plus one two. The cogitator counts with two digits only, 0 and 1. The tech-priests call this the binary chant.
+**Context** - On the tenth of October the date reads 1010, the binary number ten. A 64-bit float keeps 53 binary digits, so a whole number above 2 to the power 53 may lose its last digits with no error. pandas reads an integer column with one missing value as floats. The adepts read identifiers as text.
 
 ## October 11 - Rite of the Nested Fold
 

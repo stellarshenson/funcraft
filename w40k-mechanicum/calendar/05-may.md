@@ -2,9 +2,9 @@
 
 ## May 1 - Feast of the Chain Rule
 
-**Purpose** - Remembering how backpropagation works.
+**Purpose** - Checking a hand-written gradient against a numerical one.
 
-**Context** - Backpropagation is the chain rule of calculus applied from the loss back to the first layer. It reuses each intermediate result on the way. Every network trained by gradient descent rests on this one rule, and the tech-priests honour it.
+**Context** - Backpropagation is the chain rule applied from the loss back to the first layer. The framework applies it for you. If you write a gradient by hand, compare it with a numerical gradient: gradcheck in PyTorch does this in double precision. The tech-priests trust no unchecked derivative.
 
 ## May 2 - Rite of the Shuffled Deck
 
@@ -170,9 +170,9 @@
 
 ## May 29 - Feast of the Orthogonal Turn
 
-**Purpose** - Remembering what an orthogonal matrix keeps unchanged.
+**Purpose** - Undoing a rotation with the transpose, not with an inverse.
 
-**Context** - An orthogonal matrix turns or mirrors vectors without changing their lengths or the angles between them. Its inverse is its transpose. Because it keeps lengths, it neither shrinks nor inflates a signal that passes through it. The tech-priests call such a turn pure.
+**Context** - An orthogonal matrix turns or mirrors vectors and keeps their lengths and angles. Its inverse is its transpose. So undo a rotation by transposing the matrix: no inverse is computed and no precision is lost. The tech-priests call such a turn pure.
 
 ## May 30 - Observance of the Heavy Tail
 

@@ -158,9 +158,9 @@
 
 ## December 27 - Feast of the Gated Memory
 
-**Purpose** - Remembering how an LSTM gates its memory.
+**Purpose** - Starting an LSTM with its forget gate open.
 
-**Context** - The long short-term memory network carries a cell state through the sequence. Three gates decide what enters the cell state, what is forgotten and what is output. The network carried gradients across long sequences before attention took over that work. The cogitators remember this network.
+**Context** - An LSTM carries a cell state through the sequence, and a forget gate decides how much of it survives each step. Set the bias of that gate to 1 at the start. The cell then keeps its memory until it learns what to forget. Keras does this by default; PyTorch does not, so the enginseers set it by hand.
 
 ## December 28 - Rite of the Single Batch
 

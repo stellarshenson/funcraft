@@ -14,9 +14,9 @@
 
 ## March 3 - Observance of the Sliding Kernel
 
-**Purpose** - Understanding why a convolution shares its weights.
+**Purpose** - Letting a convolutional network accept images of other sizes.
 
-**Context** - A convolution slides one small set of weights across the whole image. A pattern learned in one corner is recognised in every other corner. This sharing keeps the network small. The enginseers honour it as thrift.
+**Context** - A convolution slides one small set of weights across the image, so one layer works on images of different sizes. A flatten layer before the classifier fixes the input size. Put global average pooling in its place, and the network accepts other sizes. The enginseers call the sliding kernel thrift.
 
 ## March 4 - Vigil of the Exploding Gradient
 
@@ -80,9 +80,9 @@
 
 ## March 14 - Feast of the Unending Ratio
 
-**Purpose** - Estimating pi with random points.
+**Purpose** - Passing angles in radians to the sine and the cosine.
 
-**Context** - In month-day order, March 14 is 3.14, the first digits of pi. To estimate pi, scatter random points in a square, count the share inside the inscribed circle and multiply it by four. This Monte Carlo method converges slowly. Any adept can run it on a cogitator.
+**Context** - In month-day order, March 14 is 3.14, the first digits of pi: half a turn in radians. The sine and cosine of NumPy and PyTorch expect radians. Pass 90 for a right angle and the sine is 0.89, not 1, with no error. The adepts convert degrees with deg2rad first.
 
 ## March 15 - Observance of the Reversed Aggregate
 
@@ -92,9 +92,9 @@
 
 ## March 16 - Feast of the Multilayer Perceptron
 
-**Purpose** - Understanding why a network needs non-linear functions.
+**Purpose** - Checking that no activation is missing between two layers.
 
-**Context** - A multilayer perceptron is a stack of layers. Each computes weighted sums of its inputs and passes them through a non-linear function. Without that function the whole stack collapses into a single linear map, however many layers it has. The enginseers never leave it out.
+**Context** - A multilayer perceptron passes each weighted sum through a non-linear function. Without that function, two layers collapse into a single linear map. A forgotten activation raises no error: the network trains and remains a linear model. The enginseers read the forward pass line by line to find it.
 
 ## March 17 - Vigil of the Hallucination
 

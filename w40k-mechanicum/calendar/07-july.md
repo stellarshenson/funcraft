@@ -8,9 +8,9 @@
 
 ## July 2 - Rite of the Momentum
 
-**Purpose** - Understanding how momentum smooths gradient descent.
+**Purpose** - Lowering the learning rate when you raise the momentum.
 
-**Context** - Momentum keeps a running average of past gradients and moves the weights along that average. The optimiser then passes over small bumps in the loss surface and moves down its narrow valleys. The enginseers call momentum a blessing for gradient descent.
+**Context** - Momentum adds a share of the previous step to each new step. In the usual form of SGD, along a steady gradient, a momentum of 0.9 multiplies the long-run step by ten, and 0.99 by a hundred. So lower the learning rate when you raise the momentum. The enginseers tune the two together.
 
 ## July 3 - Vigil of the Underfitted Model
 
@@ -32,15 +32,15 @@
 
 ## July 6 - Feast of the Positional Encoding
 
-**Purpose** - Understanding why attention needs positional encodings.
+**Purpose** - Checking the longest input that a model's positions allow.
 
-**Context** - Attention alone cannot distinguish the first word from the last. Positional encodings give each token its place in the sequence. Without them, a sentence is only a bag of words to the model. The machine spirit needs the order.
+**Context** - Attention alone cannot tell the first word from the last, so each token receives a position. A learned table of positions has a fixed length: 512 in BERT. A tokeniser with truncation switched on cuts off longer text with no warning. The adepts decide which part to cut, or they split the text.
 
 ## July 7 - Feast of the Pooled Window
 
-**Purpose** - Understanding what max pooling does to a feature map.
+**Purpose** - Making the image size a multiple of the total pooling factor.
 
-**Context** - Max pooling keeps the largest value in each small window of a feature map. A 2 by 2 window with stride 2 halves the height and the width. The output then tolerates small shifts of the input. The machine spirit stays calm when the picture moves a little.
+**Context** - Max pooling keeps the largest value in each window. A 2 by 2 window with stride 2 halves each side, so five such stages divide it by 32. Pad or crop the image to a multiple of 32. Otherwise the skip connections of a U-shaped network can meet maps of different sizes. The enginseers pad first.
 
 ## July 8 - Rite of the Named Index
 
@@ -62,9 +62,9 @@
 
 ## July 11 - Feast of the Many Heads
 
-**Purpose** - Understanding multi-head attention.
+**Purpose** - Remembering that more heads make each head narrower.
 
-**Context** - Multi-head attention runs several attention heads side by side. Each head has its own projections of the queries, keys and values and can follow a different relation between tokens. One linear layer joins and mixes their outputs. The enginseers hold a feast for this design.
+**Context** - Multi-head attention splits the width of the model among its heads: 768 dimensions and 12 heads give 64 per head. The width must be divisible by the number of heads. More heads add no parameters and leave each head fewer dimensions. The enginseers keep enough dimensions in every head.
 
 ## July 12 - Saint Quantila of the Ninety-Ninth Percentile
 
@@ -164,9 +164,9 @@
 
 ## July 28 - Saint Rara of the Uncommon Word
 
-**Purpose** - Remembering the saint who weighted words by their rarity.
+**Purpose** - Remembering the saint who tried word weights before a deep model.
 
-**Context** - Rara used TF-IDF, which weights a word by how often it occurs in a document and by how rare it is across all documents. Words found everywhere get a low weight. A word found in few documents marks what a document is about. In her memory the tech-priests weigh words.
+**Context** - Rara weighted each word by how often it occurs in a document and by how rare it is across all documents (TF-IDF). She trained a linear classifier on these weights before any transformer, and it was often hard to beat. In her memory the tech-priests fit this baseline first for every text task.
 
 ## July 29 - Feast of the Well-Made Feature
 

@@ -56,9 +56,9 @@
 
 ## January 10 - Feast of the Dot Product
 
-**Purpose** - Understanding the dot product behind every linear layer.
+**Purpose** - Computing dot products in one call, not in a Python loop.
 
-**Context** - The dot product multiplies two vectors component by component and adds the results. It equals the product of their lengths and the cosine of the angle between them. Each output of a linear layer is one dot product of the input with a row of weights, plus a bias. The adepts honour the dot product.
+**Context** - A linear layer computes one dot product for each output: the input with one row of weights. Do not compute it in a Python loop over the components. One matrix product computes all outputs in compiled code and is many times faster. The enginseers remove every such loop from the forge.
 
 ## January 11 - Feast of the Blessed Checkpoint
 

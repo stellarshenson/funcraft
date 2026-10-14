@@ -14,9 +14,9 @@
 
 ## November 3 - Feast of the Embedding Table
 
-**Purpose** - Understanding an embedding layer as a lookup table.
+**Purpose** - Resizing the embedding table after adding tokens.
 
-**Context** - An embedding layer is a lookup table with one learned vector per token identifier. Looking up row i gives the same result as multiplying a one-hot vector by the table, without the multiplication. The cogitator takes the cheaper way.
+**Context** - An embedding layer is a lookup table with one learned vector per token identifier. Add a token to the tokeniser, and its identifier points beyond the last row. On a GPU the run then stops with a device-side assert that does not name the cause. The enginseers resize the table first.
 
 ## November 4 - Vigil of the Chosen Champion
 
@@ -56,15 +56,15 @@
 
 ## November 10 - Observance of the Determinant
 
-**Purpose** - Reading what the determinant says about a matrix.
+**Purpose** - Computing the logarithm of a determinant without underflow.
 
-**Context** - The determinant of a square matrix is the factor by which the matrix scales volume. A determinant of zero means the matrix flattens space into fewer dimensions and cannot be inverted. The tech-priests do not try to invert such a matrix.
+**Context** - The determinant is the factor by which a square matrix scales volume. For a large matrix it leaves the range of floating point: a thousand diagonal entries of 0.1 give a determinant stored as zero. If you need its logarithm, call slogdet in NumPy. The tech-priests never take the logarithm of det.
 
 ## November 11 - Feast of the Four Ones
 
-**Purpose** - Reading 1111 as binary and as hexadecimal.
+**Purpose** - Recording the hash of the data file with every run.
 
-**Context** - The date written 1111 and read as binary is fifteen, F in hexadecimal. One hexadecimal digit writes four bits, and here all four are set to 1. A byte has eight bits, so two hexadecimal digits write one byte. The cogitator celebrates this feast with a binary chant.
+**Context** - The date written 1111 and read as binary is fifteen, F in hexadecimal: one digit for four bits. A SHA-256 hash is 64 such digits. Compute it for your data file with sha256sum and record it with every run. Two runs with the same hash used the same data. The cogitator recites them as a binary chant.
 
 ## November 12 - Commemoration of Saint Steadia the Stationary
 
@@ -74,9 +74,9 @@
 
 ## November 13 - Observance of the Forgetful Chain
 
-**Purpose** - Remembering that a Markov chain forgets the past.
+**Purpose** - Smoothing the counts of a Markov chain.
 
-**Context** - In a Markov chain the next state depends on the present state alone. An n-gram language model is a Markov chain. It predicts the next word from the last n minus 1 words and nothing earlier. The machine spirit remembers no earlier words.
+**Context** - In a Markov chain the next state depends on the present state alone. Its probabilities are estimated from counts, so a transition never observed gets probability zero. One zero makes every sequence that contains it impossible. Add a small count to every transition, as the tech-priests do.
 
 ## November 14 - Vigil of the Lossy Image
 

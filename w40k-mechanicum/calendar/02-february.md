@@ -38,9 +38,9 @@
 
 ## February 7 - Rite of the Natural Base
 
-**Purpose** - Remembering that e is the base of the natural logarithm.
+**Purpose** - Checking the first loss of a classifier against the logarithm of the class count.
 
-**Context** - Second month, seventh day: 2.7, the first digits of e. The number e is usually the base of the logarithm in your cross-entropy loss, and of the exponential in every softmax. The acolytes memorise these digits.
+**Context** - Second month, seventh day: 2.7, the first digits of e, the base of the logarithm in cross-entropy. An untrained classifier spreads its probability almost evenly, so its first loss is near the logarithm of the class count: 2.3 for ten classes. The acolytes check this in every run.
 
 ## February 8 - Observance of the Sampling Bias
 
@@ -134,9 +134,9 @@
 
 ## February 23 - Feast of the Unturned Vector
 
-**Purpose** - Honouring eigenvectors and eigenvalues.
+**Purpose** - Calling the symmetric solver for the eigenvectors of a covariance matrix.
 
-**Context** - An eigenvector of a matrix is a vector that the matrix only stretches and does not turn; the eigenvalue is the stretch factor. The eigenvectors of a covariance matrix are the principal components of the data. The tech-priests honour the vector that keeps its direction.
+**Context** - An eigenvector is a vector that a matrix only stretches and does not turn. A covariance matrix is symmetric, so call eigh in NumPy, not eig. It is faster and returns real eigenvalues sorted from smallest to largest. The general eig sorts nothing. The enginseers call eigh for every symmetric matrix.
 
 ## February 24 - Feast of the Overlapping Boxes
 

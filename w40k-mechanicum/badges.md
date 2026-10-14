@@ -15,7 +15,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **01-07** - a mechanical claw that picks one glowing green circuit card out of a rack of dark circuit cards
 - **01-08** - an iron valve wheel on a thick pipe, shut tight, with one last drop that hangs from the end of the pipe
 - **01-09** - three candles of different heights that burn side by side, one short, one medium and one tall
-- **01-10** - two gold arrows that both start at the bottom of the field and point upwards, their tips a little apart, and one round gold stud between the tips
+- **01-10** - one long straight gold arrow that passes through a coil of dark iron wire, and a small cog wheel at the tip of the arrow
 - **01-11** - a reliquary casket with an open lid that holds a glowing gold cog wheel, a purity seal on its side
 - **01-12** - a skull-faced saint in a crimson cowl who holds one gold seed in an open bony hand, a pair of dice at her feet
 - **01-13** - two brass gauges side by side, one with its needle in the middle and one with its needle pressed against the far right end
@@ -46,7 +46,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **02-04** - a row of gold columns that fall steeply in height from left to right and then stay low, like a slope of rubble
 - **02-05** - a skull-faced saint in a crimson cowl who holds a level balance scale, each pan filled with the same layers of red and white
 - **02-06** - a small flame at the left that grows along a rising gold ramp to a tall flame at the right
-- **02-07** - a gold spiral like a nautilus shell that winds outwards from a small cog wheel at its centre
+- **02-07** - a brass gauge with its needle on a gold mark, and below it a row of small candles of exactly equal height
 - **02-08** - an iron sieve that holds back large gold beads while small beads fall through it
 - **02-09** - a small clockwork puppet of brass that stands in front of a large dark statue of the same shape
 - **02-10** - two curved gold lines that fall together from the upper left, one of which turns upwards again at the right
@@ -62,7 +62,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **02-20** - a raised mechanical hand, palm forward, in front of a falling gold line that has started to rise again
 - **02-21** - an old closed book and a new open book on the two pans of a balance scale
 - **02-22** - a machine of meshing cog wheels with one wheel taken out and held above its empty place by tongs
-- **02-23** - a wheel of many spokes that spins, and one long gold arrow through its hub that stays straight
+- **02-23** - a round mirror in a gold frame with a gold arrow that crosses it and continues straight on the other side, and a row of three beads below it, small, medium and large
 - **02-24** - two plain rectangles of gold cord, one laid over the lower right corner of the other, and the small area that both cover filled with solid bright gold stitching, nothing else in the field
 - **02-25** - a narrow gothic window through which a long scroll passes, only the part inside the window lit by a candle
 - **02-26** - a large empty cube drawn in gold lines with a few tiny dots far apart inside it
@@ -74,7 +74,7 @@ A line names objects only. It asks for no text and for no exact count above four
 
 - **03-01** - a large brass magnifying lens held over an unrolled scroll with rows of small marks, an open eye in the lens
 - **03-02** - a hilly gold line with a flag on one hill, and an arrow that points at a higher hill half hidden in mist
-- **03-03** - a small square gold frame that slides over a large grid of small squares, an arrow that shows its path
+- **03-03** - a large brass funnel that gathers a wide grid of small squares into one gold drop
 - **03-04** - a cog wheel that bursts into flying pieces with flames, and beside it a gauge with a broken needle
 - **03-05** - a skull-faced saint in a crimson cowl who holds a web of gold nodes joined by threads between her hands
 - **03-06** - two iron boxes side by side, and one chain of linked rings that lies whole inside the left box
@@ -85,9 +85,9 @@ A line names objects only. It asks for no text and for no exact count above four
 - **03-11** - a battered winged machine with holes in its wings, and the dark outline of the same machine fallen below it
 - **03-12** - a skull-faced saint in a crimson cowl whose bony hand throws a large iron lever switch from one side to the other
 - **03-13** - a heavy flywheel on an axle with a small pointer and a spring, and an arrow that curves along its rim
-- **03-14** - a plain gold ring that touches the four sides of a square frame of white thread, and many small gold dots scattered inside the ring and in the four corners
+- **03-14** - a brass protractor in the shape of a half circle with a gold pointer that stands upright at a right angle, and a small cog wheel at its centre
 - **03-15** - two short gold arrows that point up, and one long arrow across them that points down
-- **03-16** - three layers of small round nodes joined by many crossing threads, a bent gold line above them
+- **03-16** - two iron plates joined by a bent gold bar, and beside them two iron plates with an empty gap between them, a mechanical finger that points at the gap
 - **03-17** - a skull that breathes out a cloud in the shape of a false second skull, and beside it a book with a lit candle
 - **03-18** - a bell-shaped gold curve that rises in the middle, built from many small stacked beads
 - **03-19** - a brass measuring cup that pours fluid into a glass vessel up to a gold level line
@@ -114,11 +114,11 @@ A line names objects only. It asks for no text and for no exact count above four
 - **04-06** - a glass measuring jar filled with beads exactly up to a gold line on its side
 - **04-07** - a slate tablet that a mechanical hand wipes clean with a cloth, a piece of chalk beside it
 - **04-08** - a mechanical arm that pulls one glowing book out of a tall shelf of dark books
-- **04-09** - a tower of three stacked machine blocks, an eye on the lowest and a cog on the middle one, and a cable that runs past all of them
+- **04-09** - a tower of two stacked machine blocks, a small gold balance scale in front of the door of each block, and a cable that runs past both blocks
 - **04-10** - a pendulum drawn far to one side, with an arrow that curves back to the middle line
 - **04-11** - a stack of machine layers, the lower ones covered in ice and icicles and the top one glowing with a flame
 - **04-12** - a skull-faced saint in a crimson cowl who holds a tall narrow picture set inside a square frame with dark bands at both sides
-- **04-13** - a grove of small bare trees of gold wire, a small ballot stone hanging from each tree
+- **04-13** - a grove of small bare trees of gold wire, and on the ground beside them an open cloth sack with a few bone white beads that lie outside it
 - **04-14** - an eye that looks through a keyhole in an iron door, and beside the door an hourglass that is still running
 - **04-15** - a string of gold beads with one hollow black hole in the row, a candle held close to it
 - **04-16** - several square gold frames that overlap around one skull, all but one of them faded and struck through
@@ -139,7 +139,7 @@ A line names objects only. It asks for no text and for no exact count above four
 
 ## May
 
-- **05-01** - a chain of large iron links that runs from the right to the left, with a small gold arrow on every link that points backwards
+- **05-01** - a chain of large iron links with one small gold arrow that points backwards along it, and a pair of calipers that measures one of the links
 - **05-02** - a deck of tarot cards thrown into the air in disorder by two mechanical hands
 - **05-03** - a wide crowd of grey skulls with one gold skull among them, and a small alarm bell above
 - **05-04** - a round target with an arrow near its centre, and a measuring rod laid from the arrow to the centre
@@ -167,7 +167,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **05-26** - a staircase on which every step carries a small tree, each tree smaller than the last, and an arrow that climbs the stairs
 - **05-27** - a row of five small iron tablets of which the two at the right are covered by a black cloth, and above the row one mechanical eye lens that looks to the left
 - **05-28** - a skull-faced saint in a crimson cowl who lays square mosaic tiles into a large floor, one tile in her hand
-- **05-29** - a rigid gold square frame turned a quarter turn around its centre, a carpenter's square in the corner
+- **05-29** - a gold square frame that stands on one of its corners like a diamond, a curved gold arrow that circles around it, and a small cog wheel at its centre
 - **05-30** - a gold curve that drops quickly and then runs on far to the right as a long thick tail, with one great boulder at its far end
 - **05-31** - a bell that sends out ring-shaped waves which repeat at equal distances
 
@@ -178,7 +178,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **06-03** - a square grid of small tiles with a bright gold diagonal from the upper left to the lower right, the tiles mirrored on both sides of it
 - **06-04** - a ring of small chests, one chest closed and set apart, and arrows from all the other chests that point to it
 - **06-05** - a skull-faced saint in a crimson cowl who measures a block made of small cubes with a folding rule
-- **06-06** - a pair of dice held fast in the jaws of an iron vice, a key in the screw of the vice
+- **06-06** - a mechanical hand that passes a small open iron box with a pair of dice inside it to a second mechanical hand
 - **06-07** - one long gold arrow and one short gold arrow that both start at the lower left corner of the field and point to the right at different heights, and a small white arc between them near their start
 - **06-08** - a mosaic picture of a skull made of small square tiles, each region of the mosaic in its own colour
 - **06-09** - a row of lamps on a cable of which one is dark and cold, a candle held up to it
@@ -207,16 +207,16 @@ A line names objects only. It asks for no text and for no exact count above four
 ## July
 
 - **07-01** - a set of brass standard weights in a fitted case with a purity seal on the lid
-- **07-02** - a heavy iron ball that rolls down a slope and through a small dip, speed lines behind it
+- **07-02** - a heavy iron ball that rolls down a slope with speed lines behind it, and a mechanical hand that pulls a brake lever beside the slope
 - **07-03** - a straight rod laid across a curved row of dots that it cannot follow, a candle beside it
 - **07-04** - single beads that lie apart on the left and beads chained together on the right, a pair of shears above the chain
 - **07-05** - a skull-faced saint in a crimson cowl who studies a cracked cog wheel through a magnifying lens
-- **07-06** - a row of identical beads on a rod, each with a small flag of a different height, the flags forming a wave
-- **07-07** - a square of four tiles of which the brightest gold tile is lifted out by a claw
+- **07-06** - a long parchment ribbon laid along a brass measuring rod, and iron shears that cut the ribbon at the end of the rod
+- **07-07** - a staircase of four gold squares, each half the size of the one before it, and around the largest square an added border of plain dark cloth
 - **07-08** - two machine blocks tied to each other by threads, a small tag knotted to each thread
 - **07-09** - an old measuring rod covered in cobwebs and dust beside a cracked trophy cup
 - **07-10** - a field of scattered round gold studs, one larger stud near the middle tied by short white threads to its three closest neighbours, the other studs untied
-- **07-11** - one hooded body with several skulls on separate necks, each skull looking in a different direction
+- **07-11** - one hooded figure in a crimson cowl with several small skulls around its head, and below them a row of short plain gold rods of equal length
 - **07-12** - a skull-faced saint in a crimson cowl who points to the last and tallest column of a rising row of columns, a snail on top of it
 - **07-13** - a level gold line with small dots scattered evenly above and below it
 - **07-14** - a servo-skull with a mechanical arm, held on a short iron chain by a gauntleted hand
@@ -233,7 +233,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **07-25** - a straight diagonal line with a row of beads that follows it and bends away at both ends
 - **07-26** - a key ring crowded with a great many small keys beside one large plain key, a candle between them
 - **07-27** - a horse saddle of leather and brass with a small steel ball resting in the middle of it, a candle behind
-- **07-28** - a skull-faced saint in a crimson cowl who lifts one gold bead out of a bowl of many grey beads
+- **07-28** - a skull-faced saint in a crimson cowl who weighs one gold bead against a heap of grey beads on a small balance scale
 - **07-29** - a mechanical hand that files one fine gold gear at a jeweller's bench, small tools beside it
 - **07-30** - a brass stencil plate with shaped openings laid over a scroll, a quill beside it
 - **07-31** - a field of scattered small round studs joined by thin white lines, and one bent route through them stitched in thick bright gold from the left edge to the right edge
@@ -278,20 +278,20 @@ A line names objects only. It asks for no text and for no exact count above four
 - **09-02** - two nearly identical cog wheels side by side, one of them with a single tooth of slightly different length, a candle between them
 - **09-03** - a row of beads on a rod with the last bead taken off and held by tongs
 - **09-04** - four small picture frames that each show a different pattern of dots with the same straight line across it, a candle below
-- **09-05** - a skull-faced saint in a crimson cowl who walks on a wide empty road between a group of red dots and a group of white dots
-- **09-06** - a crowned skull that stands on a tall narrow pedestal, and a great hammer that falls towards it
+- **09-05** - a skull-faced saint in a crimson cowl who turns a brass dial, on a road between a group of red dots and a group of white dots, with one red dot on the road
+- **09-06** - a crowned skull on a tall narrow pedestal between two gold arrows that rise side by side, one on each side of the pedestal
 - **09-07** - a row of tablets pushed against a wall on the right, with blank tablets filling the room on the left
 - **09-08** - a gold curve that bows from the lower left to the upper right, the area below it filled with gold stitching
 - **09-09** - a solid line through a group of dots that continues as a dashed line out over the edge of a cliff, a candle on the cliff
-- **09-10** - an hourglass that lies on its side, wide at both ends and very narrow in the middle, with one gold bead in the waist
+- **09-10** - a small balance scale with an hourglass on one pan and a straight gold rod on the other pan
 - **09-11** - an open ledger book in which a servo-skull writes with a quill, a row of tally strokes on the page
 - **09-12** - several separate strings that hang side by side from one bar without touching, a bead on each
-- **09-13** - a row of small lamps on a brass bar, every one of them lit, inside a frame of cog teeth
+- **09-13** - a brass cup filled to its rim with molten gold that spills over the edge, inside a frame of cog teeth
 - **09-14** - a skull-faced saint in a crimson cowl who holds a large glass lens through which a bent grid appears straight
-- **09-15** - a row of small plain iron plates, one of them covered by a black mask with two eye holes, and a mechanical finger that points at it
+- **09-15** - a black mask with two eye holes that lies on a pile of stacked parchment sheets, and a quill that lies beside the pile
 - **09-16** - three closed gothic doors side by side, one of them slightly open with light behind it, a candle before them
 - **09-17** - two balance beams one above the other, each level, with their pivots at different places
-- **09-18** - a row of panels from left to right in which a cloud of random specks becomes step by step a clear skull
+- **09-18** - a row of three panels in which a cloud of random specks becomes a clear skull, and a large hourglass that stands beside the row
 - **09-19** - a servo-skull that sits on one pan of a large weighing scale, iron weights on the other pan
 - **09-20** - many thin lines that almost meet in one place, and one gold dot set in the middle of their crossings
 - **09-21** - a skull-faced saint in a crimson cowl who picks up one grey stone from a path of marked stones and holds a lantern to it
@@ -316,7 +316,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **10-07** - two gold arrows that come down from the upper left and the upper right and meet at one round red disc in the centre, and one tall burning candle below the disc
 - **10-08** - an abacus frame with five vertical rods of beads, four rods with bone white beads in order and one rod in the middle with beads of mixed red, gold and black
 - **10-09** - a skull-faced saint in a crimson cowl who shuffles a handful of red and white label tags between two bowls
-- **10-10** - a row of four lamps on a brass bar, the first lit, the second dark, the third lit and the fourth dark
+- **10-10** - a long iron chain whose last links are broken off and lie apart from it, and beside the chain a quill and a parchment tag on a cord
 - **10-11** - a small ring of beads set inside a large ring of beads, each ring with one gold bead
 - **10-12** - a calendar wheel of many dark fields with a single small lightning flash in one field
 - **10-13** - a servo-skull that holds a pair of scales, and a human hand that sets a check weight on one pan, a candle behind
@@ -343,17 +343,17 @@ A line names objects only. It asks for no text and for no exact count above four
 
 - **11-01** - a picture of a skull cut into a grid of square pieces that are laid out in a row
 - **11-02** - two servo-skulls that face the same row of tablets, a thread from each tablet to both skulls
-- **11-03** - a cabinet of many small drawers with one drawer pulled open and a gold rod taken from it
+- **11-03** - a cabinet of many small dark drawers, and a mechanical hand that pushes one new gold drawer into its side
 - **11-04** - a laurel-crowned skull on a pedestal and a measuring rod held up against it a second time, a candle beside it
 - **11-05** - a skull-faced saint in a crimson cowl who holds a loop of cable that runs out of her hand and back into her own sleeve
 - **11-06** - a ring of nodes in which small scrolls travel along the threads from each node to its neighbours
 - **11-07** - an hourglass and a small chest on the two pans of a scale, the pan with the chest rising
 - **11-08** - a line through dots with a narrow gold band close around it and a wide pale band around both
 - **11-09** - a web of nodes that a single upright blade divides into two halves at its thinnest place
-- **11-10** - a slanted four-sided frame whose area is filled with gold, and beside it the same frame pressed flat into a line
-- **11-11** - a row of four lamps on a brass bar, all four lit
+- **11-10** - a slanted four-sided gold frame that shrinks in three steps to a tiny gold dot, and a magnifying lens held over the dot
+- **11-11** - a closed iron chest with a red wax seal on its lid, and beside it a second identical red wax seal that hangs on a short crimson ribbon
 - **11-12** - a skull-faced saint in a crimson cowl who presses a rising wavy line down until it runs level
-- **11-13** - a chain in which only the last link and the next link are gold and all earlier links fade into mist
+- **11-13** - a chain of iron links with one gap where a link is missing, and a mechanical hand that sets a small gold link into the gap
 - **11-14** - a clean mask of a skull on the left and the same mask broken into coarse blurred blocks on the right, a candle between them
 - **11-15** - a half circle of several hooded priests of whom only two are lit, and before them a gate with a pointing hand
 - **11-16** - several small scrolls tied into one bundle with a cord, and above the bundle one floating skull with a short antenna that carries it on a chain
@@ -400,7 +400,7 @@ A line names objects only. It asks for no text and for no exact count above four
 - **12-24** - a skull-faced saint in a crimson cowl who bends a flexible gold rod into a long double bend over a row of dots
 - **12-25** - a round glass dome in which a bulging grid appears, and beside it the same grid flat and straight
 - **12-26** - a curved bowl-shaped line with a straight rod laid across it from rim to rim, a bead on the rod above the bottom of the bowl, a candle beside it
-- **12-27** - a conveyor of small chests that passes through three iron gates, one gate open, one half open and one shut
+- **12-27** - a conveyor of small chests that passes through one iron gate that stands wide open, and a gold weight on a chain that holds the gate up
 - **12-28** - one small tray of beads under a great magnifying lens, a forge fire behind it
 - **12-29** - several small heaps of beads of unequal size and one large scale that weighs them all together, a candle beside it
 - **12-30** - a skull-faced saint in a crimson cowl who draws several scattered beads on strings towards one gold bead in the middle

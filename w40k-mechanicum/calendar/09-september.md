@@ -26,15 +26,15 @@
 
 ## September 5 - Commemoration of Saint Marginia the Wide
 
-**Purpose** - Honouring the widest margin between two classes.
+**Purpose** - Remembering the saint who tuned the penalty C of a support vector machine.
 
-**Context** - Marginia always drew the boundary with the widest margin between the classes. A support vector machine does the same, and only the points on the margin, the support vectors, decide where the boundary lies. The adepts honour her with every wide margin.
+**Context** - Marginia drew the boundary with the widest margin between the classes, as a support vector machine does. For overlapping classes she tuned the penalty C: a small C keeps the margin wide and tolerates points inside it, a large C narrows it. She searched C on a logarithmic scale, as the adepts do.
 
 ## September 6 - Feast of the Cross-Entropy
 
-**Purpose** - Understanding why cross-entropy punishes confident wrong answers.
+**Purpose** - Reading a rising validation loss beside a rising accuracy.
 
-**Context** - Cross-entropy loss is the negative logarithm of the probability the model gave to the correct class. A confident wrong answer costs far more than a hesitant one. The machine spirit learns humility from this loss.
+**Context** - Cross-entropy is the negative logarithm of the probability given to the correct class. A confident wrong answer costs far more than a hesitant one. So the validation loss can rise while the accuracy improves: the model grows overconfident. The tech-priests plot both and check the calibration.
 
 ## September 7 - Rite of the Left Padding
 
@@ -56,9 +56,9 @@
 
 ## September 10 - Feast of the Narrow Waist
 
-**Purpose** - Learning a compressed representation with an autoencoder.
+**Purpose** - Comparing an autoencoder with PCA of the same size.
 
-**Context** - An autoencoder squeezes its input through a narrow middle layer and rebuilds it on the other side, so it must learn a compressed representation. Inputs it rebuilds badly are unlike its training data. The servo-skulls report those inputs.
+**Context** - An autoencoder squeezes its input through a narrow middle layer and rebuilds it on the other side. With linear layers only, it finds the same subspace as PCA. So compare its reconstruction error with that of PCA with the same number of components. If it is no better, the Magos keeps the PCA.
 
 ## September 11 - Rite of the Tracked Run
 
@@ -74,9 +74,9 @@
 
 ## September 13 - Feast of the Full Byte
 
-**Purpose** - Counting the 256 values of one byte.
+**Purpose** - Converting 8-bit images to a wider type before arithmetic.
 
-**Context** - Day 256 of a common year is September 13. In a leap year day 256 falls one day earlier. 256 is 2 to the power 8, the number of values one byte can hold, 0 to 255. The cogitator stores every byte in this range.
+**Context** - Day 256 of a common year is September 13, and 256 is the number of values one byte can hold, 0 to 255. A pixel stored as uint8 is one byte. Add two such images in NumPy and a sum above 255 wraps around: 200 plus 100 gives 44, with no error. The enginseers convert to a wider type first.
 
 ## September 14 - Commemoration of Saint Lensa the Straightener
 
@@ -86,9 +86,9 @@
 
 ## September 15 - Rite of the Masked Token
 
-**Purpose** - Training a model to predict hidden words.
+**Purpose** - Continuing masked training on your own unlabelled text.
 
-**Context** - In masked language modelling some tokens of a text are hidden, and the model learns to predict them from the words on both sides. The text supplies its own labels, so no human annotator is needed. The servitors do the hiding.
+**Context** - In masked language modelling some tokens are hidden, and the model predicts them from the words on both sides. The text supplies its own labels. So continue this training on unlabelled text of your own domain before you fine-tune. It often improves the result. The servitors do the hiding.
 
 ## September 16 - Vigil of the Three Doors
 
@@ -104,9 +104,9 @@
 
 ## September 18 - Feast of the Denoising Step
 
-**Purpose** - Generating images by removing noise step by step.
+**Purpose** - Counting what each denoising step of a diffusion model costs.
 
-**Context** - A diffusion model is trained to remove a little noise from a noised image. To generate, it starts from pure noise and removes noise step by step until an image remains. The machine spirit finds the picture in the noise.
+**Context** - A diffusion model starts from pure noise and removes a little of it at every step. Each step is at least one full pass of the network, so fifty steps cost at least fifty passes. Halve the number of steps and compare the images. Often little is lost, and the servitors finish in half the time.
 
 ## September 19 - Rite of the Weighed Model
 
