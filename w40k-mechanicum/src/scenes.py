@@ -36,7 +36,12 @@ CLOCKS, MOVERS, PLATES = [], [], []
 # skull: a floating servo-skull. px, depth: where it is (plate pixel, metres); height in metres; yaw: its face
 #        turned so many degrees to the camera's right; key, rim: its warm light and the cold light behind it,
 #        each (plate pixel, depth, colour, watts); ambient: the weak light from all round
-SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10)),
+# titan: the Warhound in a hall behind an opening in the wall (src/titanhall.py)
+SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10),
+                        titan=dict(opening=(1660, 1946), behind=10.4, depth=56.0, feet=-9.0, yaw=0.0, haze=0.008,
+                                   piers=((-14, 25), (12, 30)), windows=0.6,
+                                   key=((-14, -14, 20), (1.0, 0.62, 0.32), 8.0e4, 40),
+                                   rim=((10, 24, 22), (0.5, 0.65, 1.0), 5.0e4, 35))),
           "forge": dict(skull=dict(px=(790, 235), depth=3.3, height=0.36, yaw=22,
                                    key=((965, 345), 3.05, (1.0, 0.6, 0.28), 7.0),      # the lantern
                                    rim=((700, 110), 4.3, (0.4, 0.58, 1.0), 25.0),      # the night window
@@ -366,6 +371,9 @@ def build(name):
         servoskull.build(at(sk["px"], sk["depth"]), sk["height"], sk["yaw"], MOVERS,
                          *[(at(px, z), colour, watts) for px, z, colour, watts in (sk["key"], sk["rim"])])
         s.world.color = sk["ambient"]
+    if "titan" in conf:
+        import titanhall
+        titanhall.build(conf["titan"], d["depth"], K, ob, bpy.data.objects["backdrop_fill"])
     s.render.engine = "CYCLES"
     s.cycles.device = "GPU"
     s.cycles.samples = SAMPLES

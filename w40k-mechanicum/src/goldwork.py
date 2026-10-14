@@ -59,7 +59,9 @@ THREAD = {"mechanicum": 128, "stellars": 255}      # the value in the ink map of
 # object of its own), `box` (the part of the plate the image model sees when it clears the cloth: x0, y0, x1, y1, its
 # sides multiples of 16), `region` (the part that holds the cloth, which is measured and laid flat), `toward` (the
 # direction towards the light on the flat cloth: right, down), `seed` (of the image model, where another than the
-# default painted velvet that matched the velvet round it better: wip/muster/clearseeds.py), `edges` (the long edges
+# default painted velvet that matched the velvet round it better: wip/muster/clearseeds.py), `strokes` (the
+# emblem's gold strokes are filled from the velvet beside them, without the image model, no nearer to the cloth's edge
+# than this many pixels), `edges` (the long edges
 # of a banner that give its own way down; an edge that a thing before it hides is left out) and the sigils: (name, x, y, radius in plate pixels
 # where the cloth faces the camera, or across the picture with `across`, (ex, ey, rx, ry) the ellipse round the emblem
 # that the model painted there). `across`: each sigil as wide in the picture as the emblem it replaces; the depth of
@@ -78,7 +80,15 @@ DRAPES = {"forge": dict(prompt="A heavy dark crimson velvet cloth draped over a 
                          cloths=[dict(actor="11", box=(128, 0, 448, 320), region=(135, 0, 411, 654), toward=(0.9, -0.45), seed=6, edges=("right",),
                                       sigils=[("mechanicum", 310, 40, 49, (310, 40, 54, 52)), ("stellars", 288, 211, 60, (288, 211, 64, 61))]),
                                  dict(actor="14", box=(1312, 0, 1600, 320), region=(1326, 0, 1571, 652), toward=(-0.9, -0.45), edges=("left", "right"),
-                                      sigils=[("mechanicum", 1431, 78, 53, (1431, 78, 57, 57)), ("stellars", 1444, 214, 62, (1444, 214, 66, 70))])])}
+                                      sigils=[("mechanicum", 1431, 78, 53, (1431, 78, 57, 57)), ("stellars", 1444, 214, 62, (1444, 214, 66, 70))])]),
+          "saint": dict(prompt="A flat banner of matte dark crimson velvet seen from the front, filling the picture, in dim warm light: "
+                               "flat smooth fabric with a fine pile and no folds, between two narrow gold embroidered borders. The "
+                               "middle is plain flat velvet without any emblem, gear, dragon, candle, curtain, opening or ornament",
+                        measure="saint", pictures=("saint.png",), across=True,
+                        cloths=[dict(actor="2", box=(0, 96, 176, 304), region=(1, 1, 169, 568), toward=(0.8, 0.6), strokes=14, edges=("left", "right"),
+                                     sigils=[("mechanicum", 85, 195, 40, (84, 202, 48, 76))]),
+                                dict(actor="3", box=(1424, 160, 1600, 352), region=(1429, 0, 1596, 587), toward=(-0.6, 0.8), strokes=12, edges=("left", "right"),
+                                     sigils=[("stellars", 1507, 251, 33, (1502, 250, 54, 54))])])}
 RIM = 4                                    # vertices of an element's mesh that its curved rim takes
 TEXELS = 4                                 # texels of the texture of the flat cloth in a pixel of the plate
 SOFT = 0.5                                 # pixels of the plate: the texture of the gold is evened over this much
@@ -135,18 +145,47 @@ def clear(scene, seed=4):
     from diffusers import ZImageInpaintPipeline
     conf = DRAPES[scene]
     plate = first(scene).copy()
-    pipe = ZImageInpaintPipeline.from_pretrained("Tongyi-MAI/Z-Image-Turbo", torch_dtype=torch.bfloat16).to("cuda")
+    pipe = None
     for cloth in conf["cloths"]:
         hole = np.any([ellipse(plate.shape, s[4], grow=6) for s in cloth["sigils"]], 0).astype(np.uint8)
+        if cloth.get("strokes"):
+            # thin strokes on a flat banner (the saint's): only the emblem's gold and the velvet next to it are
+            # filled, from the velvet beside them. The image model, given an ellipse there, painted the folds of a
+            # curtain or a glossy patch that stood apart from the flat banner at every seed and scale. The gold
+            # borders, within `strokes` pixels of the cloth's edge, and every piece of gold that lies mostly outside
+            # the ellipse (the emblems above and below) stay
+            seg = np.load(os.path.join(ROOT, "wip", "scene3d", f"{scene}_seg.npz"))[cloth["actor"]]
+            inner = ndimage.distance_transform_edt(seg) > cloth["strokes"]
+            count, pieces = cv2.connectedComponents((golden(plate) & inner).astype(np.uint8))
+            share = ndimage.mean(hole > 0, pieces, range(1, count))
+            gold = np.isin(pieces, 1 + np.flatnonzero(share >= 0.5))
+            hole = cv2.dilate(gold.astype(np.uint8), np.ones((11, 11), np.uint8)) * inner      # past the dark edge of the stitches
         x0, y0, x1, y1 = cloth["box"]
-        crop, part = plate[y0:y1, x0:x1].copy(), hole[y0:y1, x0:x1]
-        # a hole at the top edge of the plate: the model painted the top of a banner there, with sky above it. The
-        # crop is mirrored upwards, so the cloth goes on above the hole
-        top = 64 if y0 == 0 else 0
-        big = lambda a: np.pad(a, ((top, 0),) + ((0, 0),) * (a.ndim - 1), mode="reflect")
-        gen = np.asarray(pipe(prompt=conf["prompt"], image=Image.fromarray(big(crop)), mask_image=Image.fromarray(big(part) * 255), strength=1.0,
-                              height=y1 - y0 + top, width=x1 - x0, num_inference_steps=9, guidance_scale=0.0,
-                              generator=torch.Generator("cuda").manual_seed(int(cloth.get("seed", seed)))).images[0])[top:]
+        crop, part = plate[y0:y1, x0:x1].copy(), hole[y0:y1, x0:x1].astype(np.uint8)
+        if cloth.get("strokes"):
+            # the colours of the velvet beside the strokes carried into them, with the grain of that velvet: its
+            # difference from its own blur, taken from random places round the hole
+            gen = cv2.inpaint(crop, part, 6, cv2.INPAINT_TELEA).astype(np.float32)
+            r, g = crop[..., 0].astype(np.float32), crop[..., 1].astype(np.float32)
+            ring = (cv2.dilate(part, np.ones((25, 25), np.uint8)) > 0) & (part == 0) & (r > 1.5 * g) & (r > 20) & ~golden(crop)
+            grain = (crop.astype(np.float32) - cv2.GaussianBlur(crop.astype(np.float32), (0, 0), 2))[ring]
+            # picked pixel by pixel the grain stood as dots; evened over 0.8 pixels and brought to half its spread: at
+            # its whole spread the filled strokes stood darker and mottled
+            noise = np.zeros_like(gen)
+            noise[part > 0] = grain[np.random.default_rng(0).integers(0, len(grain), int(part.sum()))]
+            noise = cv2.GaussianBlur(noise, (0, 0), 0.8)
+            noise *= 0.5 * grain.std(0) / (noise[part > 0].std(0) + 1e-6)
+            gen[part > 0] += noise[part > 0]
+            gen = gen.clip(0, 255)
+        else:
+            # a hole at the top edge of the plate: the model painted the top of a banner there, with sky above it.
+            # The crop is mirrored upwards, so the cloth goes on above the hole
+            top = 64 if y0 == 0 else 0
+            big = lambda a: np.pad(a, ((top, 0),) + ((0, 0),) * (a.ndim - 1), mode="reflect")
+            pipe = pipe or ZImageInpaintPipeline.from_pretrained("Tongyi-MAI/Z-Image-Turbo", torch_dtype=torch.bfloat16).to("cuda")
+            gen = np.asarray(pipe(prompt=conf["prompt"], image=Image.fromarray(big(crop)), mask_image=Image.fromarray(big(part) * 255), strength=1.0,
+                                  height=y1 - y0 + top, width=x1 - x0, num_inference_steps=9, guidance_scale=0.0,
+                                  generator=torch.Generator("cuda").manual_seed(int(cloth.get("seed", seed)))).images[0])[top:]
         a = cv2.GaussianBlur(part.astype(np.float32), (0, 0), 2)[..., None]
         plate[y0:y1, x0:x1] = (crop * (1 - a) + gen * a).astype(np.uint8)
         print(f"CLEARED {cloth['actor'] or 'cloth'} seed {cloth.get('seed', seed)}: {int(hole.sum())} px painted, "
@@ -423,7 +462,8 @@ def apply(scene):
         if not os.path.exists(os.path.join(keep, name)):
             shutil.copy2(file, os.path.join(keep, name))
         old = np.asarray(Image.open(os.path.join(keep, name)).convert("RGB")).astype(np.float32)
-        Image.fromarray((old * (1 - a) + new * a).round().astype(np.uint8)).save(file)
+        now = np.asarray(Image.open(file).convert("RGB")).astype(np.float32)          # with what src/repaint.py painted elsewhere
+        Image.fromarray(np.where(a > 0, old * (1 - a) + new * a, now).round().astype(np.uint8)).save(file)
         print("wrote", file)
 
 
