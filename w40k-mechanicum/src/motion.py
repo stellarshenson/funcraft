@@ -20,8 +20,8 @@ import os, sys, math
 import numpy as np, cv2
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FRAMES = 80
-CYCLE = 20                 # frames per flow cycle of a molten stream: 4 per loop
+FRAMES = int(os.environ.get("LOOP_FRAMES", 80))      # as src/scenes.py: the loop lasts 4 s
+CYCLE = FRAMES // 4        # frames per flow cycle of a molten stream: 4 per loop
 TAU = 2 * math.pi
 
 
@@ -140,7 +140,7 @@ MAPS = {
         swing("7", "Seal tag 6", (1733, 345, 1808, 515), [(1770, 450)], (1772, 240), 1.0, 0.75),
         swing("8", "Seal tag 7", (2015, 340, 2094, 518), [(2055, 450)], (2056, 235), 1.0, 0.9),
         stream("9", "Screen text scrolls upward", (662, 222, 775, 388), [(718, 300)], [(718, 386), (718, 224)], 0.6),
-        spin("10", "Gear on the arch", (1375, 34, 1448, 100), [(1411, 67)]),
+        spin("10", "Gear on the arch", (1375, 34, 1448, 100), [(1411, 67)], turns=0),      # the owner: "turn this off"
         smoke("s1", "Smoke of floor candle 1", at=(1058, 600)),
         smoke("s2", "Smoke of floor candle 2", at=(1390, 640)),
         smoke("s3", "Smoke of floor candle 3", at=(1852, 690)),
@@ -296,7 +296,7 @@ def flow_setup(plate, streams):
         fx = cv2.GaussianBlur(fx * m, (0, 0), 12) / g
         fy = cv2.GaussianBlur(fy * m, (0, 0), 12) / g
         n = np.hypot(fx, fy) + 1e-6
-        el["F"] = (fx / n * el["speed"], fy / n * el["speed"])
+        el["F"] = (fx / n * el["speed"] * 80 / FRAMES, fy / n * el["speed"] * 80 / FRAMES)      # speed: px per 50 ms
         noise = cv2.GaussianBlur(rng.random((H, W)).astype(np.float32), (0, 0), 20)
         el["offset"] = (noise - noise.min()) / (noise.max() - noise.min() + 1e-6)
         el["ws"] = cv2.GaussianBlur(cv2.dilate(el["mask"].astype(np.uint8), np.ones((5, 5), np.uint8)).astype(np.float32), (0, 0), 2)

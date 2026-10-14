@@ -27,7 +27,7 @@ import air
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAU = 2 * math.pi
-FRAMES = 80
+FRAMES = int(os.environ.get("LOOP_FRAMES", 80))      # as src/scenes.py
 REACH = 0.5                # m
 GLOW = 0.12                # m, how far a flame lights its own smoke
 MAX_LIGHTS = 48

@@ -43,8 +43,9 @@ import air
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAU = 2 * math.pi
-FRAMES, FPS, SUB = 80, 20, 2
-WARM = 240                 # frames before recording
+FRAMES = int(os.environ.get("LOOP_FRAMES", 80))      # as src/scenes.py: the loop lasts 4 s
+FPS, SUB = FRAMES // 4, 2
+WARM = 12 * FPS            # frames before recording
 DX = 0.00625               # m, one cell of the velocity grid
 N = (64, 64, 128)          # cells
 FINE = 2                   # density cells per velocity cell

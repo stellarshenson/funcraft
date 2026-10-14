@@ -8,8 +8,12 @@ flames lean with the room's draft and change their light (src/air.py);
 smoke rises from them, simulated as a gas (src/smoke.py) and placed at the
 wick it comes from; molten streams flow (src/motion.py); status lights
 blink; dust motes float near the lens; a scene may hold a floating
-servo-skull, a painted 3D model with lights of its own (src/servoskull.py).
-80 frames (4 s at 50 ms), an exact loop.
+servo-skull, a painted 3D model with lights of its own (src/servoskull.py),
+and a draped cloth as an object of its own with its embroidery as a texture
+(src/goldwork.py).
+80 frames (4 s at 50 ms), an exact loop. LOOP_FRAMES and LOOP_WIDTH in the environment give another frame count for
+the same 4 s and another width (LOOP_FRAMES=120 LOOP_WIDTH=2432: 30 frames per second at the plate's own size); the
+same LOOP_FRAMES must be set for the smoke sources and for src/smoke.py, which make one record per frame.
 
     blender -b -P src/scenes.py -- choir sources     # wip/scene3d/choir_sources.json for src/smoke.py
     blender -b -P src/scenes.py -- choir preview     # one still, wip/preview/scene-choir.png
@@ -23,8 +27,9 @@ import backdrop as B
 import rig
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FRAMES, TICK, SAMPLES = 80, 16, 64
-RES = (1520, 480)
+FRAMES, SAMPLES = int(os.environ.get("LOOP_FRAMES", 80)), 64
+TICK = FRAMES // 5                         # a status light holds its state that many frames: 0.8 s
+RES = (int(os.environ.get("LOOP_WIDTH", 1520)), int(os.environ.get("LOOP_WIDTH", 1520)) * 6 // 19)
 CLOCKS, MOVERS, PLATES = [], [], []
 
 # halo: (u, v, radius) of a gold halo a glint sweeps round once per loop
@@ -260,6 +265,70 @@ def motes(near, count=36, seed=3):
             x + a * math.sin(2 * math.pi * (ph + o)), y, z + a * 0.6 * math.sin(4 * math.pi * (ph + o)))))
 
 
+def drape(stem, back, group):
+    """The cloths with gold of the plate, where src/goldwork.py has written them (<stem>_drape.npz). A cloth that is
+    an object of its own is the mesh of its measured surface, cut out of the backdrop; a cloth that is an element of
+    the motion map keeps its mesh and its bones. Each has the plate as its first UV map, whose picture of the velvet
+    it emits, and the cloth laid flat as its second, through which lies the texture of its gold (red: where it lies,
+    green: the shading of its strokes, blue: its shadow on the velvet). The gold emits a tone chosen by the velvet's
+    light at its pixel of the plate and the shading of the stroke, under the same candle light: it bends, shortens
+    and moves with the cloth because the cloth carries it, and darkens where the velvet does."""
+    if not os.path.exists(stem + "_drape.npz"):
+        return
+    import bmesh
+    d = np.load(stem + "_drape.npz")
+    light = to_image("velvet_light", d["light"].astype(np.float32))
+    lin = lambda c: np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    for i in range(int(d["n"])):
+        if f"{i}/V" in d.files:
+            bm = bmesh.new()
+            bm.from_mesh(back.data)
+            under = d[f"{i}/cut"][::2, ::2].ravel()     # the backdrop has a vertex for every second pixel
+            bmesh.ops.delete(bm, geom=[f for f in bm.faces if all(under[v.index] for v in f.verts)], context="FACES_ONLY")
+            bm.to_mesh(back.data)
+            bm.free()
+            m = rig.material(f"drape_{i}", stem + "_clean.png")
+            ob = rig.mesh(f"drape_{i}", d[f"{i}/V"], d[f"{i}/uv"], d[f"{i}/quads"], m)
+        else:
+            ob = bpy.data.objects["cloth_" + str(d[f"{i}/actor"])]
+            m = ob.data.materials[0].copy()
+            ob.data.materials[0] = m
+        me = ob.data
+        vi = np.empty(len(me.loops), np.int32)
+        me.loops.foreach_get("vertex_index", vi)
+        me.uv_layers.new(name="chart").data.foreach_set("uv", d[f"{i}/chart"][vi].ravel())
+        X = Nodes(m.node_tree)
+        velvet = next(n for n in X.N if n.type == "EMISSION")
+        work = X.new("ShaderNodeTexImage", image=to_image(f"gold_{i}", d[f"{i}/work"].astype(np.float32)), interpolation="Cubic", extension="CLIP")
+        X.L.new(X.new("ShaderNodeUVMap", uv_map="chart").outputs["UV"], work.inputs["Vector"])
+        part = X.new("ShaderNodeSeparateColor")
+        X.L.new(work.outputs["Color"], part.inputs["Color"])
+        X.L.new(X.op("SUBTRACT", 1.0, part.outputs["Blue"]), velvet.inputs["Strength"])
+        lit = X.new("ShaderNodeTexImage", image=light, interpolation="Linear", extension="EXTEND")
+        X.L.new(X.new("ShaderNodeUVMap", uv_map="uv").outputs["UV"], lit.inputs["Vector"])
+        # the gold: the velvet's light, times the shading of the stroke, through the plate's three tones of gold
+        level = X.op("MULTIPLY", lit.outputs["Color"], X.op("ADD", 1.0, part.outputs["Green"]))
+        ramp = X.new("ShaderNodeValToRGB")
+        X.L.new(X.op("MULTIPLY", level, 0.5 / 1.2), ramp.inputs["Fac"])
+        dark, mid, bright = (lin(c / 255) for c in d[f"{i}/tones"])
+        stops = [(0.0, np.zeros(3)), (0.25 / 1.2, dark), (0.5 / 1.2, mid), (0.9 / 1.2, bright), (1.0, np.minimum(1.0, 1.2 * bright))]
+        el = ramp.color_ramp.elements
+        while len(el) < len(stops):
+            el.new(0.5)
+        for e, (at, c) in zip(el, stops):
+            e.position, e.color = at, (*c.tolist(), 1.0)
+        gold = X.new("ShaderNodeEmission")
+        glow = X.new("ShaderNodeVectorMath", operation="SCALE")
+        X.L.new(ramp.outputs["Color"], glow.inputs[0])
+        X.L.new(X.new("ShaderNodeGroup", node_tree=group).outputs["Gain"], glow.inputs["Scale"])
+        X.L.new(glow.outputs[0], gold.inputs["Color"])
+        mix = X.new("ShaderNodeMixShader")
+        for k, sock in enumerate((part.outputs["Red"], velvet.outputs[0], gold.outputs[0])):
+            X.L.new(sock, mix.inputs[k])
+        X.L.new(mix.outputs[0], X.N["Material Output"].inputs["Surface"])
+        print("DRAPE", ob.name, len(me.vertices), "vertices, texture", d[f"{i}/work"].shape[1::-1], flush=True)
+
+
 def build(name):
     conf = SCENES.get(name, {})
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -267,6 +336,7 @@ def build(name):
     d = np.load(stem + ".npz")
     ob, fov = B.backdrop(stem + "_clean")
     group = rig.build(name, MOVERS, stem + ".png")
+    drape(stem, ob, group)
     plate = ob.material_slots[0].material
     glow = to_image("glow", plate_material(plate, conf, group))
     for m in bpy.data.materials:                     # the actors and the fill behind the plate's edges

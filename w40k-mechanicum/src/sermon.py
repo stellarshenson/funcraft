@@ -11,7 +11,7 @@ the page asks for a file only when it needs it:
                          size of every badge
   sermons/<mm>.json.gz   the title and the Context of every entry of calendar/ for one month: JSON, gzipped. The
                          page gets the file of the current month and inflates it
-  banners/<name>.avif    the scene animations of BANNERS (out/<name>.gif or out/<name>.avif), each reduced to WIDTH
+  banners/<name>.avif    the scene animations of BANNERS (out/<name>.avif, or out/<name>.gif without one), each reduced to WIDTH
                          pixels and to every STEP-th frame, as an animated AVIF, about a twentieth of the size of
                          the same GIF. The page draws one with the day of the year as the seed
   badges/<mm-dd>.avif    the service badge of every day, from resources/assets/badges/ (src/badges.py). The page
@@ -71,8 +71,9 @@ def avif(image, quality, **options):
 
 
 def banner(name):
-    """Writes the animation out/<name>.gif or out/<name>.avif, reduced, as an animated AVIF and returns its size in pixels."""
-    scene = Image.open(next(path for path in (ROOT / f"out/{name}.gif", ROOT / f"out/{name}.avif") if path.exists()))
+    """Writes the animation out/<name>.avif or, where a scene has none yet, out/<name>.gif, reduced, as an animated
+    AVIF and returns its size in pixels."""
+    scene = Image.open(next(path for path in (ROOT / f"out/{name}.avif", ROOT / f"out/{name}.gif") if path.exists()))
     size = (WIDTH, round(scene.height * WIDTH / scene.width))
     # each kept frame is reduced as it is read: the 360 frames of a scene of 2432 x 768 pixels do not fit into memory
     # whole. A reduced frame is a copy; the iterator reuses one image. A kept frame is shown for as long as the STEP
