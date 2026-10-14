@@ -14,6 +14,11 @@ as the smoke of the candles (src/smoke.py), with fuel and soot as further fields
     dS/dt + (u . grad) S = r - S / t_soot
     dF/dt + (u . grad) F = r - F / t_glow
 
+A column of smoke is the same fire in a higher and wider box of air, with soot that stays in sight longer (`high`,
+`wide`, `lasts`); its flame burns out of sight and only its soot is shown. Its loop is closed by `carry`. Its box must
+be so large, and its soot must thin so soon, that no soot reaches a wall of the box: there it would show as a
+straight edge.
+
 u is the air velocity; th = T / T0 - 1 the temperature over that of the air, in units of the air's own; Y the
 fuel gas, 1 where it leaves the bed; F the soot that has just formed, which glows while it is hot: the flame; S the
 soot that is left when it has cooled: dark smoke. Hot gas is lighter than the air by the share th, so it rises with g th. A wind crosses the box and
@@ -63,11 +68,11 @@ CLOSE = 40                                 # the frames led over at the end of t
 
 
 class Fire:
-    def __init__(self, width, dev, seed=0, deep=None, fine=1.0, lumps=None, tall=1.0, pace=None):
-        self.N = X, Y, Z = tuple(8 * round(n * fine / 8) for n in N)
-        self.pace = pace or PACE
+    def __init__(self, width, dev, seed=0, deep=None, fine=1.0, lumps=None, tall=1.0, pace=None, high=1.0, lasts=None, wide=1.0):
+        self.N = X, Y, Z = tuple(8 * round(n * fine / 8) for n in (N[0] * wide, N[1], N[2] * high))
+        self.pace, self.lasts = pace or PACE, lasts or T_SOOT
         self.dev, self.W, self.t0 = dev, width, self.pace * math.sqrt(width / G)
-        self.dx = dx = BOX[0] * width / X
+        self.dx = dx = BOX[0] * wide * width / X
         self.u = torch.zeros(3, X, Y, Z, device=dev)
         self.q = torch.zeros(4, X, Y, Z, device=dev)                  # th, fuel, soot, glowing soot
         ax = [torch.arange(n, device=dev, dtype=torch.float32) for n in self.N]
@@ -138,8 +143,9 @@ class Fire:
         th = torch.maximum(th, 1.5 * bed)                             # the bed is alight
         burn = torch.minimum(fuel, dt / (self.burns * t0) * (0.3 + 0.7 * fuel)) * (th > 0.3)
         fuel = fuel - burn
+        self.burn = burn
         th = (th + HEAT * burn).clamp(max=HOTTEST)
-        soot = (soot + burn) * math.exp(-dt / (T_SOOT * t0))
+        soot = (soot + burn) * math.exp(-dt / (self.lasts * t0))
         flame = (flame + burn) * math.exp(-dt / (T_GLOW * t0))
         th = th / (1 + dt / (T_COOL * t0) * (1 + (th / 2) ** 3))       # hot gas radiates: it cools faster the hotter it is
         u[2] = u[2] + G / self.pace ** 2 * th * dt
@@ -179,15 +185,51 @@ def pace(width, like):
     return PACE * math.sqrt(like / width) if like else PACE
 
 
+def carry(sim, air, burnt, winds, frames, fps, sub, log=None):
+    """The soot of a column of smoke, carried through air that repeats: (frames, across, up), along each line of sight.
+
+    The pictures of a fire are led over at the end of its loop, so for CLOSE frames two pictures show at once. A flame
+    changes faster than that. A column of smoke does not: it would show as two columns that fade into each other. So
+    the air is led over and not the picture: the recorded motion of the air and the soot set free in each frame repeat
+    with the loop, and the soot is carried through that loop again and again until its pictures repeat too.
+    air, burnt: for every recorded frame the velocity of the air and the soot set free in it; winds: the wind in it."""
+    w = smooth(frames - CLOSE, frames, torch.arange(frames, device=sim.dev).float())
+    def led(rec, i):                                                  # frame i of the loop, as the pictures of a fire are led over
+        a = rec[CLOSE + i].float()
+        return a if w[i] == 0 else (1 - w[i]) * a + w[i] * rec[i - (frames - CLOSE)].float()
+    soot, dt, step, last = sim.q[2].clone(), 1.0 / (fps * sub), sim.dx / sim.W, None
+    fade = math.exp(-dt / (sim.lasts * sim.t0))
+    for turn in range(1, 41):
+        shots = []
+        for i in range(frames):
+            adv, free = led(air, i), led(burnt, i) / sub
+            adv[0] += winds[CLOSE + i][0]
+            adv[1] += winds[CLOSE + i][1]
+            for _ in range(sub):
+                soot = (sim.advect(soot[None], adv, dt)[0] + free) * fade * sim.keep
+            shots.append((soot * sim.rich).sum(1) * step)
+        shots = torch.stack(shots)
+        change = float((shots - last).abs().mean() / shots.mean()) if last is not None else 1.0
+        last = shots
+        if log is not None:
+            log(f"soot carried through the loop {turn} times: its pictures differ from those of the turn before by {change:.1%}")
+        if change < 0.005:
+            break
+    return shots
+
+
 def simulate(width, dev, frames=120, fps=30, wind=(1.1, 1.0), course=((1, 0.25), (2, 0.20), (3, 0.15)), seed=0, deep=None, fine=1.0, lumps=None,
-             tall=1.0, like=None, log=None):
+             tall=1.0, like=None, log=None, high=1.0, lasts=None, column=False, wide=1.0):
     """The loop of one fire `width` metres wide: glow and soot, each (frames, up, across) with row 0 at the top; the
     light of the whole fire per frame; the size of a cell in metres; the cell of the middle of the bed (across, up
     from the lowest row). `deep` is the depth of its bed in widths; `fine` makes the cells that many times smaller;
     `lumps` is the number of heaps of its bed; `tall` makes its fuel burn that many times longer, which makes its flame
-    taller; `like` gives it the pace of a fire that many metres wide, by a stretch of its time."""
+    taller; `like` gives it the pace of a fire that many metres wide, by a stretch of its time. `high` makes its box
+    of air that many times higher and `wide` that many times wider, downwind of the bed; `lasts` is the time its
+    soot stays in sight, in units of the fire's time; `column` closes the loop of its soot by `carry`: for a column
+    of smoke."""
     slow = pace(width, like)
-    sim = Fire(width, dev, seed, deep, fine, lumps, tall, slow)
+    sim = Fire(width, dev, seed, deep, fine, lumps, tall, slow, high, lasts, wide)
     fast = 3.0 * math.sqrt(G * width) / slow                          # about the fastest gas
     sub = max(1, math.ceil(fast / fps / (2.5 * sim.dx)))              # a step moves the gas 2.5 cells at most
     dt = 1.0 / (fps * sub)
@@ -199,18 +241,26 @@ def simulate(width, dev, frames=120, fps=30, wind=(1.1, 1.0), course=((1, 0.25),
         t = k * warm / steps
         blow = gusts(t, loop, course, 1.0, phases)
         sim.step(t, warm / steps, (wind[0] * blow / slow, wind[1] * blow / slow))
-    rec, speed = [], []
+    rec, speed, air, burnt, winds = [], [], [], [], []
     for frame in range(frames + CLOSE):
+        free = 0
         for s in range(sub):
             t = warm + (frame + s / sub) / fps
             blow = gusts(t, loop, course, 1.0, phases)
             sim.step(t, dt, (wind[0] * blow / slow, wind[1] * blow / slow))      # the wind in the model's time
+            free = free + sim.burn
         rec.append(torch.stack(sim.picture()))
         speed.append(sim.u[2].amax().item())
+        if column:
+            air.append(sim.u.half())
+            burnt.append(free.half())
+            winds.append((wind[0] * blow / slow, wind[1] * blow / slow))
     rec = torch.stack(rec)                                            # (frames + CLOSE, 2, across, up)
     k = torch.arange(frames, device=dev)
     w = smooth(frames - CLOSE, frames, k.float())[:, None, None, None]
     loop = (1 - w) * rec[CLOSE + k] + w * rec[(k - (frames - CLOSE)).clamp(min=0)]
+    if column:
+        loop[:, 1] = carry(sim, air, burnt, winds, frames, fps, sub, log)
     loop = loop.flip(-1).transpose(-1, -2)                            # (frames, 2, up from the top, across)
     if log is not None:
         lum = loop[:, 0].sum((1, 2)).cpu().numpy()
@@ -218,7 +268,7 @@ def simulate(width, dev, frames=120, fps=30, wind=(1.1, 1.0), course=((1, 0.25),
             f"fastest gas {np.mean(speed):.1f} m/s; "
             f"the light of the fire rises and falls {rate(lum, fps):.2f} times per second and changes by {lum.std() / lum.mean():.0%}")
     return loop[:, 0].cpu().numpy(), loop[:, 1].cpu().numpy(), loop[:, 0].sum((1, 2)).cpu().numpy(), sim.dx, \
-        (BED[0] / BOX[0] * sim.N[0], BED[2] / BOX[2] * sim.N[2])
+        (BED[0] / (BOX[0] * wide) * sim.N[0], BED[2] / (BOX[2] * high) * sim.N[2])
 
 
 def rate(light, fps, least=0.0):
@@ -289,7 +339,7 @@ def main():
             continue
         glow, soot, lum, cell, at = simulate(bed["width"], dev, muster.FRAMES, muster.RATE, wind=tuple(bed["wind"] * np.array(muster.WIND_TO[:2])),
                                              course=muster.GUSTS, seed=k, deep=bed.get("deep"), fine=bed.get("fine", 1.0), lumps=bed.get("lumps"), tall=bed.get("tall", 1.0),
-                                             like=bed["like"],
+                                             like=bed["like"], high=bed.get("high", 1.0), lasts=bed.get("lasts"), column=bed["kind"] == "smoke", wide=bed.get("wide", 1.0),
                                              log=lambda m, name=name: print(name, m, flush=True))
         np.savez_compressed(os.path.join(out, name + ".npz"), glow=glow.astype(np.float16), soot=soot.astype(np.float16), light=lum, cell=cell,
                             bed=np.array(at), width=bed["width"])

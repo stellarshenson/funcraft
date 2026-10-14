@@ -78,6 +78,23 @@ For architecture and props no downloaded model covers; subjects stay real models
 - Animated shaders read Value nodes registered in `CLOCKS` ("phase" or "tick") and set every frame; moving objects sit in `MOVERS` as `(object, fn(phase))`
 - Blinking cells: White Noise 4D on (cell x, cell y, face) with W = tick. Data pulses: a pulse of `fract(coord / period - laps · phase)`
 
+## Scenes from a plate
+A picture turned into a 3D scene. Rules: `w40k-mechanicum/DESIGN.md` 5.13; tool `w40k-mechanicum/src/things.py`; worked list: `THINGS` in `src/muster.py`.
+
+- List the things first: name, mask, one surface, support, order. Owner reviews the map `wip/preview/things-<scene>.png` before any build
+- Measured depth of a pixel never decides what covers what - inside one mast it differed by 261 %
+- Depth by kind of thing: a wide near surface (railing) takes its own measured depth by column, even within 3 %. A thin thing is measured 30-60 % too deep, with what lies behind it → it takes the depth of its support (mast on a railing) or of the wide thing it holds (far mast ← its cloth)
+- A depth another tool made for another purpose is not a surface - the crowd builder's parapet line lay up to 2.5× as deep as the railing
+- Masks by logical operations on whole things, every pixel in exactly one; compare a thing with the colours round the whole thing, not round one box of it. Thin things are surfaces of their own with their picture as cover - a relief with one corner per 2 px breaks them
+- A thing that stays is in one piece: where the plate hides a part (mast behind a cloth), the list says it goes on (`rods`)
+- Ground lies behind everything: the build stops when ground lies before a thing or a cloth (`things.covered`). Within 4 px of a thing the ground takes no measured depth - the depth model spreads a thing's depth over the pixels round it
+- Fire, cloth, crowd are tied to a thing: a fire shows only over the upper outline of its bowl or wall, at that thing's depth
+- Cloth: scale its vertices about the camera, the picture stays. Its deepest place in the loop lies just before the mast - wind carries it 2-8 % deeper than at rest, so a margin at rest lets it pass through the mast. It begins at the last row of its crossbar's picture and over the rows the repaint painted out, not at a level cut - else a pale band shows under the crossbar
+- A thing without support is a fault before the render - "something hanging in the air"
+- Second fault of one class → stop repairing; correct the list or the design, never a box over pixels
+- Check each thing whole in frames a quarter of a camera cycle apart: a part that slides, a bowl without a stand, a fire outside its bowl
+- Before a full render: list every region of four test frames that differs from the accepted render (`w40k-mechanicum/wip/muster/differ.py`), then a close view of each thing (`compare.py` beside it). A closed loop is no proof - one such render hid six faults
+
 ## API traps
 - `ShaderNodeMix` RGBA sockets by identifier - `Factor_Float`, `A_Color`, `B_Color`, `Result_Color`; `inputs["A"]` is the float socket
 - Principled emission inputs: `Emission Color`, `Emission Strength`
@@ -91,4 +108,4 @@ For architecture and props no downloaded model covers; subjects stay real models
 - Measure what the request names - pixel values, margins in pixels, brightness per frame. An unmeasured "looks right" drew "have you even checked?"
 - Sheets and seam checks: `design-gif` scripts
 
-<!-- improved 2026-09-30 | body 0→1453w / 0→88L | benchmark n/a (declined) | via improve-skill -->
+<!-- improved 2026-10-12 | body 1670→1931w / 99→104L | benchmark n/a (not-requested) | via improve-skill -->
