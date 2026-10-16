@@ -3,7 +3,7 @@
     python3 src/welcome.py                          # out/behemoth-welcome.html
     python3 src/welcome.py <crest.png> <page.html>  # the page with another crest, to compare two
 
-The banner is out/10-banner-procession-marauder.avif, an animated AVIF, stored in base64 as it is.
+The banner is out/10-banner-procession-marauder.avif, encoded at quality 60 for the page with its full size and timing.
 The crest on the hazard strip is resources/assets/cog-stellars.png, the wheel of src/sigil.py; the seal over the closing
 litany is resources/assets/cog-mechanicum.png, its sigil. Each is cut to the square round its visible part, with the same
 room on every side, and reduced to twice its size on the page. The page shows both at one size, so the two look equally large.
@@ -17,14 +17,23 @@ import sys
 
 from fontTools import subset
 from fontTools.ttLib import TTFont
-from PIL import Image
+from PIL import Image, ImageSequence
 
 ROOT = pathlib.Path(__file__).parent.parent
 BADGE = 108                               # pixels: twice the largest size the page shows the crest and the seal at
 ROOM = 0.046                              # the share of a badge's side that stays free on each side of its visible part, as round the wheel
 
-avif = (ROOT / "out/10-banner-procession-marauder.avif").read_bytes()
-print(f"banner: {len(avif) / 1e6:.2f} MB")
+source = Image.open(ROOT / "out/10-banner-procession-marauder.avif")
+frames, durations = [], []
+for frame in ImageSequence.Iterator(source):
+    frame.load()
+    frames.append(frame.convert("RGB"))
+    durations.append(frame.info["duration"])
+banner = io.BytesIO()
+frames[0].save(banner, format="AVIF", quality=60, speed=4, save_all=True,
+               append_images=frames[1:], duration=durations)
+avif = banner.getvalue()
+print(f"banner: {len(avif) / 1e6:.2f} MB, {len(frames)} frames, {sum(durations) / 1000:.2f} s")
 
 
 

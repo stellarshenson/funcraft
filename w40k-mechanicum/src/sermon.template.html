@@ -218,8 +218,8 @@
 </head>
 <body>
 <main>
-  <!-- the banner script puts the chosen banner here; where scripts are switched off the browser shows the choir -->
-  <div class="banner"><noscript><img src="resources/banners/{{BANNER}}.avif" alt="A scene of the Cult Mechanicus"></noscript></div>
+  <!-- the fallback image also loads when a content policy blocks scripts; the banner script changes its source -->
+  <div class="banner"><img src="resources/banners/{{BANNER}}.avif" alt="A scene of the Cult Mechanicus"></div>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="cog" viewBox="0 0 34 34">
       <circle cx="17" cy="17" r="12" fill="none" stroke="#c2923a" stroke-width="6" stroke-dasharray="4.7 4.7"/>
@@ -336,10 +336,8 @@
   }
 
   // the seed is the day of the year, so every reader sees the same banner on the same day
-  const banner = new Image();
-  banner.alt = "A scene of the Cult Mechanicus";
-  banner.src = "resources/banners/" + BANNERS[Math.floor(draw(number) * BANNERS.length)] + ".avif";
-  document.querySelector(".banner").append(banner);
+  document.querySelector(".banner img").src =
+    "resources/banners/" + BANNERS[Math.floor(draw(number) * BANNERS.length)] + ".avif";
 </script>
 <script data-name="music">
   // a script of its own. A browser blocks sound before the first action of the reader on the page:

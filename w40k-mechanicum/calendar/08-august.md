@@ -100,7 +100,7 @@
 
 **Purpose** - Matching each job to the smallest GPU that fits it.
 
-**Context** - Three GPUs serve BEHEMOTH: 24 GB at index 0, 96 GB at index 1 and 32 GB at index 2, 152 GB in all. Give each job the smallest GPU that can fit it. The tech-priests give thanks to the Machine God.
+**Context** - Three GPUs serve BEHEMOTH: 24 GB at index 0, 96 GB at index 1 and 72 GB at index 2, 192 GB in all. Give each job the smallest GPU that can fit it. The tech-priests give thanks to the Machine God.
 
 ## August 18 - Vigil of the Projected Mirage
 

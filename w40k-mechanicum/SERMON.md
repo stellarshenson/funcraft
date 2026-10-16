@@ -31,7 +31,7 @@ The build writes every part as files into `resources/`. The page requests a file
 | Part | Source | Files in the package | Requested by the page |
 |---|---|---|---|
 | Sermons | `calendar/`, 12 month files with 366 entries | `resources/sermons/<mm>.json.gz`, 12 files: JSON, gzipped | the file of the current month |
-| Banners | 8 scene animations of `out/`, 7 GIFs and 1 animated AVIF, listed in `src/sermon.py` | `resources/banners/<name>.avif`, 8 animated AVIF files | one file, chosen by the day of the year |
+| Banners | 8 scene animations of `out/`, 7 GIFs and 1 animated AVIF, listed in `src/sermon.py` | `resources/banners/<name>.avif`, 8 animated AVIF files | the fallback, and the chosen banner if different |
 | Music | one mp3 file of `resources/assets/`, named in `src/sermon.py` | `resources/music.mp3`, the file as it is | on every visit |
 | Prayers | 3 mp3 files of `resources/assets/`, listed in `src/sermon.py` | `resources/prayers/<n>.mp3`, the files as they are | the tune of a button, when the button is pressed |
 | Rewards | `rewards.md`, 13 entries, and 13 seals of `resources/assets/` | the sermons in `resources/prayers.js`; `resources/seals/<number>.avif`, 0.29 MB together | a seal, when its reward is shown |
@@ -217,7 +217,7 @@ This section lists the checks after a build.
 - **Lab viewer** - in the HTML viewer of the lab press `Trust HTML`. Before that the viewer runs no scripts. After it the sermon shows and the music starts on load. A press of a prayer button shows the failed-call strip there, because the lab blocks the call. A press of a radio button lights nothing there, because the lab blocks the player of YouTube
 
 > [!WARNING]
-> The page needs scripts. Where scripts are switched off it shows the first banner and the text `The cogitator sleeps`, with no sermon, no badge and no buttons. There the music starts only if the browser allows sound without an action of the reader. The Welcome tab of GalaxaLab runs no scripts.
+> The page needs scripts. Where scripts are switched off it shows the first banner and the text `The cogitator sleeps`, with no sermon, no badge and no buttons. There the music starts only if the browser allows sound without an action of the reader. The GalaxaLab Welcome frame allows scripts by default. The GalaxaHub Welcome post must also have Allow scripts enabled and the content policy in `design-sermons-html.md`, section 8. Check the served policy after saving the group.
 
 The page needs a browser that shows animated AVIF and has `DecompressionStream`. It was checked in Chrome 154.
 

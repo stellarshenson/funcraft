@@ -694,7 +694,7 @@ This section covers how every animation returns exactly to its first frame.
 
 ## 7. Rendering and assembly
 
-This section covers the render settings, the machines and the GIF step.
+This section covers the render settings, the machines and the GIF step. The times below were measured before GPU 2 was replaced.
 
 | Step | Samples | Time per frame | GPU |
 |---|---:|---:|---|
@@ -703,7 +703,7 @@ This section covers the render settings, the machines and the GIF step.
 | plate preview | 24 | about 3 s | RTX 5000 Ada |
 | plate frame | 64 | about 4.4 s | RTX 5000 Ada |
 
-- **Engine** - Blender 4.5.9, Cycles on CUDA; the GPU is chosen by the nvidia-smi index in `CUDA_VISIBLE_DEVICES` (1 is the RTX PRO 6000, 2 is the RTX 5000 Ada)
+- **Engine** - Blender 4.5.9, Cycles on CUDA; the GPU is chosen by the nvidia-smi index in `CUDA_VISIBLE_DEVICES` (1 is the RTX PRO 6000 Blackwell, 2 is the RTX PRO 5000 72GB Blackwell)
 - **Stopping a GPU job** - a job that uses a GPU is not killed while it runs. On this workstation (WSL2) three build steps killed at once left a thread waiting in the GPU driver, and every program that opened a GPU afterwards waited behind it for 24 minutes. To stop a queue, stop its shell script and let the running step end
 - **Detached renders** - long renders run under `nohup setsid`, log to `wip/logs/`, and write each frame to disk as it finishes; `src/render-scenes.sh <gpu> <first GIF number> <scene>...` renders plate scenes one after another and assembles each GIF
 - **Assembly** - `src/assemble.py <frames> <gif>` resizes each frame to 1140 × 360, builds a palette of 224 colours from the first frame by median cut, adds up to 32 colours for the pixels of every tenth frame that lie further than 40 (of 255) from that palette, dithers every frame with Floyd-Steinberg, and writes 50 ms per frame, looping forever. A median cut gives colours by pixel count: without the added colours the servo-skull's red eye lens, about 100 pixels, came out brick red

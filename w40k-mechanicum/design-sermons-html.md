@@ -35,7 +35,7 @@ The package is the page "Sermon of the Day". It shows a banner animation, the se
 - **Folder** - `out/w40k-mechanicum-sermons/`, with `index.html` and the folder `resources/`
 - **Archive** - `out/w40k-mechanicum-sermons.zip`, with `index.html` at the root of the archive
 
-The package has 410 files of 10.2 MB together. A visit transfers 11 of them, about 2.1 MB, of which 1.7 MB is the music.
+The package has 410 files of 10.3 MB together. A visit transfers 11 files, or 12 when the browser fetches the fallback banner before the script selects another. The music accounts for 1.7 MB.
 
 ## 2. Design rules
 
@@ -69,20 +69,20 @@ resources/
 | `index.html` | 1 | 14 kB | markup, styles, drawn ornaments | on every visit |
 | `resources/<name>.js` | 6 | 32 kB | the scripts and their small tables | on every visit |
 | `resources/sermons/<mm>.json.gz` | 12 | 45 kB | title and text of the days of one month | the file of the current month |
-| `resources/banners/<name>.avif` | 8 | 1.49 MB | scene animations | one file, chosen by the day |
+| `resources/banners/<name>.avif` | 8 | 1.60 MB | scene animations | the fallback; the script may select another |
 | `resources/badges/<mm-dd>.avif` | 366 | 4.06 MB | service badges | the badge of the day |
 | `resources/seals/<number>.avif` | 13 | 0.29 MB | seals of the reward sermons | when a reward is shown |
 | `resources/music.mp3` | 1 | 1.69 MB | the music | on every visit |
 | `resources/prayers/<n>.mp3` | 3 | 2.55 MB | prayer tunes | when its button is pressed |
-| **Total** | **410** | **10.2 MB** | | |
+| **Total** | **410** | **10.3 MB** | | |
 
-A visit requests `index.html`, the six scripts, one month of sermons, one banner, one badge and the music. Without the music these are 0.2 MB to 0.3 MB.
+A visit requests `index.html`, the six scripts, one month of sermons, the fallback banner, one badge and the music. The script may select a different banner, which adds one request if the browser has already fetched the fallback.
 
 ## 4. Page file
 
 This section describes `index.html`, the only file outside `resources/`. The build makes it from `src/sermon.template.html`.
 
-- **Banner area** - a box with the aspect ratio of the banners, 788 to 249, so the place is kept before the banner arrives. A `noscript` element holds the first banner for a browser that runs no scripts
+- **Banner area** - a box with the aspect ratio of the banners, 788 to 249, so the place is kept before the banner arrives. A normal image holds the first banner, so it also appears when a content policy blocks scripts
 - **Cloth** - the patch with the sermon: the day line, the title, the invocation, the service badge, the sermon text and the blessing. Seam, corner cogs and bands are drawn with CSS and inline SVG
 - **Prayer row** - an empty row. The scripts put the three prayer buttons and the download button into it
 - **Radio row** - an empty row below the prayer row. The radio script puts the four radio buttons into it, and the player of the radio that plays
@@ -109,7 +109,7 @@ This section lists the six scripts. They are the script blocks of `src/sermon.te
 | File | Size | Job | Table it holds | Files it requests |
 |---|---:|---|---|---|
 | `sermon.js` | 2.3 kB | finds the day, gets the month of sermons, writes day line, title, invocation, sermon and blessing | 7 invocations, 7 blessings, the month names | `sermons/<mm>.json.gz` |
-| `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 8 banner names | one banner |
+| `banner.js` | 0.9 kB | chooses one banner with the day of the year as the seed | the 8 banner names | the selected banner, if different from the fallback |
 | `music.js` | 1.8 kB | starts the music at the first click or key press where the browser blocked it at load, and never while a radio plays; stops it and plays it on at a click on the banner, which also stops a radio | none | none |
 | `prayers.js` | 13.9 kB | prayer buttons, tunes, the calls to the prayer counter, the reader's total, the answer strip, the reward | the 3 prayers, the 13 reward sermons | a tune, a seal |
 | `radio.js` | 2.6 kB | radio buttons; puts the YouTube player of the pressed radio into the page at a start drawn at random, and stops the music | the 4 radios with their lengths | none of the package: the player and its sound come from YouTube |
@@ -245,10 +245,16 @@ A press of a radio button plays the sound of one YouTube video; a second press s
 
 This section lists what the package needs from the host that serves it and from the browser.
 
-- **Archive** - `index.html` at the root, entries for files only, 9.4 MiB unpacked. The welcome page store of GalaxaHub accepts a package up to 16 MiB unpacked
+- **Archive** - `index.html` at the root, entries for files only, 9.8 MiB unpacked. The welcome page store of GalaxaHub accepts a package up to 16 MiB unpacked
 - **Files as they are** - the host sends `sermons/<mm>.json.gz` without a `Content-Encoding` header. With that header the browser inflates the file first, and the inflate of the page then fails
-- **Frame** - a frame that shows the page needs `allow-scripts` and `allow-same-origin` in its sandbox, and `allow-downloads` for a download or `allow-popups` for the new tab. The player of a radio runs under the same sandbox; it played under the sandbox of the hub's Welcome frame
+- **Frame** - a frame that shows the page needs `allow-scripts` and `allow-same-origin` for its scripts and package files, and `allow-downloads` for a download or `allow-popups` for the new tab. The player of a radio runs under the same sandbox. The lab Welcome frame allows scripts by default, but the hub package response forbids them
 - **Browser** - animated AVIF and `DecompressionStream`. Checked in Chrome 154, the radios in Chrome 155
+
+To select the package for a group in GalaxaHub, upload the zip in the Message of the day policy section, set `motd_active` to true, choose `motd_rich_kind=html`, and save the returned package id as `motd_rich_package`. In GalaxaHub v4.5.59, the Welcome HTML post also has an Allow scripts switch and an Edit Content Policy control. Enable scripts for this post, enter the directives below, press Apply, and save the group policy. The editor states that each entered directive replaces the default directive with the same name.
+
+The GalaxaLab Welcome frame permits scripts by default through `c.GalaxaHubMotd.html_allow_scripts=True`. Both this frame setting and the served package's content policy must permit them. The older GalaxaHub source checkout in this workspace hardcodes `script-src 'none'`, while the v4.5.59 policy editor shown on 2026-10-15 exposes a replacement for that directive. Check the served `index.html` response header after saving to confirm which policy the browser receives.
+
+The hub and lab share a browser origin in the default proxy layout. A script permitted in the package can access the lab page and its session under `allow-same-origin`. Keep the scripts switch and the policy scoped to this administrator-controlled post. The admin Preview frame may have different sandbox permissions from the lab Welcome frame; verify the package in Welcome after saving.
 
 The content policy of the host must allow the following.
 
@@ -261,16 +267,13 @@ The content policy of the host must allow the following.
 | `connect-src` | `'self' https://prayer-counter.<host>` | the month of sermons; the prayer counter |
 | `frame-src` | `https://www.youtube-nocookie.com` | the YouTube player of the radio buttons |
 
-One policy that holds every row, with the frame rule of the hub:
+The content policy shown in the GalaxaHub v4.5.59 editor on 2026-10-15 covers every row for the current workbench origin:
 
 ```
-default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://prayer-counter.<host>; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'
+default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' https://prayer-counter.lab.stellars-tech.eu; frame-src https://www.youtube-nocookie.com; frame-ancestors 'self'
 ```
 
-`blob:` in `img-src` is for the downloaded image when it opens in a new tab. Whether Chrome needs it there is not measured.
-
-> [!WARNING]
-> The source of the GalaxaHub welcome handler, read on 2026-10-05, sends packages with `script-src 'none'`. Under that policy the page shows only its fallback text. The hub in use on that day sent `script-src 'unsafe-inline'` and `media-src data:`, a policy for a page with everything inside one file: it blocked the five scripts and the music.
+The editor's default `font-src 'self' data:` remains in force. The package loads no external fonts. `blob:` in `img-src` is for the downloaded image when it opens in a new tab. Whether Chrome needs it there is not measured.
 
 ## 9. Build
 
@@ -295,7 +298,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 This section lists the checks that run after a build. Their scripts are in `wip/sermon/`, which is not in git.
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
-- **Page checks** - `test.py` runs 81 checks in headless Chrome at 1440, 720 and 390 px width: the 11 requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip with the reader's total over all prayers, a report that fails, every reward, a frame without downloads and a frame without scripts
+- **Page checks** - `test.py` runs 81 checks in headless Chrome at 1440, 720 and 390 px width: the requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip with the reader's total over all prayers, a report that fails, every reward, a frame without downloads and a frame without scripts
 - **Banner checks** - `banners.py` runs 28 checks in headless Chrome: the page's own choice for each of the 366 day numbers is a banner of the package, every banner is chosen on some day, every banner file is served, and for one day per banner the page opened with that date shows that banner, 788 × 249 pixels and moving
 - **Radio checks** - `radio.py` runs 35 checks in headless Chrome with the browser's own rule for sound, and it needs the network, because the radios play from YouTube: each radio plays with sound after one press, from a start inside its video, also in a frame with the sandbox of the hub; the length of each video is the one in the table; a radio starts again after the end of its video; the music stops and starts as section 7.5 says; under a policy without `frame-src` the button goes out
 - **Lab viewer** - `lab.py` opens `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab and checks the sermon, the badge, one press of a radio button and one download
@@ -307,6 +310,6 @@ This section lists what is not settled.
 
 - **Size of the report** - the page reads the whole report of the reader after every counted start. The report has one row per day and per sermon of that reader: 4.8 kB for 5 days on 2026-10-09. It grows with the days on which the reader prays. An answer of the counter that holds the reader's total would remove the second call
 - **Origins of the counter** - the counter allows calls from the origin `https://workbench.lab.stellars-tech.eu` and answered no permission for three other origins, measured on 2026-10-09. A page on another host gets no count and no total
-- **Hub policy** - the policy of section 8 is derived from the files the built package loads. It has not been run on the hub
+- **Live policy check** - after Apply and Save in GalaxaHub v4.5.59, inspect the `index.html` response CSP in Welcome and check the sermon, prayer counter and radios. The editor screenshot establishes the entered directives, not the saved response
 - **Radios in Safari** - not checked. Safari may refuse sound from a player that the reader did not press, and the reader cannot press the hidden player
 - **YouTube terms** - the rules of YouTube for embedded players ask for a visible player of at least 200 px width and height. The player of the radios is hidden. YouTube can also play advertisements in it, which the reader hears and cannot skip

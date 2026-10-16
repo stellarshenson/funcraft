@@ -117,7 +117,7 @@ An entry is one chain of statements: the rite or the fact of the day, the techni
 Use these wherever an entry speaks of the machine. Do not invent others.
 
 - **Name** - BEHEMOTH
-- **GPUs, by nvidia-smi index** - index 0 RTX PRO 4000 Blackwell 24 GB; index 1 RTX PRO 6000 Blackwell 96 GB; index 2 RTX 5000 Ada 32 GB; 152 GB in all
+- **GPUs, by nvidia-smi index** - index 0 RTX PRO 4000 Blackwell 24 GB; index 1 RTX PRO 6000 Blackwell 96 GB; index 2 RTX PRO 5000 72GB Blackwell; 192 GB in all
 - **CPU and memory** - 64 threads, 503 GiB of RAM
 - **Volumes** - @volumes/shared is read by every user; @volumes/personal is the user's own
 - **Practice** - set CUDA_VISIBLE_DEVICES before importing a framework; nvidia-smi shows memory, utilisation, temperature, power and the processes on each card

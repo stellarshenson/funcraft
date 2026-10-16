@@ -54,6 +54,7 @@
     min-height: 100vh;
   }
   .wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px 16px; }
+  .hero { padding: 12px 12px 0; }
 
   /* header: the banner, a hazard strip, the crest centred on the strip, the name. Only the banner moves */
   .banner { display: block; width: 100%; height: auto; aspect-ratio: 1140 / 360; background: #29333f; }
@@ -202,7 +203,7 @@
 </head>
 <body>
 <header>
-  <div class="wrap" style="padding-bottom:0">
+  <div class="hero">
     <img class="banner" src="{{BANNER}}" alt="Nine walking machines in red, black and bone armour with gold trims, three in front and six behind them, on the deck of a forge, in front of towers and chimneys">
     <div class="hazard" aria-hidden="true"></div>
     <img class="crest" src="{{CREST}}" alt="" aria-hidden="true">
@@ -218,7 +219,7 @@
   </section>
 
   <ul class="figures">
-    <li><b>3 GPUs</b><span>152 GB of GPU memory in total</span></li>
+    <li><b>3 GPUs</b><span>192 GB of GPU memory in total</span></li>
     <li><b>64 CPU threads</b><span>AMD Ryzen Threadripper PRO 7975WX</span></li>
     <li><b>503 GiB</b><span>of system memory</span></li>
   </ul>
@@ -240,9 +241,9 @@
     </article>
     <article class="card gpu" style="--c: var(--bone)">
       <span class="tag">GPU 2</span>
-      <h3>NVIDIA RTX 5000 Ada Generation</h3>
-      <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li><li></li></ul>
-      <div class="vram"><b>32 GB</b><small>of memory</small></div>
+      <h3>NVIDIA RTX PRO 5000 72GB Blackwell</h3>
+      <ul class="blocks" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>
+      <div class="vram"><b>72 GB</b><small>of memory</small></div>
     </article>
   </div>
 

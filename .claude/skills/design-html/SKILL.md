@@ -12,7 +12,7 @@ Working examples to copy from:
 | Page | Build | Template | Has scripts |
 |---|---|---|---|
 | `w40k-mechanicum/out/w40k-mechanicum-sermons/` and `out/w40k-mechanicum-sermons.zip`, a package of 9.9 MB: `index.html` and files in `resources/` (`design-sermons-html.md`) | `src/sermon.py`, `make sermon` | `src/sermon.template.html` | yes: data by date, one of seven banners, a badge per day, music, tunes on buttons, an image to download |
-| `mech-design/out/06-behemoth-welcome.html`, 0.47 MB | `src/welcome.py`, `make welcome` | `src/welcome.template.html` | no: animated banner, embedded font, type sizes that follow the page width |
+| `mech-design/out/behemoth-welcome.html`, 1.20 MB | `src/welcome.py`, `make welcome` | `src/welcome.template.html` | no: animated banner spanning the page with 12 px side margins, embedded font, type sizes that follow the page width |
 
 ## Build
 - Template with `{{NAME}}` placeholders, a Python script that fills them, a Make target. `out/` is not in git

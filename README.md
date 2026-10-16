@@ -13,8 +13,8 @@ The repository holds two scene projects with the same folder structure. Each has
 
 | Project | Contents | Output |
 |---|---|---|
-| [`mech-design/`](mech-design/) | walking-machine banners, from hand-drawn 2D silhouettes to rigged high-poly meshes; the BEHEMOTH welcome page | 5 GIFs, 1 HTML page |
-| [`w40k-mechanicum/`](w40k-mechanicum/) | a machine cathedral built in 3D, ten generated scenes with rigged figures, flames and smoke; a calendar of 366 daily entries; the sermon of the day page | 13 GIFs, 1 calendar, 1 HTML page |
+| [`mech-design/`](mech-design/) | walking-machine banners, from hand-drawn 2D silhouettes to rigged high-poly meshes; the BEHEMOTH welcome page | GIF and AVIF banners, 1 HTML page |
+| [`w40k-mechanicum/`](w40k-mechanicum/) | a machine cathedral built in 3D, generated scenes with rigged figures, flames and smoke; a calendar of 366 daily entries; the sermon of the day page | GIF and AVIF banners, 1 calendar, 1 HTML package |
 
 ### mech-design
 
@@ -28,7 +28,7 @@ Three walking machines cross a city in a 1140 × 360 banner. The project builds 
 - **Procedural 3D** - boxes, a perspective camera and a z-buffered software rasteriser, written without a 3D library
 - **Models** - supplied meshes painted on the mesh, rigged with an armature and walked through a gait cycle in Blender; the camera jolts at each footfall
 - **Loop check** - each generator renders one frame past the end and compares it with the first frame; the 2D banner and the procedural banner are pixel-identical, and the model banners differ by at most 8/255 in any pixel
-- **Welcome page** - `make welcome` builds one HTML file of 0.47 MB with the banner as animated AVIF and the title font embedded, without JavaScript
+- **Welcome page** - `make welcome` builds one HTML file of 1.20 MB with a full-width animated AVIF banner and the title font embedded, without JavaScript
 
 ### w40k-mechanicum
 
@@ -40,7 +40,7 @@ A machine cathedral in the style of the Adeptus Mechanicus, made with two pipeli
 - **Plate pipeline** - one generated image gets depth from MoGe-2; every element that moves is cut out with SAM 2.1 and becomes its own mesh with bones; flames follow a model of the air and smoke is simulated as a gas
 - **Textures** - embroidery, iron reliefs and stained glass come from Z-Image-Turbo; Latin text is written flat and draped on the surface that carries it
 - **Calendar** - `calendar/` holds 366 short entries, one mock holy day per date, each teaching one point of machine learning, statistics or data science
-- **Sermon page** - `make sermon` builds a package of 9.9 MB, `index.html` with a `resources` folder and the same files as a zip, that shows the entry of today's date with its service badge under one of seven banners, plays one music file and has three prayer buttons with a tune each. A visit transfers 10 of its 408 files. A download button gives the sermon with its badge as one image. A reader whose total of prayers reaches a holy number receives a seal and one of the 13 reward sermons of `rewards.md`; `SERMON.md` describes the rebuild and `design-sermons-html.md` the design
+- **Sermon page** - `make sermon` builds `index.html` with a `resources` folder and the same files as a zip. It shows today's calendar entry and service badge under a scene banner, plays background music and has three prayer buttons with a tune each. A download button gives the sermon with its badge as one image. A reader whose prayer total reaches a holy number receives a seal and one of the 13 reward sermons of `rewards.md`; `SERMON.md` describes the rebuild and `design-sermons-html.md` the design
 
 ## Structure
 
@@ -69,6 +69,10 @@ funcraft/
 | `out/` | finished GIFs and pages, numbered in the order they were made | no |
 
 `in/` and `references/` feed the scripts in `src/`, the scripts write to `wip/`, and a finished animation is assembled into `out/`. A generated texture starts as a draft in `wip/gen/`; the chosen draft becomes a file in `resources/assets/`.
+
+## Running a project
+
+Install Blender 4.5 and the Python packages listed in the chosen project's README. Place its required models in `in/models/` and its assets in `resources/`, then run a target from that project's Makefile. For example, `make -C mech-design banner` renders and assembles the model banner. The project READMEs list the other targets and their inputs.
 
 ## What a clone contains
 
