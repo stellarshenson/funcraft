@@ -372,6 +372,18 @@ def wheel_fit(el, mask, depth, K, size):
     return dict(hub=hub.tolist(), n=n.tolist(), e1=e1.tolist(), e2=e2.tolist(), R=R)
 
 
+def moved(fit, place, K, size):
+    """A wheel's disc moved to plate pixel (x, y) at its own depth and scaled to a radius of r pixels: place = (x, y,
+    r). Its plane keeps its turn."""
+    x, y, r = place
+    hub = np.array(fit["hub"])
+    th = np.linspace(0, TAU, 64, endpoint=False)
+    rim = hub + fit["R"] * (np.cos(th)[:, None] * np.array(fit["e1"]) + np.sin(th)[:, None] * np.array(fit["e2"]))
+    hx, hy = pixel(K, size, hub)
+    qx, qy = pixel(K, size, rim)
+    return dict(fit, hub=world(K, size, x, y, hub[1]).tolist(), R=fit["R"] * r / float(np.hypot(qx - hx, qy - hy).mean()))
+
+
 def wheel_disc(fit, K, size):
     """The plate pixels a wheel's disc covers."""
     W, H = size
@@ -383,16 +395,44 @@ def wheel_disc(fit, K, size):
 
 def wheel(name, el, K, size, fit, rings=48, spokes=240):
     """A spinning wheel: a flat disc, and its texture unrolled by angle (u)
-    and radius (v) with the mask as its alpha. Where the wheel is outside
-    the plate, the texture is its own mirror image about the edge of what
-    is seen. Returns vertices, uvs, quads and the texture's path."""
-    W, H = size
-    m = el["mask"]
+    and radius (v): the plate with the mask as its alpha (wheel_plate), or
+    the element's own picture and the glow picture beside it. Returns
+    vertices, uvs, quads and the texture's path."""
     hub, e1, e2, R = np.array(fit["hub"]), np.array(fit["e1"]), np.array(fit["e2"]), fit["R"]
     th = np.linspace(0, TAU, 720, endpoint=False)
     rr = (np.arange(256) + 0.5) / 256 * R
     Q = hub + rr[:, None, None] * (np.cos(th)[None, :, None] * e1 + np.sin(th)[None, :, None] * e2)
     qx, qy = (v.astype(np.float32) for v in pixel(K, size, Q))
+    path = os.path.join(ROOT, "wip", "scene3d", f"{name}_wheel_{el['id']}.png")
+    if el.get("picture"):                                    # a picture of its own: square, the rim at its edge, laid
+        pic = cv2.imread(os.path.join(ROOT, el["picture"]), cv2.IMREAD_UNCHANGED)   # on the disc as the camera sees it
+        hx, hy = (float(v[0]) for v in pixel(K, size, hub[None]))
+        side = pic.shape[0] / 2
+        k = side / np.hypot(qx[-1] - hx, qy[-1] - hy).mean()
+        c, s_ = math.cos(math.radians(el.get("lean", 0.0))), math.sin(math.radians(el.get("lean", 0.0)))
+        mx = (side + k * (c * (qx - hx) - s_ * (qy - hy))).astype(np.float32)      # turned `lean` degrees, top to the left
+        my = (side + k * (s_ * (qx - hx) + c * (qy - hy))).astype(np.float32)
+        cv2.imwrite(path, cv2.remap(pic, mx, my, cv2.INTER_CUBIC, borderMode=cv2.BORDER_CONSTANT, borderValue=0)[::-1])
+        if el.get("glow"):
+            glow = cv2.imread(os.path.join(ROOT, el["glow"]), cv2.IMREAD_GRAYSCALE)
+            cv2.imwrite(path[:-4] + "_glow.png", cv2.remap(glow, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT,
+                                                           borderValue=0)[::-1])
+    else:
+        wheel_plate(name, el, K, size, qx, qy, path)
+    a = np.linspace(0, TAU, spokes + 1)
+    rad = np.linspace(0, R, rings + 1)
+    V = hub + rad[:, None, None] * (np.cos(a)[None, :, None] * e1 + np.sin(a)[None, :, None] * e2)
+    uv = np.stack(np.broadcast_arrays((a / TAU)[None, :], (rad / R)[:, None]), -1)
+    idx = np.arange((rings + 1) * (spokes + 1)).reshape(rings + 1, spokes + 1)
+    q = np.stack([idx[:-1, :-1], idx[1:, :-1], idx[1:, 1:], idx[:-1, 1:]], -1).reshape(-1, 4)
+    return V.reshape(-1, 3), uv.reshape(-1, 2), q, path
+
+
+def wheel_plate(name, el, K, size, qx, qy, path):
+    """A wheel's texture from the plate, unrolled by angle and radius, the mask as its alpha. Where the wheel is
+    outside the plate, the texture is its own mirror image about the edge of what is seen."""
+    W, H = size
+    m = el["mask"]
     plate = cv2.imread(os.path.join(ROOT, "wip", "scene3d", name + ".png"), cv2.IMREAD_COLOR)
     ok = (qx >= 0) & (qx <= W - 1) & (qy >= 0) & (qy <= H - 1)
     tex = cv2.remap(plate, qx, qy, cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
@@ -406,15 +446,7 @@ def wheel(name, el, K, size, fit, rings=48, spokes=240):
         near = good[np.abs(((bad[:, None] - good[None, :] + 360) % 720) - 360).argmin(1)]
         src = (2 * near - bad) % 720
         tex[r, bad] = tex[r, np.where(ok[r][src], src, near)]
-    path = os.path.join(ROOT, "wip", "scene3d", f"{name}_wheel_{el['id']}.png")
     cv2.imwrite(path, tex[::-1])
-    a = np.linspace(0, TAU, spokes + 1)
-    rad = np.linspace(0, R, rings + 1)
-    V = hub + rad[:, None, None] * (np.cos(a)[None, :, None] * e1 + np.sin(a)[None, :, None] * e2)
-    uv = np.stack(np.broadcast_arrays((a / TAU)[None, :], (rad / R)[:, None]), -1)
-    idx = np.arange((rings + 1) * (spokes + 1)).reshape(rings + 1, spokes + 1)
-    q = np.stack([idx[:-1, :-1], idx[1:, :-1], idx[1:, 1:], idx[:-1, 1:]], -1).reshape(-1, 4)
-    return V.reshape(-1, 3), uv.reshape(-1, 2), q, path
 
 
 def source(el, flames, depth, f):
@@ -463,11 +495,13 @@ def bake(name):
         k = el["id"]
         item = dict(id=k, kind=el["kind"], phase=el.get("phase", 0.0))
         if el["kind"] == "spin":
-            fit = fits[k]
+            fit = moved(fits[k], el["place"], K, size) if el.get("place") else fits[k]
             V, uv, q, path = wheel(name, el, K, size, fit)
             hub, n = np.array(fit["hub"]), np.array(fit["n"])
             item.update(texture=path, bones=[("spin", hub.tolist(), (hub + 0.1 * n).tolist(), None, {})],
                         turns=el.get("turns", 1), rock=el.get("rock", 0.0))
+            if el.get("glow"):
+                item["glow"] = path[:-4] + "_glow.png"
             out[k + "/w/spin"] = np.ones(len(V), np.float16)
         else:
             V, uv, q, px, py = grid(el, K, size)

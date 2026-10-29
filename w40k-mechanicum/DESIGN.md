@@ -1,6 +1,6 @@
 # w40k-mechanicum - Animation pipeline v1
 
-Status: DRAFT for internal review, 2026-10-10.
+Status: DRAFT for internal review, 2026-10-16.
 
 ## Contents
 
@@ -14,6 +14,7 @@ Status: DRAFT for internal review, 2026-10-10.
   - [2.4 Latin](#2.4-Latin)
   - [2.5 Text on surfaces](#2.5-Text-on-surfaces)
   - [2.6 Sigils on a draped cloth](#2.6-Sigils-on-a-draped-cloth)
+  - [2.7 Parts painted anew](#2.7-Parts-painted-anew)
 - [3. Depth from the image](#3.-Depth-from-the-image)
 - [4. Cathedral scene](#4.-Cathedral-scene)
 - [5. Plate scene animation](#5.-Plate-scene-animation)
@@ -32,6 +33,7 @@ Status: DRAFT for internal review, 2026-10-10.
   - [5.13 A scene is built from things](#5.13-A-scene-is-built-from-things)
   - [5.14 Rods: a post is measured and built](#5.14-Rods:-a-post-is-measured-and-built)
   - [5.15 Rules from the owner's reports](#5.15-Rules-from-the-owner's-reports)
+  - [5.16 Titan in a corridor](#5.16-Titan-in-a-corridor)
 - [6. Loop and timing](#6.-Loop-and-timing)
 - [7. Rendering and assembly](#7.-Rendering-and-assembly)
 - [8. Development workflow](#8.-Development-workflow)
@@ -107,10 +109,12 @@ The finished animations are in `out/`, numbered in the order they were made.
 | `04-forge.avif` | plate | forge, with the sigils of the Mechanicum and of Stellars Tech on its drape (section 2.6) | 120 frames, 4 s, 2432 × 768 |
 | `05-vault.avif` | plate | vault; the gear on the arch stands still | 120 frames, 4 s, 2432 × 768 |
 | `06-street.avif` | plate | street, with the sigils of the Mechanicum and of Stellars Tech on its two front banners (section 2.6) | 120 frames, 4 s, 2432 × 768 |
-| `07-saint.avif` | plate | saint, with the sigils of the Mechanicum and of Stellars Tech on its two side banners (section 2.6), the owner's Imperial Knight and the normal distribution in its windows, a Warhound Titan in its open entrance and a red light in the saint's eye socket (section 2.7) | 120 frames, 4 s, 2432 × 768 |
+| `07-saint.avif` | plate | saint, with the sigils of the Mechanicum and of Stellars Tech on its two side banners (section 2.6), the owner's Imperial Knight and the normal distribution in its windows, a Warhound Titan in its open entrance (section 5.16), a red light in the saint's eye socket (section 2.7), the wheel of Stellars Tech with a pulsing star in place of the sun-gear (section 5.8), and simulated flames with faint smoke on its 18 lit candles (sections 5.6, 5.7) | 120 frames, 4 s, 2432 × 768 |
 | `08-hall.gif` | plate | hall | 80 frames, 4 s |
 | `09-reliquary.gif` … `13-voidshrine.gif` | plate | reliquary, foundry, scriptorium, choir, voidshrine | 80 frames, 4 s |
 | `16-muster.avif` | plate with a 3D crowd | rampart walks with a crowd of 149,000 figures, cloth banners, simulated fires and dust (section 5.12) | 360 frames, 12 s, 2432 × 768 |
+
+The sermon page shows nine of them as its banner of the day: 04 to 10, 12 and 16 (`BANNERS` in `src/sermon.py`). A new render reaches the page with `make sermon`; `SERMON.md` lists the checks after it.
 
 ## 2. Image generation
 
@@ -221,6 +225,8 @@ This section covers parts of a plate whose content the owner asked to change (`s
 - **Saint scene** - the owner asked for war machines instead of the human figures in the windows, then rejected what the image model drew from a prompt alone: "stained glass images are terrible". The owner gave pictures of an Imperial Knight and of a Warhound Titan and set the content: the left window holds the Knight, the right one is "dedicated to maths and statistics", and the Warhound stands "in the open entrance on the right, as it was standing vigil". The saint's skull lost a green glow on its nose: it has dark eye sockets, a plain nasal hole and a red light in its right socket
 - **Windows from designs** - `src/glassdesign.py` draws a window piece by piece: the window's own blue glass as cells with lead between them; the Knight cut from its white ground, its colours sorted into eight glasses split into pieces a tenth of its width, before a gold halo; the bell curve of the normal distribution as a gold band over a histogram of thirteen bars, and two rows of panes with μ, σ, Σ, ∫, π, e, χ² and √n. Everything stands above the candle before each window. The image model works over the design at a strength of 0.3 (Knight) and 0.2 (mathematics) for the glass's grain and light; at 0.45 it made armoured men of the machines and other letters of the signs, so the signs are laid over its result again
 - **Hole** - the glass inside a window's border of coloured panes, below its top rosette, without the things before it (SAM 2.1 cuts the glass and the candelabras; the masks of the moving things and flames are added). SAM left out parts of the old figures, which then showed beside the new glass: every row is filled out to the window's sides, the outermost glass over all its rows
+- **Upright in a leaning window** - every vertical of the plate leans, and the two windows converge upwards each by its own amount. The owner: "all image rotated vs window frames". Each side of a window is fitted on its own, along the inner edge of its border of panes; sides taken from one vanishing point missed the plate's frames and left a double border. A design is drawn upright on a canvas of the window's own size and warped into the window between its two sides
+- **Behind a simulated flame** - the cut of the right window held the candle before it (flame f2) with its painted flame and the glow round it, and the repaint kept the old wall there: a brown box 30 pixels above the candle. Once the flame was simulated and smaller (section 5.6), the box showed round it. The cut now holds the candle's body from its top down, and the glass goes on behind the flame. The rest of the window changed by 1.4 of 255 on average
 - **Warhound** - cut from its white ground and 1 pixel more, darkened to the room's light and set in the clean plate in the gilded opening, its head below the hanging sun-gear and its legs behind the ledge; the model works over it at a strength of 0.3. In the plate the sun-gear, a moving element, keeps its own pixels before it
 - **Pictures** - windows and the Warhound lie on the backdrop: the plate, the clean plate and its fill behind breaks change alike. The skull belongs to the saint, whose texture is the plate. The old files are kept in `wip/scene3d/before-repaint/`; `repaint.py apply` and `goldwork.py apply` each change only their own parts
 - **Choice** - each part is painted in several versions (`wip/preview/repaint-<scene>-<part>.png`) and one is chosen for the test frame that the owner judges (section 5.10)
@@ -232,6 +238,7 @@ This section covers how a flat plate becomes a 3D surface that a moving camera c
 - **Estimation** - `src/img2geometry.py` runs MoGe-2 (Microsoft, MIT licence, model `Ruicheng/moge-2-vitl-normal`) on GPU and saves `wip/scene3d/<name>.npz`: a metric point map, depth, normals, a validity mask and the camera intrinsics
 - **Fill layer** - the script also saves the depth pushed out from every depth break (`bg_depth`, the farthest depth within 25 pixels) and `<name>_bg.png`, the image with the near side of each break inpainted
 - **Mesh** - `src/backdrop.py` builds one vertex per 2 pixels and leaves out quads that span a depth break (far corner deeper than 1.25 × near corner); the fill layer sits 1 % behind it and shows only where the front layer has a gap
+- **Rim** - the mesh ends at the image's edges, and the camera's drift looks up to 10 pixels past it. In the first full render of the saint scene with the titan, the right edge showed the titan's plasma gun and right leg, which stand behind the plate there, in about 70 of 120 frames; the left edge showed 9 black columns near frame 90, and the top and bottom rows were dark. The vault and street loops in `out/` show up to 8 black columns at their sides and up to 4 black rows. The backdrop now goes on past the image by a strip of 64 pixels (`EDGE`) at the depth of the edge, painted with the edge's own pixels. The strip is an object of its own (`backdrop_rim`) with the plate's material, so the backdrop's vertex numbers stay as the drape's cut expects. Only the camera sees it: a first strip that took part in the light lit a surface of the titan above its head, 25 × 26 pixels that turned from black to pale
 - **Sky** - pixels MoGe-2 leaves out become a far surface at twice the farthest depth
 - **Camera** - a camera with the image's field of view and principal point reproduces the plate exactly from the origin
 - **Limit** - camera moves up to about 8 cm show clean parallax; 25 cm and more stretch the image at depth breaks
@@ -347,7 +354,7 @@ This section lists the rules that put every element at its place in depth, and t
 | A hand that holds a thing is cut with the thing | the candle moved and the hand did not | `grip` |
 | A smoke source is the tip of its flame, and moves with it | smoke must not rise metres behind its candle | distance under 5 cm |
 | The backdrop lies behind the back of every actor | a painted pillar hid a priest | - |
-| A flame is shown at the size of a candle flame, about its wick | the model paints flames 4 to 26 cm tall | `FLAME_H` 4 cm, at least `FLAME_PX` 8 plate pixels |
+| A flame is shown at the size of a candle flame, about its wick | the model paints flames 4 to 26 cm tall | `FLAME_H` 4 cm, at least `FLAME_PX` 8 plate pixels; a simulated flame at its own size, at least `FLAME_PX` and at most its painted height |
 | A thin thing takes one depth | its pixels mix with the background | 30th percentile |
 
 - **Check** - `motion.py plan <name>` draws the scene from above (actors, flames, smoke boxes) and prints two tables: each held thing's depth against its priest's chest, and each smoke source's distance from its flame
@@ -365,8 +372,29 @@ This section covers the model that moves the flames and their light. `src/air.py
 - **Gusts** - a flame also feels fast, small eddies: 4 to 27 cycles per loop (1 to 6.75 Hz), wavelengths of 0.3 to 1.2 m, 0.35 m/s, amplitude falling with frequency as f^(-5/6). With the draft they lean a flame by 16 degrees on average and 38 at most, and change the lean by 6.5 degrees from frame to frame
 - **Lean** - the flame gas rises at about 1 m/s. Air crossing it at speed v leans it by atan(v / 1 m/s); the wind a flame feels is the air less the candle's own velocity, so a moving candle's flame trails
 - **Length and light** - an updraft stretches the flame and gives more light, a crosswind shortens it and gives less. A stretched flame is drawn thinner
-- **Flame element** - a flame is light, not a thing with an edge. It is drawn from the plate through an alpha that keeps bright, warm pixels only; the glow the model painted round it stays out
+- **Flame element** - a flame is light, not a thing with an edge. In the scenes made before the saint scene's rework it is drawn from the plate through an alpha that keeps bright, warm pixels only; the glow the model painted round it stays out
+- **Simulated flame** - the owner: "light in those candles must also be simulated flame". In the saint scene every standing candle burns a simulated flame (`src/candle.py`, `wip/sim/<name>/flames/<flame>.npz`); `src/rig.py` shows it as a picture at the wick that faces the camera, 3 % nearer than the wick, its pixels set every frame. The table below gives the model; the bullets after it give what the first renders taught
 - **Candle light** - every material is multiplied by (1 + Σ I s) / (1 + Σ s), summed over the flames: I is the flame's light relative to still air, s = R² / (R² + d²) its share at distance d, R = 0.5 m, and the 1 is the scene's own light. The factor stays between the smallest and the largest I, however many flames stand together; the earlier form 1 + Σ (I - 1) s turned the candles of a cluster dark. Flames move with their candles. No shadows
+
+| Property | Value |
+|---|---|
+| Model | laminar diffusion flame: wax vapour from the wick mixes with air and burns where both meet in the proportion in which they burn (mixture fraction 0.064, Burke-Schumann); the temperature follows from the mixture, highest 1600 K |
+| Equations | incompressible Navier-Stokes with buoyancy g × T / T0, the mixture fraction and soot as fields; soot forms on the rich side above 1100 K and burns on the lean side |
+| Light | soot glows as the sixth power of its temperature; a blue sheet where the mixture is stoichiometric and no soot has formed |
+| Box | 4.8 × 3.2 × 8 cm, 96 × 64 × 160 cells of 0.5 mm; candle 1 cm in radius, wick 0.8 mm in radius and 7 mm over the wax |
+| Gas | viscosity and diffusion of air at about 1800 K, 3.0e-4 m²/s: the flame does not flicker by itself |
+| Air | the draft of `air.py` at the wick and 0.3 of its gusts |
+| Result | 2.8 cm in still air; 3.0 to 3.4 cm in the room's air, leaning up to about 30 degrees, its light changing by about 11 % |
+| Loop | 99 warm-up frames, 140 recorded; the last 20 frames of the loop cross-faded into the 20 before its first; loop frame k shows the time k / 30 s of the air |
+| Cost | 65 to 80 s per candle on the RTX PRO 6000; the 18 candles of the saint scene in about 25 minutes |
+
+- **Open box** - the box is periodic, so all the gas the flame lifted came back down beside it, at up to 0.4 m/s in a box 5 cm wide, and leaned the flame in still air. The air of the box now rises as much as the flame lifts through its middle height, about 8 cm/s, as air round a flame in an open room does. The box's damping walls are also even about the middle: one cell of difference leaned the flame by 0.4 cells
+- **Gusts** - in the full gusts of `air.py` (0.35 m/s) the flame was torn off the wick and its light changed by 37 %. Those gusts were set for drawn flames that lean as a whole; the gas of a real flame rises slowly near the wick, and air near the candles of a church moves at 0.05 to 0.15 m/s
+- **Width** - the model's flame is 6 to 7 mm wide where a real one is 10 to 12 mm: heated gas takes more room, and a model of one density does not show it. The term for that expansion blew the flame off the wick at the sharp edge of the vapour; smoothed, it added 295 cm³/s of volume against 189 cm³/s that the flame lifts, and the flame stayed 7 mm wide. A solver for gas of changing density would cost hours per candle. The flame is seen through the smoky air of the church instead, blurred as the fires of section 5.12.3 (0.6 plate pixels and 0.45 more per 100 m), which shows it about as wide as a real one
+- **Colours** - the colours of the painted flames by the rank of the light, taken from the plate as painted (`wip/scene3d/before-repaint/`): a window repaint covers a flame before it
+- **Glow** - the painted flames carried a glow round them: 37 to 73 % of their light, median 0.6, colour (1, 0.67, 0.4), falling to half in about 12 pixels. Removing the flames took it with them, and without it the simulated flames, 1 to 2 pixels wide, read as unlit candles. Each flame gets a round of warm light, radius 11 pixels at its depth, about the middle of its light and as bright as its light at each frame (`HALO`). A strength of 0.08 gave a fifth of the painted glow at 9 to 20 pixels from the flame; 0.3 matches it
+- **Size** - the real size at the wick's depth: 6 to 11 pixels on the saint plate, where the image model painted 22 to 38. Four far flames are raised to 8 pixels; four flames on small candles stay at their painted height, 6 to 8 pixels
+- **Light on the room** - the candle light below takes I from the simulated flame: its light per frame against its mean
 
 ![One candle flame in eight frames](.images_design/flames.jpg)
 
@@ -379,18 +407,20 @@ This section covers the smoke of candles and censers. `src/smoke.py` simulates e
 | Property | Value |
 |---|---|
 | Equations | incompressible Navier-Stokes with Boussinesq buoyancy, temperature as a second field |
-| Box | 0.4 × 0.4 × 0.8 m, 64 × 64 × 128 cells of 6.25 mm |
+| Box | 0.8 × 0.8 × 0.8 m, 128 × 128 × 128 cells of 6.25 mm |
 | Numerics | MacCormack advection with a limiter; viscosity and pressure projection in Fourier space; vorticity confinement |
 | Source | 45 K above the room at the wick; the warm air mixes away in 3 s |
-| Room | the draft of section 5.6 plus weak eddies of 8 to 20 cm |
+| Room | the draft of section 5.6, weak eddies of 8 to 40 cm, and horizontal layers of air that slide against each other: 0.08 m/s, wavelengths of 0.2 to 0.6 m in height, 4 waves |
 | Smoke | 3000 particles per frame, carried by the air, counted into cells of 3.1 mm |
 | Visibility | a particle shows from the age of 0.10 s and fully from 0.45 s, and fades out by 4.5 s |
 | Loop | 240 warm-up frames, then two records of 80 frames, cross-faded so that frame 80 equals frame 0 |
-| Cost | about 12 s per source on one GPU |
+| Cost | 12 to 33 s per source on one GPU; about 300 MB per source at 120 frames; the saint scene's smoke with its volume files fills 8 GB |
 
 - **Why particles** - particles keep a filament thin where a grid field would blur it
+- **Spread sideways** - the owner: "let the smoke disperse better laterally not only vertically". In a box 0.4 m wide the smoke reached the side walls and stopped spreading there. A random walk that grew as the smoke aged spread it into a fog without filaments. Layers of air that slide against each other carry the smoke sideways, each height its own way, and stretch it into sheets: the plume rises 0.4 to 0.5 m and spreads to about 0.6 m
+- **Every candle, faint** - the owner: "all candles must give simulated, albeit faint smoke". In the scenes of `SMOKY` (`src/rig.py`) every candle gives smoke from the tip of its flame, at 0.1 of the density of a source of the motion map; at 0.3 a bright plume stood over each of the 18 candles
 - **Why smoke shows late** - the gas that leaves a flame is hot and clear; its soot shows a few centimetres higher. Without this the densest smoke sits on the flame tip and reads as a larger, whiter flame
-- **Render** - one OpenVDB file per loop frame. The volume emits and absorbs; it does not scatter. A scattering volume needs light sampling, and the denoiser turned its noise into flicker
+- **Render** - one OpenVDB file per loop frame, written again when its simulation is newer. The smoke of candles emits and absorbs; it does not scatter. A scattering volume needs light sampling, and the denoiser turned its noise into flicker. The titan's smoke is thick enough to be lit by its lamps and scatters (section 5.16)
 - **Light on the smoke** - the plate's own light behind it (the plate blurred by 40 pixels, looked up by screen position) plus the candle flames within about 12 cm, at half the weight of the light behind, so smoke over a flame does not turn white
 
 ### 5.8 Wheels, cloth and streams
@@ -399,6 +429,12 @@ This section covers the remaining kinds of motion.
 
 - **Wheels** - a wheel that spins is a flat disc on the plane fitted to its points, with its texture unrolled by angle and radius and an alpha for its shape, so it can turn all the way. A large wheel takes its axis from the fitted plane; a small whole wheel seen at an angle takes it from the ellipse of its mask; any other faces the camera
 - **Fans** - `rim="inner"`: only the largest filled circle inside the mask turns, the frame stays in the plate
+- **Picture wheel** - a wheel may show a picture instead of the plate (`picture`, `glow`, `lean`, `place` of `spin`). The saint scene's sun-gear shows the Stellars Tech sigil and stands still; its star lights red twice per loop (`src/sigilwheel.py`, `src/rig.py` `BLINK`). What the owner's reports taught:
+  - **Generated over a drawn base** - a sigil drawn as raised gold over enamel was "so flat and without any embroidery and delicacy"; drawn as goldsmith's work it was still "only textured". The owner then allowed the image model: it paints over the drawn sigil in the scene's own surroundings at a strength of 0.45, which keeps the sign and adds relief, skulls on the teeth and crushed velvet. What differs from the surroundings near the outline is kept; the drawn star is laid back where the red light shows
+  - **Dirty gold** - "dirty gold": the drawn gold is sooted before the model paints, and the prompt asks for tarnished, soot-blackened gold
+  - **Turned as its frame** - "misaligned (wrong rotation)": the picture leans 4.3 degrees, as the gilded frame beside it
+  - **Whole** - "cropped circle": the picture's edges and then the disc's rim cut the teeth. The disc is moved along the camera's rays to a free place at its own depth (`place`), its radius 200 pixels, and the sigil fills 0.84 of it
+  - **Small light** - "the light in the star must be smaller and only the inner part of the star must glow and pulse": the glow picture holds only the star's centre, 10 to 22 pixels (of 1024) inside its edge, no halo. The lit area fell from 1492 to 253 plate pixels
 - **Cloth and robes** - a chain of bones from the top edge; each bone swings a fraction of a degree after the one above
 - **Streams** - the texture of a molten stream is carried along its flow line in two copies half a cycle apart, cross-faded, 4 cycles per loop. The result is written as one clean plate per loop frame
 
@@ -414,7 +450,7 @@ This section covers the effects that work on the plate's own pixels.
   - **Paint** - the model's 117 loose pieces get a material by shape: the piece with the most vertices and the teeth are bone, tubes are rubber, fittings on the face are brass, the rest is iron; a disc that only emits red sits in the mouth of the ocular, the piece that reaches furthest forward: three times full red in a core of a quarter of its radius, dark red at the rim. A lit, glossy disc came out pale orange
   - **Light** - the skull is the one surface in a plate scene that needs light: a warm point light where the scene has one, a cold one behind it, and a weak light from all round. The emitting plate is hidden from the skull's rays and left out of the light sampling; with it the skull came out speckled at 64 samples
   - **Motion** - it rises and sinks 1.2 cm, drifts 0.8 cm sideways and turns 4 to 5 degrees, once per loop
-- **Camera** - a closed path of 0.8 % of the nearest scene depth (2 to 6 cm) gives parallax
+- **Camera** - a closed path of 0.8 % of the nearest scene depth (2 to 6 cm) gives parallax; the backdrop's rim covers what it would see past the image's edges (section 3)
 
 ### 5.10 Checks before a render
 
@@ -424,8 +460,17 @@ This section lists what is looked at before a scene is rendered in full, in orde
 2. **Text** - `wip/preview/sheets-<name>.png`: the chart of every sheet (section 2.5)
 3. **Placement** - `wip/preview/plan-<name>.png` and the two tables; no `FLAG`
 4. **Test frames** - `scenes.py -- <name> 0 20 40 60`: four frames spread over the loop; `src/build-scenes.sh` builds scenes one after another and renders these four frames of each
-5. **Looks** - where the owner judges a look (a sign, a material), two or three versions are rendered as stills of one frame and shown side by side; the full render waits for the choice
-6. **Full render** - all frames; then the seam (the frame after the last against frame 0), the mean change between neighbouring frames, the count of single-frame changes over the whole frame (`wip/muster/flicker.py`), and `motion.py proof <name>`, which measures each element's motion in the frames by optical flow
+5. **Close views** - each changed thing is cut from a test frame beside the same place of the plate. For the simulated candles: every candle, the plate above and the render below, and the light round each flame measured in rings of 3 pixels against the painted glow (section 5.6)
+6. **Looks** - where the owner judges a look (a sign, a material), two or three versions are rendered as stills of one frame and shown side by side; the full render waits for the choice
+7. **Full render** - all frames; then the seam (the frame after the last against frame 0), the mean change between neighbouring frames, the count of single-frame changes over the whole frame (`wip/muster/flicker.py`), and `motion.py proof <name>`, which measures each element's motion in the frames by optical flow
+
+The flicker count names regions, and each region gets a cause before the loop goes to `out/`:
+
+- **Motion of a detailed thing** - a moving surface with fine detail is counted though nothing flickers. The titan's head, whose paint grain moves by up to 2.8 pixels per frame, gave 106,179 of the 162,826 pixels counted in the saint loop. The count in its region follows the head's speed over the loop (correlation 0.91, the speed measured by phase correlation of neighbouring frames) and falls to about 5,000 pixels where the head nearly stands still; render noise does not follow a speed
+- **Against the accepted loop** - the same count on the loop in `out/` shows which regions are new: those come from the change, the others were accepted before
+- **Edges** - a band in the outer columns or rows is the drift looking past the plate (section 3)
+- **Known causes** - the dust motes near the lens draw thin closed curves; the simulated flames, their smoke and their light on wax and polished ledges count at every candle
+- **What shows at a pixel** - the vertices of every mesh, projected into the camera at the frame in question, name the thing at a pixel; this found the titan's gun and leg behind the plate's right edge
 
 ![Test frames of the choir and the saint scene](.images_design/frames.jpg)
 
@@ -673,7 +718,29 @@ This section gathers the rules that the owner's reports on the muster, forge and
 - **A motion the owner turns off stays a thing** - the clean plate no longer holds an element that was cut out to move. The vault's gear on the arch keeps its disc and texture and turns 0 times per loop (`turns=0` in its motion map)
 - **Looks are chosen on test frames** - where the owner judges a look, two or three versions are rendered as stills of one frame and shown side by side before the full render (5.10)
 - **The whole frame over the whole loop** - after a render and before the owner sees it, every pixel of every frame is counted for single-frame changes, and every region found is explained (5.13, `wip/muster/flicker.py`)
+- **A flame is simulated with its glow** - a candle flame burns at its real size in the room's air, and gets back the glow the painted flame had; without it the candles read as unlit (5.6)
+- **Smoke is faint and spreads sideways** - every candle smokes, faintly, and the smoke spreads in sheets as it rises (5.7)
+- **A sign keeps its shape and takes the plate's style** - a known sign is drawn exactly, then the image model paints over it at a low strength in the scene's surroundings (5.8)
+- **A repaint holds only what stays before it** - a cut that keeps the old picture round a thing must change when that thing is simulated (2.7)
+- **A thing fits the room it stands in** - a model placed in the plate's 3D scene is checked against the plate's depth before a render; the owner saw the titan's head cut by the wall (5.16)
+- **The camera never looks past the plate** - the backdrop goes on past the image's edges by a strip only the camera sees; without it a model that stands behind the plate shows at the frame's edge as the camera drifts (3)
 - **New animations** - animated AVIF of 2432 × 768 at 30 frames per second; an older plate scene is rendered again at that size when it is reworked, and its GIF is removed (6, 7)
+
+### 5.16 Titan in a corridor
+
+This section covers the Warhound Titan that stands in the saint scene's right opening: a 3D model in the plate's 3D scene, not a picture. The owner: the Warhound "could protrude from the open entrance on the right, as it was standing vigil".
+
+- **Model** - an assembly kit of 15 printable parts (`in/models/warhound/`, the owner's `Wardog_titan_fix.zip`), put together by the method of the Marauder of mech-design: joints measured on the meshes by circle and sphere fits, each part moved rigidly onto the part it hangs from (`src/warhound.py`). The owner: "make the connections not snap-ons but industrial": every joint has a steel housing with bolts
+- **Paint** - the household's Mars red, bone and black; the ornament of the procession's mechs drawn on charts of the large plates (`src/warhoundlivery.py`); every part keeps all its triangles, because a quarter of them crumpled the flat plates into facets
+- **Eyes and grilles** - the owner: the eye "needs to be shining black", the grille "blackened". The lenses and side windows are glossy black glass; the grille behind each window is black with heat deep inside it. That glow first lit the whole head: it now has its own short range of shadowing and a strength of 1.0
+- **Wear and damage** - impact holes with a ring of bare metal and a scorched halo, dents, scratches through the paint, paint flaking to the primer and to the metal, charred patches with heat-browned paint round them, soot. Impact points placed in the part's volume did not show on its surface: they are placed by distance along the surface
+- **Corridor** - MoGe-2 measured the opening as a flat wall 11 to 12 m away. `src/saintcorridor.py` moves the picture inside the outline the owner marked to the corridor's far end along the camera's rays, so the camera sees the plate unchanged; the candlestick before the opening keeps its depth. The plate's verticals lean back 13 degrees, and the corridor and the titan stand along that direction
+- **Fit** - "the head collides with the wall": the titan's vertices are projected into the plate and compared with the plate's depth (`wip/warhound/fit.py`). A scale about the camera keeps the titan's size in the picture and changes only its depth, so the head is placed by its pixel and depth until the whole head shows between the column and the frame
+- **Motion** - torso sway, head turn and nod, and the guns, each a whole number of cycles per loop; the legs stand. The owner: "make the moves of the head smaller": the head turns 4 degrees and nods 1.5
+- **Smoke** - the exhaust of the two head grilles and the hot machinery of the waist, by the gas model of section 5.7 at the titan's scale: a box of 2 × 2 × 4 m in cells of 3.1 cm, the exhaust 120 K above the chapel's air (`src/titansmoke.py`)
+- **Heat** - hot air over each grille bends the light through it: a box of air carried by the head with an index of refraction of 1.03 and ripples that rise with the air. Inside the head and with caustics on, it gave speckles and black patches: the boxes stand outside the head, only the camera sees them, and caustics are off
+- **Light** - a warm light from the chapel's side and a weak cold light from behind; plate, actors and smoke neither light nor shade it, as for the servo-skull (section 5.9)
+- **Noise** - the titan's metal and smoke need light sampling: the saint scene renders with up to 256 samples per pixel and stops a pixel at a noise of 0.004 (`samples` in `SCENES`)
 
 ## 6. Loop and timing
 
@@ -689,7 +756,7 @@ This section covers how every animation returns exactly to its first frame.
 - **Clocks** - every animated value is a function of `phase` in [0, 1) or of `tick`, an integer that changes every tick frames; `CLOCKS` holds the shader nodes that receive them and `MOVERS` the functions that pose objects
 - **Whole cycles** - everything completes whole cycles per loop: a fan turns by a multiple of its blade spacing, a banner swings once, a light changes state per tick
 - **Looping noise** - a noise that changes over time takes its fourth dimension and one axis from a circle of radius r at angle 2π × phase, so phase 1.0 gives the same value as phase 0.0; a larger r changes faster
-- **Frame count by environment** - `LOOP_FRAMES` and `LOOP_WIDTH` give a plate scene another frame count for the same 4 s and another width; `scenes.py`, `rig.py`, `smoke.py` and `motion.py` read them. The smoke has one record per frame and a stream one plate per frame, so the smoke sources, `smoke.py` and `motion.py flow` run again with the same `LOOP_FRAMES` before the render; a stream keeps its speed in pixels per 50 ms and four flow cycles per loop. The forge, the vault, the street and the saint scene are rendered with `LOOP_FRAMES=120 LOOP_WIDTH=2432` and assembled by `muster.py assemble`; the other plate scenes keep 80 frames until they are rendered again
+- **Frame count by environment** - `LOOP_FRAMES` and `LOOP_WIDTH` give a plate scene another frame count for the same 4 s and another width; `scenes.py`, `rig.py`, `smoke.py`, `candle.py` and `motion.py` read them. The smoke and the candle flames have one record per frame and a stream one plate per frame, so `candle.py`, the smoke sources, `smoke.py` and `motion.py flow` run again with the same `LOOP_FRAMES` before the render; a stream keeps its speed in pixels per 50 ms and four flow cycles per loop. The forge, the vault, the street and the saint scene are rendered with `LOOP_FRAMES=120 LOOP_WIDTH=2432` and assembled by `muster.py assemble`; the other plate scenes keep 80 frames until they are rendered again. Every build of a scene writes its smoke sources (`<name>_sources.json`, `saint_titan_sources.json`) for the `LOOP_FRAMES` it runs with, so a build only for an inspection runs with the render's `LOOP_FRAMES` too: one without it wrote the sources for 80 frames
 - **Seam check** - each render also writes the frame at phase 1.0 as `seam-check.png`; it must equal `f000.png` (measured mean difference 0.0 to 0.008 of 255)
 
 ## 7. Rendering and assembly
@@ -743,6 +810,13 @@ This section lists the commands for each step, run from the project folder.
 | plate test frames | `CUDA_VISIBLE_DEVICES=2 blender -b -P src/scenes.py -- <name> 0 20 40 60` |
 | plate preview | `CUDA_VISIBLE_DEVICES=2 blender -b -P src/scenes.py -- <name> preview` |
 | measured motion in the frames | `python3 src/motion.py proof <name>` |
+| candle flames, before the smoke sources | `CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 LOOP_FRAMES=120 .venv-moge/bin/python src/candle.py <name> [flame ...]` |
+| one candle flame in still air or in the room's air | `CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 LOOP_FRAMES=120 .venv-moge/bin/python src/candle.py test [still]` |
+| smoke sources, then smoke | `CUDA_VISIBLE_DEVICES=1 LOOP_FRAMES=120 LOOP_WIDTH=2432 blender -b -P src/scenes.py -- <name> sources`, then `CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 LOOP_FRAMES=120 .venv-moge/bin/python src/smoke.py <name>` |
+| titan smoke | `CUDA_VISIBLE_DEVICES=1 LOOP_FRAMES=120 .venv-moge/bin/python src/titansmoke.py` |
+| Stellars Tech sigil | `python3 src/sigilwheel.py`, then `... src/sigilwheel.py generate` on the GPU and `python3 src/sigilwheel.py choose <file>` |
+| window or part painted anew | `CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1 HF_HUB_OFFLINE=1 .venv-moge/bin/python src/repaint.py paint saint <part> <version>`, then `python3 src/repaint.py apply saint <part>=<version>` |
+| actors after a change of plate, map or sigil | `python3 src/actors.py <name>` |
 | plate frames and GIFs | `nohup setsid src/render-scenes.sh <gpu> <first GIF number> <name>...` |
 | GIF | `python3 src/assemble.py wip/frames-<name> out/<NN>-<name>.gif` |
 

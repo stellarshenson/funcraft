@@ -53,12 +53,19 @@ def stream(id, who, box, pos, line, speed):
     return dict(kind="stream", id=id, who=who, box=box, pos=pos, neg=(), line=line, speed=speed)
 
 
-def spin(id, who, box, pos, neg=(), turns=1, rock=0.0, rim="outer"):
+def spin(id, who, box, pos, neg=(), turns=1, rock=0.0, rim="outer", picture=None, glow=None, lean=0.0, place=None):
     """A wheel on its own axis; pos[0] is the hub. It makes `turns` whole
     turns per loop, or rocks `rock` degrees each way. rim "inner": only the
     disc inside the mask turns (a fan in its frame); "outer": the whole
-    mask turns (a cog with its teeth)."""
-    return dict(kind="spin", id=id, who=who, box=box, pos=pos, neg=neg, turns=turns, rock=rock, rim=rim)
+    mask turns (a cog with its teeth). `picture`: a square RGBA picture the
+    disc shows instead of the plate, its rim at the picture's edge, its
+    alpha the wheel's shape; `glow`: a grey picture in the same frame where
+    the wheel lights red in pulses (src/rig.py); `lean`: degrees the picture
+    is turned, its top to the left, to stand as the verticals round it;
+    `place`: (x, y, r) plate pixels, the disc moved there at its own depth
+    and scaled to that radius."""
+    el = dict(kind="spin", id=id, who=who, box=box, pos=pos, neg=neg, turns=turns, rock=rock, rim=rim)
+    return dict(el, picture=picture, glow=glow, lean=lean, place=place) if picture else el
 
 
 def smoke(id, who, of=None, at=None):
@@ -171,11 +178,15 @@ MAPS = {
         carry("1r", "Right hand of the saint", "1", (952, 278, 1022, 348), [(990, 315)], hand=(990, 315), lift=1.5),
         cloth("2", "Banner, left", (1, 1, 169, 568), [(80, 250)], phase=0.0),
         cloth("3", "Banner, right", (1429, 0, 1596, 587), [(1510, 250)], phase=0.4),
-        spin("4", "Sun-gear", (2049, 1, 2432, 382), [(2265, 180), (2150, 100)], rock=3),
-        smoke("s1", "Smoke of a candle, left", at=(219, 353)),
-        smoke("s2", "Smoke of a candle by the niche", at=(450, 468)),
-        smoke("s3", "Smoke of a candle, centre", at=(1364, 365)),
-        smoke("s4", "Smoke of a candle, right", at=(1964, 505)),
+        # the owner: "make the big circle on the right to be the stellars-tech sigil, let it be still, but have the
+        # star inside it blink red" (src/sigilwheel.py); "also it is misaligned (wrong rotation)": it leans as the
+        # gilded frame beside it, whose edge leans 4.3 degrees (src/saintcorridor.py, RIGHT); "it is cropped circle":
+        # the gear ran out of the picture at the top and the right, the sigil stands whole between the frame and the
+        # picture's right edge
+        spin("4", "Sun-gear, showing the Stellars Tech sigil", (2049, 1, 2432, 382), [(2265, 180), (2150, 100)], turns=0,
+             picture="wip/scene3d/saint_sigil.png", glow="wip/scene3d/saint_sigil_star.png", lean=4.3,
+             place=(2253, 178, 200)),                # the disc; the sigil fills 0.84 of it (src/sigilwheel.py FILL)
+        # the smoke of the candles: every candle gives it from the tip of its flame (src/rig.py SMOKY)
     ],
     "hall": [
         cloth("1", "Banner, left 1", (49, 0, 305, 640), [(180, 250)], phase=0.0),

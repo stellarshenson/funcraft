@@ -33,15 +33,22 @@ RES = (int(os.environ.get("LOOP_WIDTH", 1520)), int(os.environ.get("LOOP_WIDTH",
 CLOCKS, MOVERS, PLATES = [], [], []
 
 # halo: (u, v, radius) of a gold halo a glint sweeps round once per loop
+# samples: most samples per pixel and the noise at which a pixel stops (adaptive sampling); 64 and 0.01 when not given
 # skull: a floating servo-skull. px, depth: where it is (plate pixel, metres); height in metres; yaw: its face
 #        turned so many degrees to the camera's right; key, rim: its warm light and the cold light behind it,
 #        each (plate pixel, depth, colour, watts); ambient: the weak light from all round
-# titan: the Warhound in a hall behind an opening in the wall (src/titanhall.py)
-SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10),
-                        titan=dict(opening=(1660, 1946), behind=10.4, depth=56.0, feet=-9.0, yaw=0.0, haze=0.008,
-                                   piers=((-14, 25), (12, 30)), windows=0.6,
-                                   key=((-14, -14, 20), (1.0, 0.62, 0.32), 8.0e4, 40),
-                                   rim=((10, 24, 22), (0.5, 0.65, 1.0), 5.0e4, 35))),
+# titan: the Warhound on the floor of the saint scene's corridor (src/titan.py, src/saintcorridor.py); head: plate
+#        pixel and depth in metres of the middle of its head; scale: of the 16 m model; lean, turn: degrees; floor:
+#        metres before the feet and to each side; pose: keys of warhound.POSE; idle: degrees of the torso's turn and
+#        lean, the head's turn and nod, the guns; key, rim: (right, forward, up) from its middle in metres of the 16 m
+#        model, colour, watts at that size, cone in degrees
+SCENES = {"saint": dict(halo=(0.30, 0.25, 0.10), samples=(256, 0.004),
+                        titan=dict(head=(1750, 260, 10.2), scale=0.447, lean=4.8, turn=65.0, floor=(8.0, 30.0),
+                                   pose=dict(left=dict(ahead=5.0, bend=(8.0, -10.0)), right=dict(ahead=-4.0, bend=(0.0, None)),
+                                             torso=(8.0, 2.0), head=(20.0, 5.0), guns=dict(right=55.0, left=59.0)),
+                                   idle=(1.5, 0.6, 4.0, 1.5, 2.5),
+                                   key=((-15, -25, 12), (1.0, 0.62, 0.32), 3.5e4, 45),
+                                   rim=((12, 20, 14), (0.5, 0.65, 1.0), 2.0e4, 40))),
           "forge": dict(skull=dict(px=(790, 235), depth=3.3, height=0.36, yaw=22,
                                    key=((965, 345), 3.05, (1.0, 0.6, 0.28), 7.0),      # the lantern
                                    rim=((700, 110), 4.3, (0.4, 0.58, 1.0), 25.0),      # the night window
@@ -191,7 +198,8 @@ def plumes(name, group, glow):
     """The simulated smoke of every source (wip/sim/<name>/<source>.npz) as
     a volume at the place it was simulated for. Each loop frame becomes an
     OpenVDB file once. The smoke shows the light it stands in: the plate's
-    light behind it, and the candle flames near it."""
+    light behind it, and the candle flames near it. A source's file may
+    carry its own emission, absorption and scattering (src/titansmoke.py)."""
     import openvdb as vdb
     sim = os.path.join(ROOT, "wip", "sim", name)
     for f in sorted(os.listdir(sim)) if os.path.isdir(sim) else []:
@@ -235,14 +243,23 @@ def plumes(name, group, glow):
         lit = X.new("ShaderNodeVectorMath", operation="ADD")
         X.L.new(back.outputs[0], lit.inputs[0])
         X.L.new(near.outputs[0], lit.inputs[1])
+        emit, absorb, scatter = (float(d[k]) if k in d else v for k, v in (("emit", 250.0), ("absorb", 30.0), ("scatter", 0.0)))
         em = X.new("ShaderNodeEmission")
         X.L.new(lit.outputs[0], em.inputs["Color"])
-        X.L.new(X.op("MULTIPLY", dens, 250.0), em.inputs["Strength"])
+        X.L.new(X.op("MULTIPLY", dens, emit), em.inputs["Strength"])
         ab = X.new("ShaderNodeVolumeAbsorption")
-        X.L.new(X.op("MULTIPLY", dens, 30.0), ab.inputs["Density"])
+        X.L.new(X.op("MULTIPLY", dens, absorb), ab.inputs["Density"])
         add = X.new("ShaderNodeAddShader")
         X.L.new(em.outputs[0], add.inputs[0])
         X.L.new(ab.outputs[0], add.inputs[1])
+        if scatter:                                  # smoke thick enough to be lit by the lamps near it
+            sc = X.new("ShaderNodeVolumeScatter")
+            sc.inputs["Anisotropy"].default_value = 0.3
+            X.L.new(X.op("MULTIPLY", dens, scatter), sc.inputs["Density"])
+            both = X.new("ShaderNodeAddShader")
+            X.L.new(add.outputs[0], both.inputs[0])
+            X.L.new(sc.outputs[0], both.inputs[1])
+            add = both
         X.L.new(add.outputs[0], X.N["Material Output"].inputs["Volume"])
         vol.materials.append(m)
         print("SMOKE", sid, d["density"].shape, flush=True)
@@ -372,11 +389,11 @@ def build(name):
                          *[(at(px, z), colour, watts) for px, z, colour, watts in (sk["key"], sk["rim"])])
         s.world.color = sk["ambient"]
     if "titan" in conf:
-        import titanhall
-        titanhall.build(conf["titan"], d["depth"], K, ob, bpy.data.objects["backdrop_fill"])
+        import titan
+        titan.build(conf["titan"], K, (d["depth"].shape[1], d["depth"].shape[0]), MOVERS)
     s.render.engine = "CYCLES"
     s.cycles.device = "GPU"
-    s.cycles.samples = SAMPLES
+    s.cycles.samples, s.cycles.adaptive_threshold = conf.get("samples", (SAMPLES, 0.01))
     s.cycles.use_denoising = False
     s.cycles.volume_step_rate = 1.0
     pr = bpy.context.preferences.addons["cycles"].preferences

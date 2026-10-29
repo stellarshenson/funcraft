@@ -12,7 +12,10 @@ import numpy as np
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def layer(name, V, uv, quads, image):
+EDGE = 64                                                      # pixels the backdrop reaches past each edge of the image
+
+
+def layer(name, V, uv, quads, image, material=None):
     me = bpy.data.meshes.new(name)
     me.vertices.add(len(V))
     me.vertices.foreach_set("co", V.ravel())
@@ -25,6 +28,9 @@ def layer(name, V, uv, quads, image):
     me.update()
     ob = bpy.data.objects.new(name, me)
     bpy.context.collection.objects.link(ob)
+    if material:
+        me.materials.append(material)
+        return ob
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     N, L = m.node_tree.nodes, m.node_tree.links
@@ -75,6 +81,27 @@ def backdrop(stem, step=2, cut=1.25):
     uv = np.stack([(np.arange(w) * step + 0.5) / (w * step) * np.ones((h, 1)),
                    1 - (np.arange(h)[:, None] * step + 0.5) / (h * step) * np.ones((1, w))], -1).reshape(-1, 2)
     ob = layer("backdrop", V, uv, quads, stem + ".png")
+    # the rim: a strip EDGE pixels wide round the image, its outer vertices on the rays of pixels outside the image at
+    # the depth of the image's edge, painted with the edge's own pixels, so that a camera moved a little never looks
+    # past the backdrop at what lies behind it; only the camera sees it, so it adds no light to the scene
+    K = d["intrinsics"]
+    ue = np.concatenate([[-EDGE], np.arange(w) * step + 0.5, [w * step + EDGE]]) / (w * step)
+    ve = np.concatenate([[-EDGE], np.arange(h) * step + 0.5, [h * step + EDGE]]) / (h * step)
+    Pe = np.stack(np.broadcast_arrays((ue[None, :] - K[0, 2]) / K[0, 0], (ve[:, None] - K[1, 2]) / K[1, 1],
+                                      np.ones((h + 2, w + 2))), -1) * np.pad(z, 1, mode="edge")[..., None]
+    Pe[1:-1, 1:-1] = P
+    Ve = np.stack([Pe[..., 0], Pe[..., 2], -Pe[..., 1]], -1).reshape(-1, 3)
+    ie = np.arange((h + 2) * (w + 2)).reshape(h + 2, w + 2)
+    ring = np.ones((h + 1, w + 1), bool)
+    ring[1:-1, 1:-1] = False
+    qe = np.stack([ie[:-1, :-1], ie[1:, :-1], ie[1:, 1:], ie[:-1, 1:]], -1)[ring]
+    qe = qe[np.isfinite(Ve)[qe].all((1, 2))]
+    used, qe = np.unique(qe, return_inverse=True)
+    uve = np.stack([np.clip(ue, ue[1], ue[-2])[None, :] * np.ones((h + 2, 1)),
+                    1 - np.clip(ve, ve[1], ve[-2])[:, None] * np.ones((1, w + 2))], -1).reshape(-1, 2)
+    rim = layer("backdrop_rim", Ve[used], uve[used], qe.reshape(-1, 4), None, ob.data.materials[0])
+    rim.visible_diffuse = rim.visible_glossy = rim.visible_transmission = rim.visible_volume_scatter = False
+    rim.visible_shadow = False
     # the fill: the same grid pushed back to the far side of every depth
     # break, whole, painted with the inpainted image, a little behind the
     # front layer so it only shows where the front layer is cut

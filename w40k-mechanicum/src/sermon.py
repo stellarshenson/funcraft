@@ -38,7 +38,7 @@ ROOT = pathlib.Path(__file__).parent.parent
 OUT = ROOT / "out/w40k-mechanicum-sermons"      # the package as a folder; the zip beside it holds the same files
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
           "November", "December"]
-BANNERS = ["12-choir", "10-foundry", "09-reliquary", "08-hall", "06-street", "05-vault", "04-forge", "16-muster"]
+BANNERS = ["12-choir", "10-foundry", "09-reliquary", "08-hall", "07-saint", "06-street", "05-vault", "04-forge", "16-muster"]
 WIDTH, STEP, QUALITY = 788, 2, 60         # banner width in pixels; every STEP-th frame is kept; AVIF quality
 SEAL_QUALITY = 70                         # AVIF quality of the seals of the reward sermons
 BADGE_QUALITY = 55                        # AVIF quality of the service badges of the days

@@ -38,13 +38,20 @@ GLASS = ("A gothic cathedral stained glass window, lit from behind, small pieces
 PARTS = {"saint": {
     # the windows from designs drawn piece by piece (src/glassdesign.py), which the model works over at a low
     # strength; the versions are strengths in percent, 0 is the design alone
+    # `sides`: the inner edges of the window's border of panes, x at the top and the bottom row of the hole, fitted to
+    # the plate's frames (they converge upwards, each window by its own amount); the design is drawn upright between them
+    # and the border stays
     "window-left": dict(box=(112, 0, 384, 576), scale=2, glass=((123, 0, 376, 566), 16, 70), before=[(13, 367, 358, 769)],
+                        sides=((215.1, 144.7), (356.4, 325.5)),
                         pictures=("saint.png", "saint_clean.png", "saint_clean_bg.png"),
-                        design="titan", reference="out/paste-20261014-160135.png",
+                        design="titan", reference="in/reference/imperial-knight.jpg", tall=0.64,
                         prompt=GLASS + "In the middle a giant walking war machine of red, gold and grey glass pieces with a gold "
                                "halo of glass behind it, every piece outlined by black lead, glowing with the light behind"),
-    "window-right": dict(box=(1232, 0, 1440, 592), scale=2, glass=((1249, 2, 1421, 578), 11, 75), panes=12,
-                         before=[(1249, 389, 1530, 766), (1352, 352, 1380, 430)],
+    "window-right": dict(box=(1232, 0, 1440, 592), scale=2, glass=((1249, 2, 1421, 578), 11, 75),
+                         sides=((1218.8, 1245.3), (1353.5, 1407.6)),
+                         # candle f2 stands before the window from its top (row 387) down; its flame is simulated
+                         # (src/candle.py): the glass goes on behind it, or the old wall showed round the flame
+                         before=[(1249, 389, 1530, 766), (1352, 387, 1380, 430)],
                          pictures=("saint.png", "saint_clean.png", "saint_clean_bg.png"), design="maths",
                          prompt=GLASS + "A medallion with the sign of the sum, the bell curve of the normal distribution over "
                                 "the bars of a histogram, and small panes with mathematical signs, every piece outlined by "
@@ -109,7 +116,7 @@ def placed(thing, s=1):
 
 
 def hole(scene, part):
-    """Where the part is painted anew, on the whole plate."""
+    """Where the part is painted anew, on the whole plate, and for a window the four corners of its glass."""
     conf, pic = PARTS[scene][part], plate(scene)
     H, W = pic.shape[:2]
     if "thing" in conf:
@@ -117,12 +124,23 @@ def hole(scene, part):
         put = placed(conf["thing"])
         m[put[1]:put[1] + put[3].shape[0], put[0]:put[0] + put[3].shape[1]] = put[3]
         m[conf["thing"]["ledge"]:] = False
-        return cv2.dilate(m.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool)
+        return cv2.dilate(m.astype(np.uint8), np.ones((5, 5), np.uint8)).astype(bool), None
     if "ellipse" in conf:
         m = np.zeros((H, W), np.uint8)
         cx, cy, rx, ry = conf["ellipse"]
         cv2.ellipse(m, (cx, cy), (rx, ry), 0, 0, 360, 1, -1)
-        return m.astype(bool)
+        return m.astype(bool), None
+    keep = os.path.join(ROOT, "wip", "gen", f"repaint-{scene}", f"{part}-hole-sam.npy")
+    if os.path.exists(keep):                         # SAM 2.1's cut of an earlier run: the model is not loaded again
+        return lean(np.load(keep), conf)
+    upright = cut(pic, scene, conf)
+    os.makedirs(os.path.dirname(keep), exist_ok=True)
+    np.save(keep, upright)
+    return lean(upright, conf)
+
+
+def cut(pic, scene, conf):
+    """SAM 2.1's glass of a window, every row filled out to the window's upright sides, without the things before it."""
     box, border, top = conf["glass"]
     glass = sam(pic, [box], [((box[0] + box[2]) // 2, (box[1] + box[3]) // 3)])
     # SAM leaves out parts of the old picture that do not look like glass, also at the window's sides: below the
@@ -137,11 +155,6 @@ def hole(scene, part):
         if y >= top:
             glass[y, left:right + 1] = True
     glass = cv2.erode(glass.astype(np.uint8), np.ones((2 * border + 1,) * 2, np.uint8)).astype(bool)
-    if conf.get("panes"):
-        # the old figure lay over the border panes on the left side: the hole reaches to the glass's edge there and
-        # the design draws a column of border panes again
-        glass[top:, left + 2:left + 2 + conf["panes"]] |= glass[top:].any(1)[:, None]
-        glass[box[3]:] = False
     glass[:top] = False
     seg = np.load(os.path.join(ROOT, "wip", "scene3d", f"{scene}_seg.npz"))
     # the flames are objects of their own, drawn from <scene>_flames.png: the glass goes on behind them, or the old
@@ -149,6 +162,36 @@ def hole(scene, part):
     before = sam(pic, conf["before"]) | np.any([seg[k] for k in seg.files if k not in ("flames", "wheels") and not k.startswith("f")], 0)
     before = cv2.dilate(before.astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool)
     return glass & ~before
+
+
+def lean(upright, conf):
+    """The window's glass between its leaning sides, inside its border of panes, without the things before it, and its
+    four corners (top left, top right, bottom right, bottom left; x, y in plate pixels). `upright`: SAM's cut with upright sides; inside its box it tells where
+    things stand before the window. Outside that box nothing was cut out: where a side leans out of the box, the new
+    glass there stops at the first row in which a thing before the window comes near that side."""
+    (lt, lb), (rt, rb) = conf["sides"]
+    H, W = upright.shape
+    rows, cols = np.flatnonzero(upright.any(1)), np.flatnonzero(upright.any(0))
+    top, bottom, left, right = rows.min(), rows.max() + 1, cols.min(), cols.max() + 1
+    xl = lambda y: lt + (lb - lt) * (y - top) / (bottom - 1 - top)
+    xr = lambda y: rt + (rb - rt) * (y - top) / (bottom - 1 - top)
+    yy, xx = np.mgrid[:H, :W]
+    quad = (yy >= top) & (yy < bottom) & (xx >= xl(yy)) & (xx < xr(yy))
+    box = np.zeros_like(upright)
+    box[top:bottom, left:right] = True
+    before = box & ~upright
+    hole = quad & ~before
+    mid = (top + bottom) / 2
+    for wedge, x in ((quad & (xx < left), left), (quad & (xx >= right), right)):
+        near = before[:, max(x - 40, 0):x + 40].any(1)
+        stop = np.zeros(H, bool)
+        below, above = np.flatnonzero(near & (np.arange(H) >= mid)), np.flatnonzero(near & (np.arange(H) < mid))
+        if len(below):
+            stop[below.min():] = True
+        if len(above):
+            stop[:above.max() + 1] = True
+        hole &= ~(wedge & stop[:, None])
+    return hole, [(xl(top), top), (xr(top), top), (xr(bottom), bottom), (xl(bottom), bottom)]
 
 
 def paint(scene, only=None, *seeds):
@@ -163,7 +206,7 @@ def paint(scene, only=None, *seeds):
             continue
         x0, y0, x1, y1 = conf["box"]
         s = conf["scale"]
-        m = hole(scene, part)
+        m, quad = hole(scene, part)
         np.save(os.path.join(out, f"{part}-hole.npy"), m)
         # a thing that stands behind a moving one is painted on the clean plate, which does not show the moving one
         crop, mask = (plate(scene, f"{scene}_clean.png") if "thing" in conf else pic)[y0:y1, x0:x1], m[y0:y1, x0:x1]
@@ -173,8 +216,8 @@ def paint(scene, only=None, *seeds):
         shown = [crop]
         if "design" in conf:
             import glassdesign
-            big, exact = glassdesign.design(crop, mask, s, conf["design"], os.path.join(ROOT, conf.get("reference", "")),
-                                            panes=conf.get("panes", 0))
+            big, exact = glassdesign.design(crop, mask, [(x - x0, y - y0) for x, y in quad], s, conf["design"],
+                                            os.path.join(ROOT, conf.get("reference", "")), tall=conf.get("tall", 0.84))
         if "thing" in conf:
             px, py, thing, where = placed(conf["thing"], s)
             px, py = px - x0 * s, py - y0 * s
@@ -220,6 +263,9 @@ def apply(scene, *choices):
         new = np.asarray(Image.open(os.path.join(out, f"{part}-{seed}.png")).convert("RGB")).astype(np.float32)
         m = np.load(os.path.join(out, f"{part}-hole.npy"))[y0:y1, x0:x1]
         a = cv2.GaussianBlur(cv2.dilate(m.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(np.float32), (0, 0), 1)[..., None]
+        sam = os.path.join(out, f"{part}-hole-sam.npy")      # the upright glass an earlier design was laid into: the
+        reset = (cv2.dilate(np.load(sam).astype(np.uint8), np.ones((7, 7), np.uint8)).astype(bool)[y0:y1, x0:x1]   # plate's own
+                 if os.path.exists(sam) else np.zeros(m.shape, bool))                                                # glass again
         seg = np.load(os.path.join(ROOT, "wip", "scene3d", f"{scene}_seg.npz"))
         for name in conf["pictures"]:
             file = os.path.join(ROOT, "wip", "scene3d", name)
@@ -233,6 +279,7 @@ def apply(scene, *choices):
             if name not in files:                    # as it is now, with what src/goldwork.py put elsewhere
                 files[name] = np.asarray(Image.open(file).convert("RGB")).astype(np.float32)
             old, now = plate(scene, name)[y0:y1, x0:x1].astype(np.float32), files[name][y0:y1, x0:x1]
+            now = np.where(reset[..., None], old, now)
             files[name][y0:y1, x0:x1] = np.where(a_name > 0, old * (1 - a_name) + new * a_name, now)
     for name, pic in files.items():
         Image.fromarray(pic.round().astype(np.uint8)).save(os.path.join(ROOT, "wip", "scene3d", name))

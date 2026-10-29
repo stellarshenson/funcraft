@@ -47,7 +47,8 @@ FRAMES = int(os.environ.get("LOOP_FRAMES", 80))      # as src/scenes.py: the loo
 FPS, SUB = FRAMES // 4, 2
 WARM = 12 * FPS            # frames before recording
 DX = 0.00625               # m, one cell of the velocity grid
-N = (64, 64, 128)          # cells
+N = (128, 128, 128)        # cells: 0.8 m each way; the owner: "let the smoke disperse better laterally not only
+                           # vertically": in a box 0.4 m wide the smoke reached the side walls and stopped spreading there
 FINE = 2                   # density cells per velocity cell
 SRC_Z = 0.10               # m, the source above the box floor
 NU = 1.5e-5                # m2/s, viscosity of air
@@ -59,8 +60,16 @@ CONFINE = 0.2              # vorticity confinement
 EMIT = 1500                # particles per substep
 R_SRC = 0.005              # m, radius of the source
 DIFF = 6e-6                # m2/s, random walk of a particle: the eddies smaller than a cell
+SHEAR = (0.08, 0.2, 0.6, 4)  # m/s, m, m: the room's air moves in horizontal layers that slide against each other, this
+                           # fast, with wavelengths in height between these, in so many waves: they carry the smoke
+                           # sideways, each height its own way, and stretch it into sheets
 LIFE = 4.5                 # s
 SEEN = (0.10, 0.45)        # s, the age at which smoke starts to show and shows fully
+R_HEAT = 0.008125          # m, radius of the warm blob at the source
+WALLS = (0.04, 0.05, 0.14) # m, damping layers at the side walls, the floor and the top
+EDDIES = (0.08, 0.40)      # m, wavelengths of the room's eddies
+TOP = (0.20, 0.06)         # m below the box's top: the smoke fades out between them
+WEIGHT = 1 / 40.0          # density of one particle in its cells
 
 
 def smooth(e0, e1, x):
@@ -92,8 +101,8 @@ class Plume:
         self.k2 = (self.k ** 2).sum(0)
         self.k2[0, 0, 0] = 1.0
         wall = lambda a, n, lo, hi: smooth(0.0, lo, a * DX) * smooth(n * DX, n * DX - hi, a * DX)
-        self.keep = (wall(ax[0], X, 0.04, 0.04)[:, None, None] * wall(ax[1], Y, 0.04, 0.04)[None, :, None]
-                     * wall(ax[2], Z, 0.05, 0.14)[None, None, :])
+        self.keep = (wall(ax[0], X, WALLS[0], WALLS[0])[:, None, None] * wall(ax[1], Y, WALLS[0], WALLS[0])[None, :, None]
+                     * wall(ax[2], Z, WALLS[1], WALLS[2])[None, None, :])
         # the room's eddies: divergence-free waves on the box's own lattice
         g = np.random.default_rng(seed + 100)
         self.eddy = []
@@ -105,7 +114,7 @@ class Plume:
                     m = np.array([g.integers(-4, 5), g.integers(-4, 5), g.integers(-8, 9)])
                     kv = TAU * m / (np.array(N) * DX)
                     lam = TAU / max(np.linalg.norm(kv), 1e-6)
-                    if not 0.08 <= lam <= 0.20:
+                    if not EDDIES[0] <= lam <= EDDIES[1]:
                         continue
                     a = np.cross(kv, g.normal(size=3))
                     a = a / np.linalg.norm(a)
@@ -113,8 +122,23 @@ class Plume:
                     w = torch.sin((pos * torch.tensor(kv, device=dev, dtype=torch.float32)).sum(-1) + ph)
                     field += torch.tensor(a, device=dev, dtype=torch.float32)[:, None, None, None] * w
             self.eddy.append((cycles, A, B))
+        self.layers = []
+        for _ in range(SHEAR[3]):
+            a = g.uniform(0, TAU)
+            k = TAU / g.uniform(SHEAR[1], SHEAR[2])
+            self.layers.append((int(g.integers(1, 4)), k, (math.cos(a), math.sin(a)), g.uniform(0, TAU)))
         self.p = torch.zeros(0, 3, device=dev)
         self.born = torch.zeros(0, device=dev)
+
+    def shear(self, t):
+        """The sliding layers of the room's air: (3, 1, 1, Z) m/s, the same over each height, without divergence."""
+        z = torch.arange(N[2], device=self.dev, dtype=torch.float32) * DX
+        v = torch.zeros(3, 1, 1, N[2], device=self.dev)
+        for cycles, k, (cx, cy), ph in self.layers:
+            w = SHEAR[0] / math.sqrt(SHEAR[3]) * torch.sin(k * z + TAU * cycles * t / air.LOOP + ph)
+            v[0, 0, 0] += cx * w
+            v[1, 0, 0] += cy * w
+        return v
 
     def advect(self, q, adv, dt):
         def trace(p, sign):
@@ -130,10 +154,10 @@ class Plume:
 
     def step(self, t, dt, src, wind):
         """One step of the air. src: the wick in cell units; wind: (3,) m/s."""
-        adv = self.u + wind[:, None, None, None]
+        adv = self.u + wind[:, None, None, None] + self.shear(t)
         q = self.advect(torch.cat([self.u, self.T]), adv, dt)
         u, T = q[:3], q[3:]
-        blob = torch.exp(-((self.idx - src) ** 2).sum(-1) / (2 * 1.3 ** 2))
+        blob = torch.exp(-((self.idx - src) ** 2).sum(-1) / (2 * (R_HEAT / DX) ** 2))
         T = T + (T_SRC - T) * blob * min(1.0, 20 * dt)
         T = T * math.exp(-dt / T_TAU)
         u[2] = u[2] + G_BETA * T[0] * dt
@@ -153,7 +177,7 @@ class Plume:
         self.u, self.T = torch.fft.irfftn(uh, s=N, dim=(1, 2, 3)), T
 
     def particles(self, t, dt, src, wind):
-        adv = self.u + wind[:, None, None, None]
+        adv = self.u + wind[:, None, None, None] + self.shear(t)
         if len(self.p):
             v = sample(adv, self.p).T
             v = sample(adv, self.p + 0.5 * dt / DX * v).T
@@ -172,7 +196,7 @@ class Plume:
         age = t - self.born
         z = self.p[:, 2] * DX
         wgt = smooth(*SEEN, age) * (1 - smooth(0.3 * LIFE, LIFE, age)) \
-            * (1 - smooth(N[2] * DX - 0.20, N[2] * DX - 0.06, z)) / 40.0
+            * (1 - smooth(N[2] * DX - TOP[0], N[2] * DX - TOP[1], z)) * WEIGHT
         q = self.p * FINE
         i0 = q.floor()
         f = q - i0
@@ -257,7 +281,7 @@ def main():
     os.makedirs(out, exist_ok=True)
     for k, s in enumerate(src):
         dens, origin, cell = simulate(s["path"], dev, k, lambda m, s=s: print(s["id"], m, flush=True))
-        np.savez_compressed(os.path.join(out, s["id"] + ".npz"), density=dens, origin=origin, cell=cell)
+        np.savez_compressed(os.path.join(out, s["id"] + ".npz"), density=dens * s.get("thin", 1.0), origin=origin, cell=cell)      # a faint source: src/rig.py SMOKY
     print("SMOKE_DONE", name, len(src))
 
 

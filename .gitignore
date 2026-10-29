@@ -3,6 +3,7 @@
 */resources/
 */wip/
 */out/
+*/tmp/
 */references/**
 !*/references/**/
 !*/references/**/*.txt

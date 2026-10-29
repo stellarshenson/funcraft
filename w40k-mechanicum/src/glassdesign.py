@@ -3,12 +3,17 @@ owner rejected war machines that the image model drew from a prompt alone ("stai
 gave pictures of the machines to use. src/repaint.py lays a design into a window's hole and the image model then
 works over it at a low strength, so the glass takes the window's light and grain while the shapes stay.
 
-- **Titan** - the machine of the owner's picture, cut from its white ground, its colours sorted into eight glasses and
-  every glass split into pieces about a tenth of the machine's width; a gold halo of pieces stands behind it. It
-  stands high in the window, above the candle before it
+- **Titan** - the Imperial Knight of the owner's picture (in/reference/imperial-knight.jpg), cut from its white
+  ground, its colours sorted into eight glasses and every glass split into pieces about a tenth of the window's width;
+  a gold halo of pieces stands behind it. The owner: "titan is too short": it stands as tall as `tall` of the window,
+  its feet behind the candelabra before the window, and the window's sides cut what is wider than the window
 - **Mathematics** - the owner: "the right one should be dedicated to maths and statistics", "sacred distribution /
-  statistical calculations": the bell curve of the normal distribution over a histogram at the top, and below it two
-  rows of panes with the signs of statistics, all above the candle that stands before the window
+  statistical calculations": the bell curve of the normal distribution over a histogram at the top, below it two rows
+  of panes with the signs of statistics, and in the lower half, behind the candle that stands before the window, a
+  Galton board whose balls pile up in its bins as the binomial distribution (the owner: "lower part of the image
+  isn't used why? there should also be something")
+- **Upright in the window** - a design is drawn upright on a canvas of the window's own size and warped into the
+  window between its leaning sides (the owner: "all image rotated vs window frames")
 - **Ground** - the window's own blue glass: its colours are taken from the old window's blue pieces; the iron bars
   across the old window stay before the new glass
 """
@@ -88,17 +93,21 @@ def cutout(path):
     return a[ys.min():ys.max() + 1, xs.min():xs.max() + 1], thing[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 
 
-def titan(out, lead, hole, box, reference, rng, s):
+def titan(out, lead, hole, box, reference, rng, s, tall):
+    """The machine of the picture standing in the window, `tall` times the window's height, its feet near the
+    window's foot; where it is wider than the window, the window's sides cut it."""
     hx0, hy0, hx1, hy1 = box
     W, H = hx1 - hx0, hy1 - hy0
     pic, thing = cutout(reference)
-    f = min(0.96 * W / pic.shape[1], 0.78 * H / pic.shape[0])
+    f = tall * H / pic.shape[0]
     w, h = int(pic.shape[1] * f), int(pic.shape[0] * f)
     pic = cv2.resize(pic, (w, h), interpolation=cv2.INTER_AREA)
     thing = cv2.resize(thing.astype(np.uint8), (w, h), interpolation=cv2.INTER_NEAREST).astype(bool)
-    x0, y0 = hx0 + (W - w) // 2, hy0 + int(0.1 * H)
+    x0, y0 = hx0 + (W - w) // 2, hy1 - h - int(0.05 * H)
+    c0, c1 = max(0, hx0 - x0), min(w, hx1 - x0)
+    pic, thing, x0, w = pic[:, c0:c1], thing[:, c0:c1], x0 + c0, c1 - c0
     # the halo: a ring of gold pieces round a light gold disc, behind the machine's upper part
-    cy, cx, r = y0 + int(0.25 * h), hx0 + W // 2, int(0.48 * W)
+    cy, cx, r = y0 + int(0.12 * h), hx0 + W // 2, int(0.62 * W)
     yy, xx = np.mgrid[:out.shape[0], :out.shape[1]]
     d = np.hypot(yy - cy, xx - cx)
     ring, disc = hole & (d < r) & (d >= 0.8 * r), hole & (d < 0.8 * r)
@@ -140,7 +149,7 @@ def maths(out, lead, hole, box, rng, s, exact):
     yy, xx = np.mgrid[:out.shape[0], :out.shape[1]]
     cx = hx0 + W // 2
     # the bell curve of the normal distribution, a thick gold band, over a histogram of thirteen bars
-    top, base = hy0 + int(0.14 * H), hy0 + int(0.34 * H)
+    top, base = hy0 + int(0.05 * H), hy0 + int(0.25 * H)
     left, right = hx0 + int(0.04 * W), hx1 - int(0.04 * W)
     sd = 0.19 * (right - left)
     curve = lambda x: base - (base - top) * np.exp(-0.5 * ((x - cx) / sd) ** 2)
@@ -158,7 +167,7 @@ def maths(out, lead, hole, box, rng, s, exact):
     lead |= hole & edges(band.astype(np.int64), s)
     lead |= hole & (np.abs(yy - base) < 1.5 * s) & (xx >= left) & (xx <= right)
     # panes with the signs of statistics, two rows of four
-    py0, py1 = hy0 + int(0.41 * H), hy0 + int(0.69 * H)
+    py0, py1 = hy0 + int(0.29 * H), hy0 + int(0.50 * H)
     ph, pw = (py1 - py0) // 2, (hx1 - hx0 - int(0.08 * W)) // 4
     for k, text in enumerate(SIGNS):
         x0, y0 = hx0 + int(0.04 * W) + (k % 4) * pw, py0 + (k // 4) * ph
@@ -172,41 +181,77 @@ def maths(out, lead, hole, box, rng, s, exact):
         out[mark] = np.array(IVORY[0], np.float32)
         exact |= cv2.dilate(mark.astype(np.uint8), np.ones((2 * s + 1,) * 2, np.uint8)).astype(bool)
         lead |= hole & edges(pane.astype(np.int64), 2 * s) | edges(mark.astype(np.int64), max(2, s)) & pane
+    return galton(out, lead, hole, (hx0, hy0 + int(0.53 * H), hx1, hy1), rng, s)
+
+
+def galton(out, lead, hole, box, rng, s, rows=6):
+    """A Galton board: balls fall from a funnel through rows of pegs and pile up in the bins below as the binomial
+    distribution, the bell of the normal distribution drawn by chance."""
+    from math import comb
+    x0, y0, x1, y1 = box
+    W, H = x1 - x0, y1 - y0
+    cx, dx = (x0 + x1) / 2, 0.125 * W
+    yy, xx = np.mgrid[:out.shape[0], :out.shape[1]]
+    for sx in (-1, 1):                               # the funnel: two gold bands down to an opening over the first peg
+        a, b = np.array([cx + sx * 0.42 * W, y0]), np.array([cx + sx * 0.6 * dx, y0 + 0.1 * H])
+        t = np.clip(((xx - a[0]) * (b[0] - a[0]) + (yy - a[1]) * (b[1] - a[1])) / ((b - a) ** 2).sum(), 0, 1)
+        band = hole & (np.hypot(xx - a[0] - t * (b[0] - a[0]), yy - a[1] - t * (b[1] - a[1])) < 3 * s)
+        fill(out, band, cells(out.shape[:2], 8 * s, rng), GOLD, rng, 0.05)
+        lead |= hole & edges(band.astype(np.int64), max(2, s))
+    pegs = np.zeros(out.shape[:2], bool)
+    for r in range(rows):
+        for k in range(r + 1):
+            pegs |= np.hypot(xx - cx - (k - r / 2) * dx, yy - y0 - (0.15 + 0.07 * r) * H) < 3.5 * s
+    pegs &= hole
+    out[pegs] = np.array(IVORY[0], np.float32)
+    lead |= edges(pegs.astype(np.int64), max(2, s)) & hole
+    by0, by1 = y0 + 0.56 * H, y1 - 0.01 * H             # the bins: lead walls, and the balls in them
+    for j in range(rows + 2):
+        lead |= hole & (np.abs(xx - cx - (j - (rows + 1) / 2) * dx) < s) & (yy >= by0) & (yy < by1)
+    lead |= hole & (np.abs(yy - by1) < 1.5 * s) & (np.abs(xx - cx) < (rows + 1) / 2 * dx)
+    r_ball = 0.42 * dx
+    most = int((by1 - by0) / (2 * r_ball))
+    for j in range(rows + 1):
+        for i in range(round(comb(rows, j) / comb(rows, rows // 2) * most)):
+            ball = hole & (np.hypot(xx - cx - (j - rows / 2) * dx, yy - by1 + r_ball * (1 + 2 * i) + s) < r_ball - s)
+            out[ball] = np.array([IVORY, RED, GOLD][(i + j) % 3][0], np.float32)
+            lead |= edges(ball.astype(np.int64), max(2, s)) & hole
     return lead
 
 
-def design(crop, hole, s, kind, reference=None, seed=0, panes=0):
+def design(crop, hole, quad, s, kind, reference=None, seed=0, tall=0.84):
     """The window's crop at `s` times the plate's scale with the new glass in its hole, and where the signs lie: the image
-    model drew other letters over them at a strength of 0.2, so they are laid over its result again."""
+    model drew other letters over them at a strength of 0.2, so they are laid over its result again. The design is drawn
+    upright on a canvas of the window's own size and warped into the window between its leaning sides: `quad`, the
+    corners of the glass in the crop (top left, top right, bottom right, bottom left; x, y in plate pixels)."""
     rng = np.random.default_rng(seed)
     h, w = crop.shape[:2]
     big = cv2.resize(crop, (w * s, h * s), interpolation=cv2.INTER_CUBIC).astype(np.float32)
     m = cv2.resize(hole.astype(np.uint8), (w * s, h * s), interpolation=cv2.INTER_NEAREST).astype(bool)
-    ys, xs = np.nonzero(m)
-    box = (xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)
+    (tlx, top), (trx, _), (brx, bottom), (blx, _) = quad
+    Hc, Wc = int(round((bottom - top) * s)), int(round((trx - tlx + brx - blx) / 2 * s))
     px = crop[hole].astype(np.float32)
     blue = px[(px[:, 2] > px[:, 0] + 30) & (px[:, 2] > px[:, 1] + 10) & (px.sum(1) > 200)]
     blues = [tuple(c) for c in blue[rng.integers(0, len(blue), 24)]]
-    out = big.copy()
-    ground = cells(out.shape[:2], 13 * s, rng)
-    fill(out, m, ground, blues, rng, 0.1)
-    lead = m & edges(ground, max(2, s))
-    exact = np.zeros(m.shape, bool)                 # signs that the image model must not change
+    canvas = np.zeros((Hc, Wc, 3), np.float32)
+    whole = np.ones((Hc, Wc), bool)
+    ground = cells((Hc, Wc), 13 * s, rng)
+    fill(canvas, whole, ground, blues, rng, 0.1)
+    lead = edges(ground, max(2, s))
+    exact = np.zeros((Hc, Wc), bool)                # signs that the image model must not change
     if kind == "titan":
-        lead = titan(out, lead, m, box, reference, rng, s)
+        lead = titan(canvas, lead, whole, (0, 0, Wc, Hc), reference, rng, s, tall)
     else:
-        lead = maths(out, lead, m, box, rng, s, exact)
-    if panes:
-        # a column of border panes along the left side, red and blue in turn, as the old window's border
-        x0, x1 = box[0], box[0] + (panes - 2) * s
-        for k, y in enumerate(range(box[1], box[3], (panes - 2) * s)):
-            pane = np.zeros(m.shape, bool)
-            pane[y:y + (panes - 2) * s, x0:x1] = True
-            pane &= m
-            out[pane] = np.array([RED[0], (40, 90, 200)][k % 2], np.float32)
-            lead |= m & edges(pane.astype(np.int64), max(2, s))
-        lead[box[1]:box[3], x1:x1 + s] |= m[box[1]:box[3], x1:x1 + s]
-    out[lead & m] = LEAD
+        lead = maths(canvas, lead, whole, (0, 0, Wc, Hc), rng, s, exact)
+    canvas[lead] = LEAD
+    # into the window: a row of the crop is a row of the canvas, and across it the canvas spans the leaning sides
+    Y, X = np.mgrid[:h * s, :w * s].astype(np.float32)
+    v = (Y / s - top) / (bottom - top)
+    xl, xr = tlx + v * (blx - tlx), trx + v * (brx - trx)
+    mx, my = ((X / s - xl) / (xr - xl) * Wc).astype(np.float32), (v * Hc).astype(np.float32)
+    warped = cv2.remap(canvas, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    out = np.where(m[..., None], warped, big)
+    exact = (cv2.remap(exact.astype(np.float32), mx, my, cv2.INTER_LINEAR) > 0.5) & m
     # the iron bars across the old window stay before the glass: rows where most of the hole is dark
     lum = crop.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], np.float32)
     dark = np.array([hole[y].sum() > 20 and (lum[y][hole[y]] < 45).mean() > 0.7 for y in range(h)])
