@@ -1,0 +1,10 @@
+*
+!src/audio_out.py
+!src/speak_text.py
+!src/fish/speak_s2pro.py
+!service/*.py
+!service/voices
+!service/static
+
+# The compose password file is a host secret and never enters an image layer
+service/password.txt

@@ -1,0 +1,25 @@
+# Fish Audio Drama 3 version of texts/inspiring-speech-controlled.txt. Lines starting with '#' are not spoken.
+# One paragraph is one Fish request, so a style prefix covers the whole paragraph.
+#
+# Ming control                                       Fish form
+# {speed: slow, pitch: low, volume: medium}          style prefix [slow, low and calm] and <slow> on the first sentence
+# [Breathing]                                        [breath] at the end of the paragraph before, mid-text where the model is reliable
+# {emotion: angry}                                   style prefix [angry, cold and hard]; <emphasis> on "Do not listen"; <whisper> on the word "whisper"
+# [Confirmation-en]                                  [hmm]
+# [Sigh]                                             [sighs] after the first sentence
+# {speed: medium, pitch: medium, volume: high}       style prefix [loud and commanding, at full voice]; <emphasis> on "Victory"; [pause] before "Now, let us begin."
+# paragraph gap                                      the 0.4 s join of speak_fish.py
+
+[slow, low and calm] <slow>Listen to me, team.</slow> The sun will be up within the hour, and the data lies before us, untouched. Behind us stands every night we have spent preparing. [breath]
+
+Our enemy is not a person. Our enemy is the deadline, and the noise hidden inside every column of numbers.
+
+[angry, cold and hard] It will tell you that a pattern is real when it is only chance. It will <whisper>whisper</whisper> that your score is high when your test has leaked into your training. <emphasis>Do not listen.</emphasis>
+
+[hmm] We hold the better ground. We know this dataset, its gaps and its flaws, and we have cleaned it row by row. [breath] Our weapons are sound features, a plain and honest baseline, and a validation set that no one is permitted to touch. The graphics processors are warm and the clusters are ready.
+
+Overfitting is the danger that kills proud teams. [sighs] A model that remembers its lessons but cannot reason beyond them will break on the first day of real data. [breath] Keep it simple, keep it tested, and measure again before you trust it. [breath]
+
+Hold the line, check your work, and help the person at your side.
+
+[loud and commanding, at full voice] <emphasis>Victory</emphasis> is not the best score on the board. Victory is a model that holds on data it has never seen. [pause] Now, let us begin.

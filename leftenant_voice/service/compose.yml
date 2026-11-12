@@ -1,0 +1,47 @@
+# Launch on a Docker host with the NVIDIA container toolkit:  docker compose up -d --remove-orphans
+# Every value is written in this file and edited here. The password is a compose secret the Docker host reads
+# at /home/lab/.cache/voice-tts/password.txt, because the daemon cannot see the lab project folder.
+services:
+  leftenant-voice-tts-service:
+    image: registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts:latest
+    container_name: leftenant-voice-tts-service
+    # This daemon's user-defined bridge networks do not resolve DNS; the default bridge does, so the service
+    # joins it instead of a compose network. A host whose user-defined networks resolve needs neither line.
+    network_mode: bridge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1::8000"
+    environment:
+      S2PRO_PASSWORD_FILE: /run/secrets/s2pro_password
+      ENGINE: s2pro
+      IDLE_UNLOAD_SECONDS: "3600"
+      MAX_TEXT_CHARS: "3000"
+    secrets:
+      - s2pro_password
+    volumes:
+      # One data volume holds both folders: the weights Hugging Face downloads on the first start at
+      # /data/huggingface, and the writable voice folder at /data/voices that the image seeds and the page fills
+      - data:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0"]
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 300s
+
+secrets:
+  # The password file lives on the Docker host at /home/lab/.cache/voice-tts/password.txt, because the
+  # daemon cannot see the lab project folder; it is never in this file or an image layer
+  s2pro_password:
+    file: /home/lab/.cache/voice-tts/password.txt
+
+volumes:
+  data:
+    name: data

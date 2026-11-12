@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Voice TTS</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f2efe9;
+    --panel: #fffdf9;
+    --field: #ffffff;
+    --ink: #1b1a17;
+    --muted: #57534c;
+    --line: #d3cec4;
+    --control-line: #8f897e;
+    --accent: #7a1f1f;
+    --accent-ink: #ffffff;
+    --link: #7a1f1f;
+    --ok: #1e6b3c;
+    --warn: #7a5200;
+    --bad: #a31c1c;
+    --focus: #1d5fa8;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131312;
+      --panel: #1d1c1a;
+      --field: #141413;
+      --ink: #ebe8e1;
+      --muted: #b8b2a7;
+      --line: #3b3833;
+      --control-line: #6b665d;
+      --accent: #9c3a33;
+      --accent-ink: #ffffff;
+      --link: #e8a59d;
+      --ok: #74d69a;
+      --warn: #e0b45c;
+      --bad: #ff9a90;
+      --focus: #8dc1ff;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { font-size: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  main { max-width: 54rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  header h1 { margin: 0; font-size: 1.6rem; }
+  header p { margin: .25rem 0 1.5rem; color: var(--muted); }
+
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: .55rem;
+    padding: 1rem 1.25rem;
+    margin: 0 0 1rem;
+  }
+
+  h2 { margin: 0 0 .75rem; font-size: 1.15rem; }
+  h3 { margin: 1.5rem 0 .35rem; font-size: 1rem; }
+
+  label { display: block; margin: .75rem 0 .3rem; font-weight: 600; }
+  input, textarea, select, button { font: inherit; }
+
+  input[type="text"],
+  input[type="password"],
+  textarea,
+  select {
+    width: 100%;
+    padding: .5rem .6rem;
+    background: var(--field);
+    color: var(--ink);
+    border: 1px solid var(--control-line);
+    border-radius: .35rem;
+  }
+
+  textarea { min-height: 5rem; resize: vertical; }
+  input[type="file"] { max-width: 100%; color: var(--muted); }
+
+  button {
+    padding: .5rem 1rem;
+    border: 1px solid var(--control-line);
+    border-radius: .35rem;
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  button[type="submit"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  a { color: var(--link); }
+
+  .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+  .hint { margin: .25rem 0 0; color: var(--muted); font-size: .875rem; }
+
+  .notice {
+    margin: 0 0 1rem;
+    padding: .75rem 1rem;
+    border: 1px solid var(--control-line);
+    border-radius: .35rem;
+    background: var(--panel);
+  }
+
+  .picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 .75rem; }
+  .picker label { margin-top: 0; }
+
+  .state-line { margin: 0; font-size: 1.1rem; }
+  .state { font-weight: 700; }
+  #service-status[data-state="ready"] .state { color: var(--ok); }
+  #service-status[data-state="error"] .state,
+  #service-status[data-state="unreachable"] .state { color: var(--bad); }
+  #service-status[data-state="downloading"] .state,
+  #service-status[data-state="loading"] .state { color: var(--warn); }
+
+  .facts { margin: .3rem 0 0; color: var(--muted); }
+  .status-error { margin: .5rem 0 0; color: var(--bad); overflow-wrap: anywhere; }
+  .load-progress { width: 100%; height: .7rem; margin-top: .75rem; accent-color: var(--accent); }
+
+  #token-state { margin: .75rem 0 0; font-weight: 600; }
+
+  #uploaded-list, #api-token-list { list-style: none; margin: .25rem 0 0; padding: 0; }
+  #uploaded-list li,
+  #api-token-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .45rem 0;
+    border-top: 1px solid var(--line);
+  }
+  #uploaded-list li:first-child,
+  #api-token-list li:first-child { border-top: 0; }
+  #uploaded-list li.empty,
+  #api-token-list li.empty { display: block; color: var(--muted); }
+  #uploaded-list button,
+  #api-token-list button { padding: .3rem .8rem; }
+  #uploaded-list li span,
+  #api-token-list li span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  #api-token-new code { display: block; margin-top: .35rem; overflow-wrap: anywhere; }
+  #login-form { max-width: 24rem; }
+
+  #player { display: block; width: 100%; margin-top: 1rem; }
+  .download { display: inline-block; margin-top: .6rem; }
+  #message { margin: .75rem 0 0; min-height: 1.5rem; color: var(--bad); overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Voice TTS</h1>
+    <p>Log in, set the Hugging Face token, choose a voice, and play the generated MP3.</p>
+    <button id="logout-button" type="button" hidden>Log out</button>
+  </header>
+
+  <noscript>
+    <p class="notice">JavaScript is required for this page.</p>
+  </noscript>
+
+  <section id="login-section">
+    <h2>Log in</h2>
+    <form id="login-form">
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" autocomplete="off" spellcheck="false">
+      <div class="actions">
+        <button id="login-button" type="submit">Log in</button>
+      </div>
+    </form>
+  </section>
+
+  <div id="app-section" hidden>
+  <section>
+    <h2>Status</h2>
+    <div id="service-status" data-state="checking">
+      <p class="state-line" role="status" aria-live="polite"><span class="state">state: checking</span></p>
+      <p class="facts">engine: none · busy: no</p>
+      <p class="status-error" hidden></p>
+      <progress class="load-progress" aria-label="Model load in progress" hidden></progress>
+    </div>
+  </section>
+
+  <section>
+    <h2>Settings</h2>
+    <form id="token-form">
+      <label for="token-input">Hugging Face token</label>
+      <input id="token-input" type="password" autocomplete="off" spellcheck="false">
+      <div class="actions">
+        <button type="submit">Save</button>
+        <button type="button" class="clear-token">Clear</button>
+      </div>
+    </form>
+    <p id="token-state" aria-live="polite">no token</p>
+    <p class="hint">The token is kept in memory by the service for this container session only. It is never written to disk. Enter it again after the container restarts.</p>
+
+    <h3>API tokens</h3>
+    <form id="api-token-form">
+      <label for="api-token-name">Token name</label>
+      <input id="api-token-name" type="text" pattern="[a-z0-9][a-z0-9_\-]{0,39}" autocomplete="off" spellcheck="false">
+      <p class="hint">Lowercase letters, digits, hyphen and underscore. Up to 40 characters.</p>
+      <div class="actions">
+        <button id="api-token-create" type="submit">Create token</button>
+      </div>
+    </form>
+    <p id="api-token-new" class="notice" hidden>New token, shown once: <code></code></p>
+    <ul id="api-token-list"></ul>
+  </section>
+
+  <section>
+    <h2>Voice</h2>
+    <div class="picker">
+      <div>
+        <label for="engine-select">Engine</label>
+        <select id="engine-select"></select>
+      </div>
+      <div>
+        <label for="voice-select">Voice</label>
+        <select id="voice-select"></select>
+      </div>
+    </div>
+
+    <h3>Clone a voice from a reference recording</h3>
+    <form id="upload-form">
+      <label for="upload-name">Name</label>
+      <input id="upload-name" type="text" pattern="[a-z0-9][a-z0-9_\-]{0,39}" autocomplete="off" spellcheck="false">
+      <p class="hint">Lowercase letters, digits, hyphen and underscore. Up to 40 characters.</p>
+      <label for="upload-text">Transcript</label>
+      <textarea id="upload-text" maxlength="1000"></textarea>
+      <label for="upload-file">Reference WAV</label>
+      <input id="upload-file" type="file" accept=".wav,audio/wav">
+      <p class="hint">Mono or stereo WAV, 3 to 30 seconds, at most 25 MB.</p>
+      <div class="actions">
+        <button type="submit">Upload and clone</button>
+      </div>
+    </form>
+
+    <h3>Cloned voices</h3>
+    <ul id="uploaded-list"></ul>
+  </section>
+
+  <section>
+    <h2>Generate</h2>
+    <form id="speak-form">
+      <label for="speak-text">Text to speak</label>
+      <textarea id="speak-text"></textarea>
+      <div class="actions">
+        <button id="speak-button" type="submit" disabled>Generate MP3</button>
+      </div>
+    </form>
+    <audio id="player" controls hidden></audio>
+    <a class="download" download="speech.mp3" hidden>Download speech.mp3</a>
+  </section>
+  </div>
+
+  <p id="message" role="alert"></p>
+</main>
+
+<script>
+const ui = {
+  status: document.getElementById("service-status"),
+  statusState: document.querySelector("#service-status .state"),
+  statusFacts: document.querySelector("#service-status .facts"),
+  statusError: document.querySelector("#service-status .status-error"),
+  statusProgress: document.querySelector("#service-status .load-progress"),
+  tokenForm: document.getElementById("token-form"),
+  tokenClear: document.querySelector("#token-form .clear-token"),
+  tokenInput: document.getElementById("token-input"),
+  tokenState: document.getElementById("token-state"),
+  engineSelect: document.getElementById("engine-select"),
+  voiceSelect: document.getElementById("voice-select"),
+  uploadForm: document.getElementById("upload-form"),
+  uploadName: document.getElementById("upload-name"),
+  uploadText: document.getElementById("upload-text"),
+  uploadFile: document.getElementById("upload-file"),
+  uploadedList: document.getElementById("uploaded-list"),
+  speakForm: document.getElementById("speak-form"),
+  speakText: document.getElementById("speak-text"),
+  speakButton: document.getElementById("speak-button"),
+  player: document.getElementById("player"),
+  download: document.querySelector(".download"),
+  loginSection: document.getElementById("login-section"),
+  loginForm: document.getElementById("login-form"),
+  loginPassword: document.getElementById("login-password"),
+  loginButton: document.getElementById("login-button"),
+  logoutButton: document.getElementById("logout-button"),
+  appSection: document.getElementById("app-section"),
+  apiTokenForm: document.getElementById("api-token-form"),
+  apiTokenName: document.getElementById("api-token-name"),
+  apiTokenCreate: document.getElementById("api-token-create"),
+  apiTokenNew: document.getElementById("api-token-new"),
+  apiTokenList: document.getElementById("api-token-list"),
+  message: document.getElementById("message"),
+};
+
+let voices = {};
+let uploaded = [];
+let defaultEngine = null;
+let serverBusy = false;
+let speaking = false;
+let audioUrl = null;
+let healthTimer = null;
+
+function setText(element, text) {
+  if (element.textContent !== text) element.textContent = text;
+}
+
+function showMessage(text) {
+  ui.message.textContent = text;
+}
+
+function clearMessage() {
+  ui.message.textContent = "";
+}
+
+function stopPolling() {
+  if (healthTimer !== null) {
+    clearInterval(healthTimer);
+    healthTimer = null;
+  }
+}
+
+function showLogin() {
+  stopPolling();
+  ui.loginSection.hidden = false;
+  ui.appSection.hidden = true;
+  ui.logoutButton.hidden = true;
+  ui.apiTokenNew.hidden = true;
+  ui.apiTokenNew.querySelector("code").textContent = "";
+}
+
+function showApp() {
+  ui.loginSection.hidden = true;
+  ui.appSection.hidden = false;
+  ui.logoutButton.hidden = false;
+  loadSettings();
+  loadVoices();
+  loadTokens();
+  pollHealth();
+  if (healthTimer === null) healthTimer = setInterval(pollHealth, 2000);
+}
+
+async function checkSession() {
+  try {
+    const response = await fetch("/session");
+    if (response.ok && (await response.json()).authenticated) {
+      showApp();
+      return;
+    }
+  } catch {
+    // the service is not reachable; the login form is the screen to show
+  }
+  showLogin();
+}
+
+async function loadTokens() {
+  try {
+    const response = await fetch("/tokens");
+    if (!response.ok) throw new Error(await errorDetail(response));
+    fillTokens((await response.json()).tokens || []);
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+function fillTokens(list) {
+  ui.apiTokenList.replaceChildren();
+  if (list.length === 0) {
+    const item = document.createElement("li");
+    item.className = "empty";
+    item.textContent = "No API tokens yet.";
+    ui.apiTokenList.append(item);
+    return;
+  }
+  for (const token of list) {
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = token.name + " · " + token.prefix + " · " + token.created;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Revoke";
+    button.addEventListener("click", () => revokeToken(token.name));
+    item.append(label, button);
+    ui.apiTokenList.append(item);
+  }
+}
+
+async function revokeToken(name) {
+  clearMessage();
+  try {
+    const response = await fetch("/tokens/" + encodeURIComponent(name), { method: "DELETE" });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    await loadTokens();
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function errorDetail(response) {
+  let body = null;
+  try {
+    body = await response.json();
+  } catch {
+    // the body is not JSON; the status code is all there is
+  }
+  const detail = body && body.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((item) => (item && item.msg ? item.msg : JSON.stringify(item))).join("; ");
+  }
+  return "the request failed with HTTP " + response.status;
+}
+
+function updateSpeakButton() {
+  ui.speakButton.disabled = serverBusy || speaking || ui.speakText.value.trim() === "";
+}
+
+function fillVoices() {
+  const names = voices[ui.engineSelect.value] || [];
+  const previous = ui.voiceSelect.value;
+  ui.voiceSelect.replaceChildren(...names.map((name) => new Option(name, name)));
+  if (names.includes(previous)) ui.voiceSelect.value = previous;
+}
+
+function fillEngines() {
+  const names = Object.keys(voices);
+  const previous = ui.engineSelect.value;
+  ui.engineSelect.replaceChildren(...names.map((name) => new Option(name, name)));
+  if (names.includes(previous)) ui.engineSelect.value = previous;
+  else if (defaultEngine && names.includes(defaultEngine)) ui.engineSelect.value = defaultEngine;
+  fillVoices();
+}
+
+function fillUploaded() {
+  ui.uploadedList.replaceChildren();
+  if (uploaded.length === 0) {
+    const item = document.createElement("li");
+    item.className = "empty";
+    item.textContent = "No cloned voices yet.";
+    ui.uploadedList.append(item);
+    return;
+  }
+  for (const name of uploaded) {
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = name;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Delete";
+    button.addEventListener("click", () => deleteVoice(name));
+    item.append(label, button);
+    ui.uploadedList.append(item);
+  }
+}
+
+async function loadVoices() {
+  try {
+    const response = await fetch("/voices");
+    if (!response.ok) throw new Error(await errorDetail(response));
+    const data = await response.json();
+    voices = data.voices || {};
+    uploaded = data.uploaded || [];
+    fillEngines();
+    fillUploaded();
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function loadSettings() {
+  try {
+    const response = await fetch("/settings");
+    if (!response.ok) throw new Error(await errorDetail(response));
+    const settings = await response.json();
+    defaultEngine = settings.default_engine || null;
+    ui.tokenState.textContent = settings.hf_token_set ? "token is set" : "no token";
+    if (settings.max_text_chars) ui.speakText.maxLength = settings.max_text_chars;
+    if (defaultEngine && voices[defaultEngine]) {
+      ui.engineSelect.value = defaultEngine;
+      fillVoices();
+    }
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function setToken(token) {
+  try {
+    const response = await fetch("/settings/hf-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    const result = await response.json();
+    ui.tokenState.textContent = result.hf_token_set ? "token is set" : "no token";
+    ui.tokenInput.value = "";
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+async function deleteVoice(name) {
+  clearMessage();
+  try {
+    const response = await fetch("/voices/" + encodeURIComponent(name), { method: "DELETE" });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    await loadVoices();
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+function renderHealth(data) {
+  const state = data.state || "unknown";
+  ui.status.dataset.state = state;
+  setText(ui.statusState, "state: " + state);
+  const facts = ["engine: " + (data.engine || "none"), "busy: " + (data.busy ? "yes" : "no")];
+  if (data.seconds_until_unload !== null && data.seconds_until_unload !== undefined) {
+    facts.push("unload in " + data.seconds_until_unload + " s");
+  }
+  setText(ui.statusFacts, facts.join(" · "));
+  ui.statusError.hidden = !data.error;
+  setText(ui.statusError, data.error || "");
+  ui.statusProgress.hidden = !(state === "downloading" || state === "loading");
+  serverBusy = Boolean(data.busy);
+  updateSpeakButton();
+}
+
+async function pollHealth() {
+  try {
+    const response = await fetch("/health", { cache: "no-store" });
+    if (!response.ok) throw new Error("health request failed");
+    renderHealth(await response.json());
+  } catch {
+    ui.status.dataset.state = "unreachable";
+    setText(ui.statusState, "service not reachable");
+    setText(ui.statusFacts, "");
+    ui.statusError.hidden = true;
+    ui.statusProgress.hidden = true;
+  }
+}
+
+ui.tokenForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessage();
+  await setToken(ui.tokenInput.value);
+});
+
+ui.tokenClear.addEventListener("click", async () => {
+  clearMessage();
+  await setToken("");
+});
+
+ui.engineSelect.addEventListener("change", fillVoices);
+
+ui.uploadForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessage();
+  const body = new FormData();
+  body.append("name", ui.uploadName.value.trim());
+  body.append("text", ui.uploadText.value.trim());
+  if (ui.uploadFile.files[0]) body.append("file", ui.uploadFile.files[0]);
+  try {
+    const response = await fetch("/voices", { method: "POST", body });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    ui.uploadForm.reset();
+    await loadVoices();
+  } catch (error) {
+    showMessage(error.message);
+  }
+});
+
+ui.speakForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessage();
+  const text = ui.speakText.value.trim();
+  if (!text) return;
+  speaking = true;
+  updateSpeakButton();
+  try {
+    const response = await fetch("/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice: ui.voiceSelect.value, engine: ui.engineSelect.value }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    const blob = new Blob([await response.arrayBuffer()], { type: "audio/mpeg" });
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    audioUrl = URL.createObjectURL(blob);
+    ui.player.src = audioUrl;
+    ui.player.hidden = false;
+    ui.download.href = audioUrl;
+    ui.download.hidden = false;
+    ui.player.play().catch(() => {});
+  } catch (error) {
+    showMessage(error.message);
+  } finally {
+    speaking = false;
+    updateSpeakButton();
+  }
+});
+
+ui.loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessage();
+  try {
+    const response = await fetch("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: ui.loginPassword.value }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    ui.loginPassword.value = "";
+    showApp();
+  } catch (error) {
+    showMessage(error.message);
+  }
+});
+
+ui.logoutButton.addEventListener("click", async () => {
+  clearMessage();
+  try {
+    await fetch("/logout", { method: "POST" });
+  } catch {
+    // the cookie is gone with the service; the login form is still the screen to show
+  }
+  showLogin();
+});
+
+ui.apiTokenForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearMessage();
+  ui.apiTokenNew.hidden = true;
+  try {
+    const response = await fetch("/tokens", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: ui.apiTokenName.value.trim() }),
+    });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    const created = await response.json();
+    ui.apiTokenNew.querySelector("code").textContent = created.token;
+    ui.apiTokenNew.hidden = false;
+    ui.apiTokenForm.reset();
+    await loadTokens();
+  } catch (error) {
+    showMessage(error.message);
+  }
+});
+
+ui.speakText.addEventListener("input", updateSpeakButton);
+
+updateSpeakButton();
+checkSession();
+</script>
+</body>
+</html>

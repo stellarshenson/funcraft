@@ -1,0 +1,13 @@
+{speed: slow, pitch: low, volume: medium} Listen to me, team. The sun will be up within the hour, and the data lies before us, untouched. Behind us stands every night we have spent preparing.
+
+[Breathing] Our enemy is not a person. Our enemy is the deadline, and the noise hidden inside every column of numbers.
+
+{emotion: angry} It will tell you that a pattern is real when it is only chance. It will whisper that your score is high when your test has leaked into your training. Do not listen.
+
+[Surprise-oh] We hold the better ground. We know this dataset, its gaps and its flaws, and we have cleaned it row by row. [Breathing] Our weapons are sound features, a plain and honest baseline, and a validation set that no one is permitted to touch. The graphics processors are warm and the clusters are ready.
+
+[Sigh] Overfitting is the danger that kills proud teams. A model that remembers its lessons but cannot reason beyond them will break on the first day of real data. [Breathing] [Uhm] Keep it simple, keep it tested, and measure again before you trust it.
+
+[Uhm] [Breathing] Hold the line, check your work, and help the person at your side.
+
+{speed: medium, pitch: medium, volume: high} Victory is not the best score on the board. Victory is a model that holds on data it has never seen. Now, let us begin.
