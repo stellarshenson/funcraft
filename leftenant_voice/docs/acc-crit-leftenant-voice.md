@@ -298,13 +298,14 @@ The image, its compose stack and the make targets that build, run and configure 
   - log: 2026-11-09T01:29:42Z @kj added
   - log: 2026-11-09T09:32:17Z @kj closed: verified
   - log: 2026-11-09T21:03:59Z @kj edited evidence "docker run -e IDLE_UNLOAD_SECONDS=10: ready in 298 s, /health loaded false 11 s later with seconds_until_unload null and engine null, the log has the unload line; the next POST /speak reloaded in 267 s and returned 200 audio/mpeg, 47649 bytes, ffprobe mp3 3.94 s; tmp/workflows/release/keepalive-check.json, keepalive-container.log" -> "wip/release/verify/keepalive-0.2.0.json: on 0.2.0 with -e IDLE_UNLOAD_SECONDS=10 the model unloaded 9 s after ready (/health loaded false, seconds_until_unload null, engine null); the next /speak returned 200 audio/mpeg 47649 bytes in 281 s and /health loaded true after"; reason: the verifier re-ran keepalive on the released 0.2.0 image; the earlier evidence named 0.1.0
-- [x] `ACC-DOCKER-53-DATA` **One data volume** - HIGH; the single named volume `data` at `/data` holds the Hugging Face cache (`/data/huggingface`) and the voices (`/data/voices`); compose, `docker-run`, the functional tests and the README agree, and a container on the migrated volume becomes ready with no download
+- [x] `ACC-DOCKER-53-DATA` **One data volume** - HIGH; the single named volume `leftenant-voice-tts-service-data` at `/data` holds the Hugging Face cache (`/data/huggingface`) and the voices (`/data/voices`); compose, `docker-run`, the functional tests and the README agree, and a container on the migrated volume becomes ready with no download
   - evidence: image sha256:375ae2f9a41e; env HF_HOME=/data/huggingface VOICES_DIR=/data/voices; compose and docker-run mount data:/data, no build key, README one volume; s2pro-hf-cache copied (11011983136 bytes, 41 files) and empty s2pro-voices equal at copy; offline container on data ready 281 s, no downloading, grimaldus; test 64, functional 21 in 1058.63 s EXIT=0 tmp/workflows/one-volume/logs/functional-full.log
-  - test: docker compose config from service/ mounts only data at /data with no build key; the image carries HF_HOME=/data/huggingface and VOICES_DIR=/data/voices; a container on data with HF_HUB_OFFLINE=1 reaches ready with no download
+  - test: docker compose config from service/ mounts only leftenant-voice-tts-service-data at /data with no build key; the image carries HF_HOME=/data/huggingface and VOICES_DIR=/data/voices; a container on it with HF_HUB_OFFLINE=1 reaches ready with no download
   - test-tags: FUNCTIONAL
   - log: 2026-11-10T22:32:48Z @kj added
   - log: 2026-11-10T22:50:51Z @kj closed: closed: verified
   - log: 2026-11-11T22:21:02Z @kj edited test "docker compose --env-file .env config from service/ mounts only data at /data with no build key; the image carries HF_HOME=/data/huggingface and VOICES_DIR=/data/voices; a container on data with HF_HUB_OFFLINE=1 reaches ready with no download" -> "docker compose config from service/ mounts only data at /data with no build key; the image carries HF_HOME=/data/huggingface and VOICES_DIR=/data/voices; a container on data with HF_HUB_OFFLINE=1 reaches ready with no download"
+  - log: 2026-11-13T18:38:02Z @kj edited text "the single named volume `data` at `/data` holds the Hugging Face cache (`/data/huggingface`) and the voices (`/data/voices`); compose, `docker-run`, the functional tests and the README agree, and a container on the migrated volume becomes ready with no download" -> "the single named volume `leftenant-voice-tts-service-data` at `/data` holds the Hugging Face cache (`/data/huggingface`) and the voices (`/data/voices`); compose, `docker-run`, the functional tests and the README agree, and a container on the migrated volume becomes ready with no download"; test "docker compose config from service/ mounts only data at /data with no build key; the image carries HF_HOME=/data/huggingface and VOICES_DIR=/data/voices; a container on data with HF_HUB_OFFLINE=1 reaches ready with no download" -> "docker compose config from service/ mounts only leftenant-voice-tts-service-data at /data with no build key; the image carries HF_HOME=/data/huggingface and VOICES_DIR=/data/voices; a container on it with HF_HUB_OFFLINE=1 reaches ready with no download"
 - [x] `ACC-DOCKER-62-COMPOSE-HARDCODED` **Compose values hardcoded** - HIGH; compose.yml names the image leftenant-voice-tts:latest, container port 8000 on a daemon-assigned loopback host port, GPU 0, engine s2pro, idle 3600 s and max 3000 chars as literals; no .env file is read or shipped; the README has no --env-file step
   - evidence: compose.yml has no variable reference and literal image leftenant-voice-tts:latest, port 127.0.0.1::8000, GPU 0, engine s2pro, idle 3600, max 3000; docker compose config shows host_ip 127.0.0.1, target 8000, no published; no .env files; README no --env-file; unit 90 passed; logs wip/compose-rename/logs/
   - test: cd service && docker compose config; ls -a service shows no .env; compose.yml and README.md hold no --env-file and compose.yml no ${
@@ -535,4 +536,61 @@ Password login for the page, API tokens for clients, and the password supplied b
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-10T22:41:12Z @kj added
   - log: 2026-11-10T23:44:09Z @kj closed: verified
+
+## Transcription `ASR`
+
+Speech-to-text and model cache management: the /transcribe endpoint with language and wording, the page panel, and deleting a downloaded model
+
+- log: 2026-11-13T18:03:04Z @kj category created
+
+- [x] `ACC-ASR-66-ENDPOINT` **Transcribe endpoint** - MEDIUM; POST /transcribe takes an audio upload (mp3, m4a, wav, flac, ogg through ffmpeg), a language (as spoken or one of the 40), the wording (verbatim or readable) and optional context terms, and returns the transcript; auth like /speak
+  - evidence: wf_c18fa67c-0cb: POST /transcribe decodes mp3, m4a, wav, flac and ogg through ffmpeg, validates language, wording and context, and transcribes 2-minute windows through the Nemotron worker; 13 tests in tests/unit/test_transcribe.py; 107 unit green; verifier pass
+  - test: unit: stub the transcriber, upload a wav, assert the text; 401 without auth; 422 for bad audio
+  - test-tags: UNIT
+  - log: 2026-11-13T18:03:04Z @kj added
+  - log: 2026-11-13T18:28:21Z @kj closed
+- [x] `ACC-ASR-67-PAGE` **Transcribe panel** - MEDIUM; the page has a transcribe panel: choose an audio file (mp3, m4a, wav), the language from as spoken plus the 40, verbatim or readable, optional context terms, submit, read the transcript; errors shown
+  - evidence: wf_347ba7ab-2dc: the page has the Transcribe section (file input mp3/m4a/wav/flac/ogg, 41 language options equal to asr.LANGUAGES plus as spoken, readable/verbatim wording, context, FormData to /transcribe, transcript shown, 67.5 GB busy note); 3 tests in test_webapp.py; 117 unit green; verifier pass
+  - test: unit: page contains the form; functional: upload a wav and read the text
+  - test-tags: UNIT, FUNCTIONAL
+  - log: 2026-11-13T18:03:04Z @kj added
+  - log: 2026-11-13T18:37:31Z @kj closed
+- [x] `ACC-ASR-68-LANGUAGE` **Language in the prompt** - MEDIUM; the model has no language parameter: the prompt carries Language: as spoken (auto) or the chosen language; the list is the 40 languages with ASR support in the model card
+  - evidence: the 40 ASR languages from the model card matrix in service/asr.py in card order; build_prompt matches the card byte for byte; a named language replaces only the language clause; an unknown language is 422; unit tested in wf_c18fa67c-0cb
+  - test: unit: every language value builds its prompt; an unknown language is refused
+  - test-tags: UNIT
+  - log: 2026-11-13T18:03:04Z @kj added
+  - log: 2026-11-13T18:28:21Z @kj closed
+- [x] `ACC-ASR-69-RUNTIME` **Nemotron bf16 on GPU 2** - HIGH; Nemotron 3.5 Transcribe 30B runs bf16 in the single /opt/venv worker on host GPU 2 via ASR_GPU_INDEX=2; compose reserves GPUs 0 and 2; container init downloads the weights to /data/huggingface (67.5 GB)
+  - evidence: E2E wf_99f566ae-33c on image 29bf480f77c5: nvidia-smi shows S2 Pro on GPU 0 (13,990 MiB) and the ASR worker on GPU 2 (64,657 MiB); init downloaded 67,515,776,086 bytes and asr became ready in 21m42s; unit 125 green
+  - test: docker compose up, POST /transcribe, assert a transcript; record the run
+  - test-tags: MANUAL
+  - log: 2026-11-13T18:03:04Z @kj added
+  - log: 2026-11-13T19:01:16Z @kj closed
+  - log: 2026-11-13T21:25:54Z @kj edited text "Nemotron 3.5 Transcribe 30B runs bf16 in its own venv worker on the second visible GPU (host GPU 2); compose reserves GPUs 0 and 2; the weights download to /data/huggingface at the first transcription (67.5 GB)" -> "Nemotron 3.5 Transcribe 30B runs bf16 in the single /opt/venv worker on host GPU 2 via ASR_GPU_INDEX=2; compose reserves GPUs 0 and 2; container init downloads the weights to /data/huggingface (67.5 GB)"; evidence "wf_a41d7078-145: image 2f7d4df8335a 31.4 GB with /opt/venv-asr (Python 3.11.18, torch 2.7.1+cu128, transformers 5.23.0.dev0 at 826edb7, librosa 0.11.0); in-image import check; compose device_ids 0 and 2; /health asr available true and /openapi.json lists the routes; 117 unit green; verifier pass" -> "E2E wf_99f566ae-33c on image 29bf480f77c5: nvidia-smi shows S2 Pro on GPU 0 (13,990 MiB) and the ASR worker on GPU 2 (64,657 MiB); init downloaded 67,515,776,086 bytes and asr became ready in 21m42s; unit 125 green"
+- [x] `ACC-ASR-70-MODELS-API` **List and delete models** - HIGH; GET /models lists the cached models with sizes and load state; DELETE /models/{name} unloads the resident model and removes its cache so the next use re-downloads it; session auth
+  - evidence: wf_b1db3a5e-c43 plus fix wf_e691bdd0-34b: GET /models lists s2pro and nemotron with bytes and loaded; DELETE unloads under the engine lock then removes the cache and reports freed bytes; DEF-ASR-5-SYMLINK-BYTES fixed so symlinks count once; 114 unit green
+  - test: unit: temp cache, delete removes the dir and reports bytes; 401 without session; 404 unknown
+  - test-tags: UNIT
+  - log: 2026-11-13T18:03:04Z @kj added
+  - log: 2026-11-13T18:28:21Z @kj closed
+  - log: 2026-11-13T18:28:24Z @kj edited evidence "wf_b1db3a5e-c43 plus fix wf_e691bdd0-34b: GET /models lists s2pro and nemotron with bytes and loaded; DELETE unloads under the engine lock then removes the cache and reports freed bytes; DEF-ASR-5 fixed so symlinks count once; 114 unit green" -> "wf_b1db3a5e-c43 plus fix wf_e691bdd0-34b: GET /models lists s2pro and nemotron with bytes and loaded; DELETE unloads under the engine lock then removes the cache and reports freed bytes; DEF-ASR-5-SYMLINK-BYTES fixed so symlinks count once; 114 unit green"
+- [x] `ACC-ASR-71-MODELS-PAGE` **Delete models on the page** - MEDIUM; Settings lists the models with their sizes and load state; Delete asks for confirmation, calls the API and shows the freed space and that the next use downloads again
+  - evidence: wf_347ba7ab-2dc: Settings lists the models from GET /models with size and loaded; a two-step Delete calls DELETE /models/{name}, reports the freed bytes and the re-download, and refreshes; tests assert the list and the fetch targets; 117 unit green; verifier pass
+  - test: unit: page contains the list and delete control; functional: delete a fake cache entry
+  - test-tags: UNIT, FUNCTIONAL
+  - log: 2026-11-13T18:03:05Z @kj added
+  - log: 2026-11-13T18:37:31Z @kj closed
+- [x] `ACC-ASR-72-DOCS` **Transcription and model docs** - LOW; service/README.md documents the endpoint, the page panel, the language list, GPU 2 and the 67.5 GB download, and the model deletion; the OpenAPI schema covers /transcribe and /models
+  - evidence: README covers POST /transcribe, the page panel, the 40 languages, GPU 2, the 67.5 GB first download and GET/DELETE /models; /openapi.json lists /transcribe, /models and /models/{name}; the page, models and image workflows each verified their section
+  - test: check docs and the OpenAPI schema list the endpoints
+  - test-tags: UNIT
+  - log: 2026-11-13T18:03:05Z @kj added
+  - log: 2026-11-13T19:01:16Z @kj closed
+- [x] `ACC-ASR-73-E2E` **Recorded real-model run** - HIGH; one recorded run: the compose service with GPUs 0 and 2 transcribes an mp3 and returns text; then DELETE /models/nemotron frees the cache and the status shows it uncached
+  - evidence: wf_99f566ae-33c pass: cold start downloaded both models (21m42s to ready); speak 200 MP3 3.474 s; transcribe WER 0.0; DELETE /models/nemotron freed 67,515,776,086 bytes, state down, next request 503 Retry-After 30 and started a real re-download; worker on GPU 2
+  - test: manual run with the real weights, recorded under wip/
+  - test-tags: MANUAL
+  - log: 2026-11-13T18:03:05Z @kj added
+  - log: 2026-11-13T21:25:54Z @kj closed
 

@@ -1,16 +1,17 @@
-"""HTTP API over the installed text-to-speech engines: POST /speak returns an MP3.
+"""HTTP API over the installed text-to-speech engines and Nemotron 3.5 Transcribe: POST /speak returns an MP3,
+POST /transcribe returns text.
 
 Run: `make -f s2pro.mk serve` (native) or the Docker image. Settings come from environment variables:
 VOICES_DIR, ENGINE (default s2pro), MAX_TEXT_CHARS (default 3000), IDLE_UNLOAD_SECONDS (default 3600),
-S2PRO_PASSWORD_FILE or S2PRO_PASSWORD, TOKENS_FILE.
+ASR_GPU_INDEX (default 1), ASR_PYTHON, S2PRO_PASSWORD_FILE or S2PRO_PASSWORD, TOKENS_FILE.
 
 The service starts only with a password. `POST /login` opens an in-memory session with an HttpOnly cookie;
 the session opens the page and manages API tokens. The token store is encrypted with the password, so a
 service without it cannot read the tokens.
 
-Access: `GET /`, `GET /health`, `POST /login` and `GET /session` are public; settings and token management
-need the session cookie; `/speak` and `/voices` accept the cookie or `Authorization: Bearer <token>`. Every
-refusal is 401.
+Access: `GET /`, `GET /health`, `POST /login` and `GET /session` are public; settings, token management and
+model management need the session cookie; `/speak`, `/transcribe` and `/voices` accept the cookie or
+`Authorization: Bearer <token>`. Every refusal is 401.
 
 The default engine loads in the background at start, so `/health` answers while the model loads. One engine is
 resident at a time: a request for another engine unloads the resident one first, because the models do not fit
@@ -19,6 +20,19 @@ loads it again. One lock covers load, unload and synthesis, so only one of them 
 
 `/health` reports the load as `state`: `downloading` while the weights come from Hugging Face, `loading` while
 the model is built, `ready` when the last load succeeded, and `error` with the message in `error` when it failed.
+
+`POST /transcribe` transcribes an uploaded recording with Nemotron 3.5 Transcribe, bf16 on GPU 2, in a child
+process of its own environment that loads in the background at start, as the default engine does. `/health`
+reports it under `asr` as `available`, `loaded`, `state` and `error`; `state` is `downloading` while its 67.5 GB
+cache is absent, `loading` while the model is built, `ready` or `error`. A request during the download or the
+load answers 503 with `Retry-After: 30` instead of waiting, and a request that finds the state `down` starts the
+load again and answers the same way. The upload may be any format ffmpeg decodes - mp3, m4a, wav, flac,
+ogg - up to one hour. The language is "as spoken" for automatic detection or one of the 40 languages with ASR
+support in the model card; the model receives it in the prompt, because its request has no language parameter.
+
+`GET /models` lists the S2 Pro and Nemotron caches under `HF_HOME` with their folder, size and whether the model
+is loaded. `DELETE /models/{name}` unloads the model when it is loaded and removes its cache, so the next use
+downloads the weights again. The page controls follow in a later change.
 
 `GET /` serves the page in `service/static`. The page sets the Hugging Face token with `POST /settings/hf-token`;
 the token lives in this process's memory for the session and reaches the weight download. The page also uploads
@@ -40,6 +54,9 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
+import asr
+import engine_nemotron
+import models
 import soundfile
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from engine import Engine, EngineError, voice_names
@@ -70,6 +87,7 @@ MAX_TEXT_CHARS = int(os.environ.get("MAX_TEXT_CHARS", "3000"))
 IDLE_UNLOAD_SECONDS = float(os.environ.get("IDLE_UNLOAD_SECONDS", "3600"))
 WATCH_SECONDS = 5.0
 MAX_TRANSCRIPT_CHARS = 1000
+MAX_CONTEXT_CHARS = 500
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 UPLOAD_MIN_SECONDS, UPLOAD_MAX_SECONDS = 3.0, 30.0
 VOICE_NAME = re.compile(r"[a-z0-9][a-z0-9_-]{0,39}")
@@ -223,6 +241,11 @@ load_error: str | None = None
 last_request = time.monotonic()
 busy = False
 
+transcriber = engine_nemotron.NemotronTranscriber()
+asr_lock = threading.Lock()
+asr_state = "down"
+asr_error: str | None = None
+
 
 def seed_voices() -> None:
     """Copy the bundled voices into the writable folder, overwriting bundled files and leaving uploads."""
@@ -309,6 +332,46 @@ def _load_default(engine: Engine) -> None:
             print(f"the default engine failed to load: {error}", flush=True)
 
 
+def _asr_phase() -> str:
+    """The state a transcriber load reports: `downloading` without the Nemotron cache, `loading` with it."""
+    return "loading" if models.cache_dir("nemotron").is_dir() else "downloading"
+
+
+def _start_transcriber_load() -> str:
+    """Start the transcriber's load in a background thread, with the state set before the thread runs.
+
+    A `/transcribe` request during the load sees `downloading` or `loading` and answers 503, so no request
+    waits for the download and none starts a second load.
+
+    Returns:
+        The state the load reports, `downloading` or `loading`; the started thread replaces it.
+    """
+    global asr_state, asr_error
+    phase = _asr_phase()
+    asr_state, asr_error = phase, None
+    threading.Thread(target=_load_transcriber, daemon=True).start()
+    return phase
+
+
+def _load_transcriber() -> None:
+    """Load the transcription model under `asr_lock`, so one load serves every request.
+
+    The state becomes `ready` when the model is loaded and `error` with the reason when the load failed.
+    """
+    global asr_state, asr_error
+    with asr_lock:
+        if transcriber.is_loaded():
+            asr_state = "ready"
+            return
+        try:
+            transcriber.load()
+        except Exception as error:  # recorded in asr_state and asr_error; the next request retries the load
+            asr_state, asr_error = "error", str(error)
+            print(f"the transcription model failed to load: {error}", flush=True)
+            return
+        asr_state = "ready"
+
+
 def _unload_when_idle() -> None:
     """Watcher thread: free the resident engine after IDLE_UNLOAD_SECONDS idle; never during a synthesis."""
     global loaded_engine
@@ -331,7 +394,8 @@ def _unload_when_idle() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Read the password and the token store, then start the engine load and the idle watcher.
+    """Read the password and the token store, then start the engine load, the transcription load and the idle
+    watcher.
 
     A missing password, a token store the password cannot decrypt, or a bad ENGINE stops the service here.
     """
@@ -341,6 +405,8 @@ async def lifespan(_: FastAPI):
     seed_voices()
     default = get_engine(ENGINES, DEFAULT_ENGINE)
     threading.Thread(target=_load_default, args=(default,), daemon=True).start()
+    if transcriber.available():
+        _start_transcriber_load()
     threading.Thread(target=_unload_when_idle, daemon=True).start()
     yield
 
@@ -442,13 +508,56 @@ def set_hf_token(request: TokenRequest, _: None = Depends(require_session)) -> d
     return {"hf_token_set": hf_token is not None}
 
 
+@app.get("/models")
+def list_models(_: None = Depends(require_session)) -> dict:
+    """The model caches the service knows, each with its folder, size and whether the model is loaded."""
+    loaded = {"s2pro": loaded_engine == "s2pro", "nemotron": transcriber.is_loaded()}
+    return {"models": [models.describe(name, loaded[name]) for name in models.MODELS]}
+
+
+@app.delete("/models/{name}")
+def delete_model(name: str, _: None = Depends(require_session)) -> dict:
+    """Delete a model's cache; a loaded model is unloaded first, so the next use downloads the weights again.
+
+    Raises:
+        HTTPException: 404 for a name the service does not know, 500 when the unload fails or the cache
+        cannot be removed.
+    """
+    global loaded_engine, asr_state, asr_error
+    if name not in models.MODELS:
+        raise HTTPException(404, f"unknown model {name!r}; the models are {list(models.MODELS)}")
+    if name == "s2pro":
+        with lock:
+            if loaded_engine == "s2pro":
+                try:
+                    ENGINES["s2pro"].unload()
+                except Exception as error:
+                    raise HTTPException(500, f"the s2pro engine could not be unloaded: {error}") from error
+                loaded_engine = None
+    else:
+        with asr_lock:
+            if transcriber.is_loaded():
+                try:
+                    transcriber.unload()
+                except Exception as error:
+                    raise HTTPException(500, f"the nemotron transcriber could not be unloaded: {error}") from error
+                asr_state, asr_error = "down", None
+    try:
+        freed = models.delete(name)
+    except OSError as error:
+        raise HTTPException(500, str(error)) from error
+    return {"deleted": name, "freed_bytes": freed}
+
+
 @app.get("/health")
 def health() -> dict:
-    """Always 200: whether an engine is loaded, the load state and error, and the seconds to its idle unload."""
+    """Always 200: the engine's load state and error, the seconds to its idle unload, and the transcriber's."""
     left = max(0.0, IDLE_UNLOAD_SECONDS - (time.monotonic() - last_request))
     return {"status": "ok", "loaded": loaded_engine is not None, "state": state, "error": load_error,
             "engine": loaded_engine, "busy": busy,
-            "seconds_until_unload": round(left) if loaded_engine is not None else None}
+            "seconds_until_unload": round(left) if loaded_engine is not None else None,
+            "asr": {"available": transcriber.available(), "loaded": transcriber.is_loaded(),
+                    "state": asr_state, "error": asr_error}}
 
 
 @app.get("/voices")
@@ -558,3 +667,62 @@ def speak(request: SpeakRequest, _: None = Depends(require_auth)) -> FileRespons
     mp3 = write_render(Path(folder) / "speech.mp3", audio, rate)
     return FileResponse(mp3, media_type="audio/mpeg", filename="speech.mp3",
                         background=BackgroundTask(lambda: (mp3.unlink(), Path(folder).rmdir())))
+
+
+@app.post("/transcribe")
+def transcribe(file: UploadFile = File(...), language: str = Form(asr.AUTO_LANGUAGE),
+               wording: str = Form("readable"), context: str = Form(""),
+               _: None = Depends(require_auth)) -> dict:
+    """Transcribe an uploaded recording with Nemotron 3.5 Transcribe and return its text.
+
+    The model loads in the background at start, so the first recording does not wait for its 67.5 GB
+    download: a request during the download or the load answers 503 with `Retry-After`. A request that
+    finds the state `down` starts the load in the background and answers the same way.
+
+    Args:
+        file: the recording; any format ffmpeg decodes, such as mp3, m4a, wav, flac or ogg.
+        language: "as spoken" for automatic detection, or one of the 40 languages with ASR support.
+        wording: "readable" omits fillers and accidental repetitions; "verbatim" keeps them.
+        context: names and terms the recording uses, at most `MAX_CONTEXT_CHARS` characters.
+
+    Returns:
+        `{"text", "language", "wording"}`.
+
+    Raises:
+        HTTPException: 413 for an upload over `asr.MAX_UPLOAD_BYTES`, 422 for a recording, language,
+        wording or context the model cannot take, 503 when the transcription environment is missing or
+        the model is downloading or loading, and 500 when the model cannot load or transcribe.
+    """
+    global asr_state, asr_error
+    data = file.file.read(asr.MAX_UPLOAD_BYTES + 1)
+    if len(data) > asr.MAX_UPLOAD_BYTES:
+        raise HTTPException(413, f"the recording is over {asr.MAX_UPLOAD_BYTES} bytes")
+    try:
+        samples, _ = asr.decode_audio(data)
+        prompt = asr.build_prompt(language, wording, context)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
+    if len(context) > MAX_CONTEXT_CHARS:
+        raise HTTPException(422, f"the context has {len(context)} characters; "
+                                 f"the limit is {MAX_CONTEXT_CHARS}")
+    if not transcriber.available():
+        raise HTTPException(503, f"the transcription environment is missing: "
+                                 f"{transcriber.python_path()}")
+    phase = asr_state
+    if phase == "down":
+        phase = _start_transcriber_load()
+    if phase in ("downloading", "loading"):
+        raise HTTPException(503, f"the transcription model is {phase}",
+                            headers={"Retry-After": "30"})
+    with asr_lock:
+        try:
+            if not transcriber.is_loaded():
+                asr_state, asr_error = "loading", None
+                transcriber.load()
+            asr_state, asr_error = "ready", None
+            texts = [transcriber.transcribe_window(samples[start:end], prompt)
+                     for start, end in asr.window_bounds(samples)]
+        except EngineError as error:
+            asr_state, asr_error = "error", str(error)
+            raise HTTPException(500, str(error)) from error
+    return {"text": " ".join(texts), "language": language, "wording": wording}

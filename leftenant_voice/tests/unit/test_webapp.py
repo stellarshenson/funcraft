@@ -2,9 +2,11 @@
 to the weight download. Stub engines and generated WAVs; no GPU, no model, no network."""
 import io
 import os
+import re
 import wave
 
 import app
+import asr
 import engine_s2pro
 import numpy as np
 import pytest
@@ -16,11 +18,14 @@ from conftest import PASSWORD
 from fastapi.testclient import TestClient
 from stubs import StubEngine
 
-PAGE_IDS = ("service-status", "token-form", "token-input", "token-state", "engine-select", "voice-select",
-            "upload-form", "upload-name", "upload-text", "upload-file", "uploaded-list", "speak-form",
-            "speak-text", "speak-button", "player", "message", "login-form", "login-password",
+PAGE_IDS = ("service-status", "asr-state", "token-form", "token-input", "token-state", "engine-select",
+            "voice-select", "upload-form", "upload-name", "upload-text", "upload-file", "uploaded-list",
+            "speak-form", "speak-text", "speak-button", "player", "message", "login-form", "login-password",
             "login-button", "logout-button", "app-section", "api-token-form", "api-token-name",
-            "api-token-create", "api-token-list")
+            "api-token-create", "api-token-list", "model-list", "models-status", "models-error",
+            "transcribe-form", "transcribe-file", "transcribe-language", "transcribe-wording",
+            "transcribe-context", "transcribe-button", "transcribe-state", "transcribe-busy",
+            "transcribe-error", "transcribe-output", "transcribe-result")
 
 
 def wav_bytes(seconds: float, channels: int = 1, rate: int = 16000) -> bytes:
@@ -79,6 +84,40 @@ def test_the_page_is_served(client):
     assert response.headers["content-type"].startswith("text/html")
     for element in PAGE_IDS:
         assert f'id="{element}"' in response.text, element
+
+
+def test_the_page_contains_the_transcription_form_and_the_models_section(client):
+    """The page has the transcription form over the five formats and the Settings models list."""
+    page = client.get("/").text
+    assert '<form id="transcribe-form">' in page
+    assert 'accept=".mp3,.m4a,.wav,.flac,.ogg"' in page
+    assert '<h3>Models</h3>' in page
+    assert 'id="model-list"' in page
+
+
+def test_the_language_options_equal_the_servers_languages(client):
+    """The select's values are 'as spoken' plus asr.LANGUAGES, so a drift in either fails here."""
+    page = client.get("/").text
+    select = page.split('id="transcribe-language"', 1)[1].split("</select>", 1)[0]
+    values = re.findall(r'<option value="([^"]*)">', select)
+    assert values == ["as spoken", *asr.LANGUAGES]
+
+
+def test_the_script_calls_the_transcription_and_model_endpoints(client):
+    """The page script posts to /transcribe, lists /models and deletes /models/<name>."""
+    page = client.get("/").text
+    assert 'fetch("/transcribe"' in page
+    assert 'fetch("/models"' in page
+    assert 'fetch("/models/" + encodeURIComponent(name)' in page
+
+
+def test_the_page_carries_the_transcription_state_and_the_ready_gate(client):
+    """The status view shows the ASR state, and Transcribe stays disabled until that state is `ready`."""
+    page = client.get("/").text
+    assert 'id="asr-state"' in page
+    assert 'id="transcribe-state"' in page
+    assert 'asrState = asr.state || "unknown"' in page
+    assert 'ui.transcribeButton.disabled = transcribing || asrState !== "ready"' in page
 
 
 def test_settings_start_without_a_token(client):

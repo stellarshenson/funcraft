@@ -76,7 +76,7 @@ docker-build:
 # (fishaudio/s2-pro is public and needs no token; the service needs a password).
 docker-run:
 	docker run --rm --name leftenant-voice-tts-service --gpus device=$(GPU) -p 127.0.0.1:$(PORT):8000 -e ENGINE=$(ENGINE) -e IDLE_UNLOAD_SECONDS=$(IDLE_UNLOAD_SECONDS) \
-	  -e HF_TOKEN -e S2PRO_PASSWORD -e S2PRO_PASSWORD_FILE -v data:/data $(IMAGE):$(VERSION)
+	  -e HF_TOKEN -e S2PRO_PASSWORD -e S2PRO_PASSWORD_FILE -v leftenant-voice-tts-service-data:/data $(IMAGE):$(VERSION)
 
 docker-tag:
 	docker tag $(IMAGE):$(VERSION) $(IMAGE):latest

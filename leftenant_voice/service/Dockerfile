@@ -23,6 +23,14 @@ RUN git clone https://github.com/fishaudio/fish-speech /opt/fish-speech \
     && uv pip install --extra-index-url $TORCH_INDEX -e /opt/fish-speech \
     && uv pip install fastapi uvicorn python-multipart cryptography
 
+# The Transformers pin override is deliberate: fish-speech pins transformers==5.19.0, which does not carry the
+# transformers.models.nemotron3_5_transcribe module the Nemotron 3.5 Transcribe model needs. This dev build
+# (5.23.0.dev0 at 826edb70) is the measured transcription runtime and it also serves the S2 Pro speech path,
+# so one venv holds both engines and no second copy of torch is needed. torch and torchaudio stay at 2.8.0.
+# Weights are not in the image; the first use downloads them into /data/huggingface.
+# DEF-ASR-6: nemotron_worker.py loads the model with device_map="cuda:0", which Transformers refuses without accelerate.
+RUN uv pip install "transformers @ git+https://github.com/huggingface/transformers@826edb70cd5b7b4e5b8b66f396f90b88898fdec1" librosa accelerate
+
 WORKDIR /app
 COPY src/audio_out.py src/speak_text.py src/
 COPY src/fish/speak_s2pro.py src/fish/

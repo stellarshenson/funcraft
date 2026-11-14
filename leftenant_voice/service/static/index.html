@@ -139,9 +139,10 @@
 
   #token-state { margin: .75rem 0 0; font-weight: 600; }
 
-  #uploaded-list, #api-token-list { list-style: none; margin: .25rem 0 0; padding: 0; }
+  #uploaded-list, #api-token-list, #model-list { list-style: none; margin: .25rem 0 0; padding: 0; }
   #uploaded-list li,
-  #api-token-list li {
+  #api-token-list li,
+  #model-list li {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -150,13 +151,16 @@
     border-top: 1px solid var(--line);
   }
   #uploaded-list li:first-child,
-  #api-token-list li:first-child { border-top: 0; }
+  #api-token-list li:first-child,
+  #model-list li:first-child { border-top: 0; }
   #uploaded-list li.empty,
   #api-token-list li.empty { display: block; color: var(--muted); }
   #uploaded-list button,
-  #api-token-list button { padding: .3rem .8rem; }
+  #api-token-list button,
+  #model-list button { padding: .3rem .8rem; }
   #uploaded-list li span,
-  #api-token-list li span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  #api-token-list li span,
+  #model-list li span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
   #api-token-new code { display: block; margin-top: .35rem; overflow-wrap: anywhere; }
   #login-form { max-width: 24rem; }
 
@@ -169,7 +173,7 @@
 <main>
   <header>
     <h1>Voice TTS</h1>
-    <p>Log in, set the Hugging Face token, choose a voice, and play the generated MP3.</p>
+    <p>Log in, set the Hugging Face token, choose a voice, play the generated MP3, and transcribe a recording.</p>
     <button id="logout-button" type="button" hidden>Log out</button>
   </header>
 
@@ -194,6 +198,7 @@
     <div id="service-status" data-state="checking">
       <p class="state-line" role="status" aria-live="polite"><span class="state">state: checking</span></p>
       <p class="facts">engine: none · busy: no</p>
+      <p class="facts" id="asr-state">transcription: checking</p>
       <p class="status-error" hidden></p>
       <progress class="load-progress" aria-label="Model load in progress" hidden></progress>
     </div>
@@ -223,6 +228,12 @@
     </form>
     <p id="api-token-new" class="notice" hidden>New token, shown once: <code></code></p>
     <ul id="api-token-list"></ul>
+
+    <h3>Models</h3>
+    <p class="hint">Each model's cache under the Hugging Face folder. Deleting one frees its size; the next use downloads it again.</p>
+    <ul id="model-list"></ul>
+    <p id="models-status" class="hint" aria-live="polite"></p>
+    <p id="models-error" class="status-error" role="alert" hidden></p>
   </section>
 
   <section>
@@ -269,6 +280,83 @@
     <audio id="player" controls hidden></audio>
     <a class="download" download="speech.mp3" hidden>Download speech.mp3</a>
   </section>
+
+  <section>
+    <h2>Transcribe</h2>
+    <form id="transcribe-form">
+      <label for="transcribe-file">Recording</label>
+      <input id="transcribe-file" type="file" accept=".mp3,.m4a,.wav,.flac,.ogg">
+      <p class="hint">MP3, M4A, WAV, FLAC or OGG, at most 250 MB and one hour.</p>
+      <div class="picker">
+        <div>
+          <label for="transcribe-language">Language</label>
+          <select id="transcribe-language">
+            <option value="as spoken">as spoken</option>
+            <option value="Czech">Czech</option>
+            <option value="Dutch">Dutch</option>
+            <option value="English">English</option>
+            <option value="French">French</option>
+            <option value="German">German</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Italian">Italian</option>
+            <option value="Korean">Korean</option>
+            <option value="Polish">Polish</option>
+            <option value="Portuguese">Portuguese</option>
+            <option value="Russian">Russian</option>
+            <option value="Slovak">Slovak</option>
+            <option value="Spanish">Spanish</option>
+            <option value="Bulgarian">Bulgarian</option>
+            <option value="Croatian">Croatian</option>
+            <option value="Danish">Danish</option>
+            <option value="Estonian">Estonian</option>
+            <option value="Finnish">Finnish</option>
+            <option value="Hungarian">Hungarian</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Latvian">Latvian</option>
+            <option value="Lithuanian">Lithuanian</option>
+            <option value="Romanian">Romanian</option>
+            <option value="Slovenian">Slovenian</option>
+            <option value="Swedish">Swedish</option>
+            <option value="Thai">Thai</option>
+            <option value="Turkish">Turkish</option>
+            <option value="Ukrainian">Ukrainian</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Bengali">Bengali</option>
+            <option value="Chinese Mandarin">Chinese Mandarin</option>
+            <option value="Greek">Greek</option>
+            <option value="Hebrew">Hebrew</option>
+            <option value="Indonesian">Indonesian</option>
+            <option value="Maltese">Maltese</option>
+            <option value="Marathi">Marathi</option>
+            <option value="Tagalog">Tagalog</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Telugu">Telugu</option>
+            <option value="Vietnamese">Vietnamese</option>
+          </select>
+        </div>
+        <div>
+          <label for="transcribe-wording">Wording</label>
+          <select id="transcribe-wording">
+            <option value="readable">readable</option>
+            <option value="verbatim">verbatim</option>
+          </select>
+        </div>
+      </div>
+      <label for="transcribe-context">Context terms</label>
+      <input id="transcribe-context" type="text" maxlength="500" autocomplete="off" spellcheck="false">
+      <p class="hint">Names and terms the recording uses. Optional.</p>
+      <div class="actions">
+        <button id="transcribe-button" type="submit" disabled>Transcribe</button>
+      </div>
+    </form>
+    <p id="transcribe-state" class="hint" aria-live="polite">transcription: checking</p>
+    <p id="transcribe-busy" class="hint" role="status" hidden>Transcribing. The model downloads when the container starts; its progress is in the status section above. This can take minutes.</p>
+    <p id="transcribe-error" class="status-error" role="alert" hidden></p>
+    <div id="transcribe-output" hidden>
+      <h3>Transcript</h3>
+      <textarea id="transcribe-result" readonly aria-label="Transcript"></textarea>
+    </div>
+  </section>
   </div>
 
   <p id="message" role="alert"></p>
@@ -279,6 +367,7 @@ const ui = {
   status: document.getElementById("service-status"),
   statusState: document.querySelector("#service-status .state"),
   statusFacts: document.querySelector("#service-status .facts"),
+  statusAsr: document.getElementById("asr-state"),
   statusError: document.querySelector("#service-status .status-error"),
   statusProgress: document.querySelector("#service-status .load-progress"),
   tokenForm: document.getElementById("token-form"),
@@ -308,6 +397,20 @@ const ui = {
   apiTokenCreate: document.getElementById("api-token-create"),
   apiTokenNew: document.getElementById("api-token-new"),
   apiTokenList: document.getElementById("api-token-list"),
+  modelList: document.getElementById("model-list"),
+  modelsStatus: document.getElementById("models-status"),
+  modelsError: document.getElementById("models-error"),
+  transcribeForm: document.getElementById("transcribe-form"),
+  transcribeFile: document.getElementById("transcribe-file"),
+  transcribeLanguage: document.getElementById("transcribe-language"),
+  transcribeWording: document.getElementById("transcribe-wording"),
+  transcribeContext: document.getElementById("transcribe-context"),
+  transcribeButton: document.getElementById("transcribe-button"),
+  transcribeState: document.getElementById("transcribe-state"),
+  transcribeBusy: document.getElementById("transcribe-busy"),
+  transcribeError: document.getElementById("transcribe-error"),
+  transcribeOutput: document.getElementById("transcribe-output"),
+  transcribeResult: document.getElementById("transcribe-result"),
   message: document.getElementById("message"),
 };
 
@@ -316,6 +419,8 @@ let uploaded = [];
 let defaultEngine = null;
 let serverBusy = false;
 let speaking = false;
+let transcribing = false;
+let asrState = "checking";
 let audioUrl = null;
 let healthTimer = null;
 
@@ -354,6 +459,7 @@ function showApp() {
   loadSettings();
   loadVoices();
   loadTokens();
+  loadModels();
   pollHealth();
   if (healthTimer === null) healthTimer = setInterval(pollHealth, 2000);
 }
@@ -411,6 +517,79 @@ async function revokeToken(name) {
     await loadTokens();
   } catch (error) {
     showMessage(error.message);
+  }
+}
+
+function formatBytes(bytes) {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return (unit === 0 ? String(value) : value.toFixed(1)) + " " + units[unit];
+}
+
+function fillModels(list) {
+  ui.modelList.replaceChildren();
+  for (const model of list) {
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = model.name + " · " + model.model + " · " + formatBytes(model.bytes) +
+      " · " + (model.loaded ? "loaded" : "not loaded");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Delete";
+    button.addEventListener("click", () => confirmDeleteModel(model.name, button));
+    item.append(label, button);
+    ui.modelList.append(item);
+  }
+}
+
+async function loadModels() {
+  try {
+    const response = await fetch("/models");
+    if (!response.ok) throw new Error(await errorDetail(response));
+    fillModels((await response.json()).models || []);
+  } catch (error) {
+    showModelsError(error.message);
+  }
+}
+
+function showModelsError(text) {
+  ui.modelsError.textContent = text;
+  ui.modelsError.hidden = !text;
+}
+
+function confirmDeleteModel(name, button) {
+  if (button.dataset.armed !== "yes") {
+    button.dataset.armed = "yes";
+    button.textContent = "Confirm delete";
+    setTimeout(() => {
+      delete button.dataset.armed;
+      button.textContent = "Delete";
+    }, 5000);
+    return;
+  }
+  deleteModel(name, button);
+}
+
+async function deleteModel(name, button) {
+  button.disabled = true;
+  showModelsError("");
+  try {
+    const response = await fetch("/models/" + encodeURIComponent(name), { method: "DELETE" });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    const result = await response.json();
+    ui.modelsStatus.textContent = "Deleted " + result.deleted + "; " + formatBytes(result.freed_bytes) +
+      " freed. The next use downloads the model again.";
+    await loadModels();
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = "Delete";
+    delete button.dataset.armed;
+    showModelsError(error.message);
   }
 }
 
@@ -529,20 +708,36 @@ async function deleteVoice(name) {
   }
 }
 
+function showTranscribeError(text) {
+  ui.transcribeError.textContent = text;
+  ui.transcribeError.hidden = !text;
+}
+
+function updateTranscribePanel() {
+  ui.transcribeButton.disabled = transcribing || asrState !== "ready";
+  setText(ui.transcribeState, "transcription: " + asrState);
+}
+
 function renderHealth(data) {
   const state = data.state || "unknown";
   ui.status.dataset.state = state;
   setText(ui.statusState, "state: " + state);
+  const asr = data.asr || {};
+  asrState = asr.state || "unknown";
+  setText(ui.statusAsr, "transcription: " + asrState);
   const facts = ["engine: " + (data.engine || "none"), "busy: " + (data.busy ? "yes" : "no")];
   if (data.seconds_until_unload !== null && data.seconds_until_unload !== undefined) {
     facts.push("unload in " + data.seconds_until_unload + " s");
   }
   setText(ui.statusFacts, facts.join(" · "));
-  ui.statusError.hidden = !data.error;
-  setText(ui.statusError, data.error || "");
-  ui.statusProgress.hidden = !(state === "downloading" || state === "loading");
+  const errors = [data.error, asr.error].filter(Boolean);
+  ui.statusError.hidden = errors.length === 0;
+  setText(ui.statusError, errors.join(" "));
+  ui.statusProgress.hidden = !(state === "downloading" || state === "loading" ||
+    asrState === "downloading" || asrState === "loading");
   serverBusy = Boolean(data.busy);
   updateSpeakButton();
+  updateTranscribePanel();
 }
 
 async function pollHealth() {
@@ -554,8 +749,11 @@ async function pollHealth() {
     ui.status.dataset.state = "unreachable";
     setText(ui.statusState, "service not reachable");
     setText(ui.statusFacts, "");
+    asrState = "unknown";
+    setText(ui.statusAsr, "transcription: unknown");
     ui.statusError.hidden = true;
     ui.statusProgress.hidden = true;
+    updateTranscribePanel();
   }
 }
 
@@ -619,6 +817,39 @@ ui.speakForm.addEventListener("submit", async (event) => {
   }
 });
 
+ui.transcribeForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  showTranscribeError("");
+  ui.transcribeOutput.hidden = true;
+  ui.transcribeResult.value = "";
+  const file = ui.transcribeFile.files[0];
+  if (!file) {
+    showTranscribeError("Choose a recording first.");
+    return;
+  }
+  const body = new FormData();
+  body.append("file", file);
+  body.append("language", ui.transcribeLanguage.value);
+  body.append("wording", ui.transcribeWording.value);
+  const context = ui.transcribeContext.value.trim();
+  if (context) body.append("context", context);
+  transcribing = true;
+  updateTranscribePanel();
+  ui.transcribeBusy.hidden = false;
+  try {
+    const response = await fetch("/transcribe", { method: "POST", body });
+    if (!response.ok) throw new Error(await errorDetail(response));
+    ui.transcribeResult.value = (await response.json()).text || "";
+    ui.transcribeOutput.hidden = false;
+  } catch (error) {
+    showTranscribeError(error.message);
+  } finally {
+    transcribing = false;
+    ui.transcribeBusy.hidden = true;
+    updateTranscribePanel();
+  }
+});
+
 ui.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearMessage();
@@ -670,6 +901,7 @@ ui.apiTokenForm.addEventListener("submit", async (event) => {
 ui.speakText.addEventListener("input", updateSpeakButton);
 
 updateSpeakButton();
+updateTranscribePanel();
 checkSession();
 </script>
 </body>

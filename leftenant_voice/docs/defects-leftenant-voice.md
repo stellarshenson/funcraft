@@ -68,3 +68,35 @@ The HTTP API and the S2 Pro renderer that feeds it
   - log: 2026-11-09T21:03:47Z @kj edited evidence "MAX_BOOST_DB=3.0 caps the positive gain in level_and_join (unit test); re-render 95.76 s, WER 0.004, ECAPA 0.778 (own highest, next 0.376), peak 0.837, paragraph ranges 0.0/1.8/0.1/0.2/0.1 dB; quietest-sentence hiss rise 3.00 dB where the gain wanted 4.63 and the earlier worst was 6.9; tmp/workflows/release/hiss-measure.json" -> "MAX_BOOST_DB = 3.0 caps the positive gain and MAX_PARA_SPREAD_DB = 1.2 trims a paragraph's loud pieces (src/fish/speak_s2pro.py, unit test); re-render 95.76 s, WER 0.004, ECAPA 0.778 (own highest, next 0.375), peak 0.837, paragraph ranges 0.0/1.3/0.1/0.2/0.1 dB, quietest-sentence hiss rise 3.00 dB where the gain wanted 4.63 and the earlier worst was 6.9; tmp/workflows/release/hiss-measure.json, repro-measure.json"; reason: the reproduction was re-rendered with the paragraph trim, so its recorded measures changed
   - log: 2026-11-09T21:07:05Z @kj amended text "per-sentence gain to the text median raises the background hiss of a quiet sentence by up to 6.9 dB; proposed fix: cap the gain at +3 dB and A/B against the winner; the owner chose this sound by ear, decision pending; `src/fish/speak_s2pro.py` level_and_join" -> "per-sentence gain to the text median raises the background hiss of a quiet sentence by up to 6.9 dB; fixed with the +3 dB cap the owner chose on 2026-11-09, plus a paragraph trim so the level spread stays within 1.5 dB; src/fish/speak_s2pro.py level_and_join"; reason: the owner chose the cap on 2026-11-09 and the repair added the paragraph trim, so 'decision pending' was stale
 
+## Transcription `ASR`
+
+Nemotron transcription service, page and model cache
+
+- log: 2026-11-13T18:23:45Z @kj category created
+
+- [x] `DEF-ASR-5-SYMLINK-BYTES` **tree_bytes doubles the cache size** - MEDIUM; tree_bytes follows the snapshot symlinks Hugging Face creates, so every blob counts directly under blobs/ and again under snapshots/<rev>; GET /models bytes and DELETE freed_bytes report about twice the data
+  - evidence: fixed in wf_e691bdd0-34b: tree_bytes skips symlinks (os.walk followlinks=False, lstat sizes); test_a_snapshotted_cache_counts_each_blob_once asserts tree_bytes, GET bytes and DELETE freed_bytes at 1000 for a 1000-byte blob; verifier pass; 114 unit green
+  - test-tags: UNIT
+  - repro: HF_HOME with blobs and snapshot symlinks: GET /models reports 2000 for 1000 bytes (wip/models-api/verify/tree_bytes_check.log)
+  - log: 2026-11-13T18:23:45Z @kj added
+  - log: 2026-11-13T18:23:48Z @kj edited test-tags added "UNIT"
+  - log: 2026-11-13T18:28:21Z @kj closed
+- [x] `DEF-ASR-6-ACCELERATE` **Merged venv lacks accelerate** - MAJOR; the merged /opt/venv lacks accelerate; AutoModelForMultimodalLM.from_pretrained(device_map='cuda:0') raises ValueError 'requires accelerate', so the transcriber fails at startup and asr.state is error
+  - evidence: fixed in wf_6d3e9cb7-2fb: the Dockerfile installs accelerate 1.15.0 beside the dev Transformers; image c58d51530d8a imports accelerate, torch 2.8.0+cu128, transformers 5.23.0.dev0, librosa 1.0.0 and the nemotron module; 123 unit green; verifier pass
+  - repro: docker compose up with image 71140daa481a: /health asr.state error, container log 'requires accelerate' (wip/e2e/logs/health-error.json)
+  - test-tags: MANUAL
+  - log: 2026-11-13T19:38:46Z @kj added
+  - log: 2026-11-13T19:51:18Z @kj closed
+- [x] `DEF-ASR-7-DELETE-BLOBS` **Model delete leaves the weight blobs** - MAJOR; DELETE /models removes only the model directory; the 67.5 GB weight blob stays in the shared hub blobs store reached through symlinks, so freed_bytes is 464 KB, GET /models undercounts s2pro at 4.7 GB of 11 GB, and the next use re-materialises the model without downloading
+  - evidence: wf_a4d1c628-625 verify: sparse 67496013734-byte blob linked by nemotron - GET /models bytes 67496013734, DELETE freed_bytes 67496013734, blob unlinked; blob shared by two models survives the first delete (freed 0) and goes with the second (freed 2000); image 29bf480f77c5; make test 125 passed
+  - repro: E2E wf_5b29b262-0db: DELETE /models/nemotron freed 464436 of 67496013734 bytes; the store measured equal before and after (wip/e2e/logs/volume-after-delete.txt)
+  - test-tags: UNIT
+  - log: 2026-11-13T20:35:58Z @kj added
+  - log: 2026-11-13T20:56:22Z @kj closed
+- [x] `DEF-ASR-8-GPU-PLACEMENT` **Worker lands on GPU 1 not GPU 2** - MEDIUM; the daemon ignores the compose device reservation (NVIDIA_VISIBLE_DEVICES=all), so ASR_GPU_INDEX=1 loads the transcriber on host GPU 1 (RTX PRO 6000) instead of the intended GPU 2; compose must set the index explicitly
+  - evidence: compose sets ASR_GPU_INDEX: "2" (docker compose config renders it with device_ids 0 and 2); engine_nemotron.py:82 passes it as CUDA_VISIBLE_DEVICES at load; the prior E2E showed the worker takes that index on this daemon, where all GPUs are visible
+  - repro: E2E run: the worker loads on GPU 1 while compose lists device_ids 0 and 2 (wip/e2e/logs/)
+  - test-tags: MANUAL
+  - log: 2026-11-13T20:35:58Z @kj added
+  - log: 2026-11-13T20:56:22Z @kj closed
+

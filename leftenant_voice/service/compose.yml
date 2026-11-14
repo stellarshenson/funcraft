@@ -16,6 +16,10 @@ services:
       ENGINE: s2pro
       IDLE_UNLOAD_SECONDS: "3600"
       MAX_TEXT_CHARS: "3000"
+      # This daemon does not enforce the device reservation below (NVIDIA_VISIBLE_DEVICES=all), so the worker
+      # sees every host GPU and picks host GPU 2 by index; a host that enforces device_ids sees two devices
+      # and needs 1
+      ASR_GPU_INDEX: "2"
     secrets:
       - s2pro_password
     volumes:
@@ -27,7 +31,8 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["0"]
+              # GPU 0 runs S2 Pro, GPU 2 runs Nemotron; see ASR_GPU_INDEX, set to the host index here
+              device_ids: ["0", "2"]
               capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
@@ -44,4 +49,4 @@ secrets:
 
 volumes:
   data:
-    name: data
+    name: leftenant-voice-tts-service-data
