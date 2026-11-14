@@ -21,3 +21,8 @@ __pycache__/
 *.ogg
 *.wav
 *.flac
+# generated graphs, run logs, the vendored fish-speech clone and agent memory stay local
+*/graphify-out/
+*/logs/
+leftenant_voice/.claude/
+leftenant_voice/src/fish/fish-speech/
