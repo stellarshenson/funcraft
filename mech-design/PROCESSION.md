@@ -72,7 +72,7 @@ This section lists the steps in the order they run, from `mech-design`. The gene
 | 10. Animation | `python3 src/assemble.py wip/frames-procession out/07-banner-procession.avif` | `out/07-banner-procession.avif` |
 | 11. Banner 08 | `make procession-hips`: steps 9 and 10 with `hips=4.5 out=frames-procession-hips` | `out/08-banner-procession-hips.avif` |
 | 12. Banner 09 | `make procession-column`: steps 9 and 10 with `hips=4.5 rear=6 out=frames-procession-column` | `out/09-banner-procession-column.avif` |
-| 13. Marauder | `BL src/marauder.py -- build`; steps 4 to 6 with `marauder`; `BL src/procession/scene.py -- livery=livery hips=4.5 cloth=1 solo=marauder out=frames-procession-marauder` | `in/models/marauder.stl`, `marauder.json`; `wip/preview/procession/marauder-walk.avif` |
+| 13. Marauder | `BL src/marauder.py -- build`; steps 4 to 6 with `marauder`; `BL src/procession/scene.py -- livery=livery hips=4.5 cloth=1 solo=marauder out=frames-procession-marauder` | `resources/models/marauder.stl`, `marauder.json`; `wip/preview/procession/marauder-walk.avif` |
 | 14. Cloth of the Mad Cat | `PY src/procession/clothart.py velvet`, `python3 src/procession/clothart.py` | `resources/assets/cloth-madcat.png`, `cloth-madcat_silk.png` |
 | 15. Banner 10 | `make procession-marauder`: steps 9 and 10 with `hips=4.5 rear=6 marauder=0 cloth=1 out=frames-procession-ten` | `out/10-banner-procession-marauder.avif` |
 
@@ -234,7 +234,7 @@ This section gives the measured places in the render of 1520 × 480 pixels (`wip
 
 ## 10. Marauder
 
-This section describes the fourth chassis, which `src/marauder.py` assembles from a kit of 19 printable parts in `in/models/marauder/parts/`. It walks alone in a preview and as the tenth mech of banner 10.
+This section describes the fourth chassis, which `src/marauder.py` assembles from a kit of 19 printable parts in `resources/models/marauder/parts/`. It walks alone in a preview and as the tenth mech of banner 10.
 
 - **Kit** - every part is its own STL, laid flat and apart; no part is in its place. The mech faces -Y there, and its left parts lie on +X
 - **Two versions** - only the right foot comes twice. `right-foot-repaired.stl` is one closed shell with the volume of the left foot; `right-foot.stl` has 1044 open edges and 46 loose shells. The repaired one is used

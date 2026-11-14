@@ -16,7 +16,7 @@ Headless scripts build the whole scene from code and render it frame by frame. P
 
 ## Models
 - Use supplied or downloaded high-poly meshes, whole. Self-modelled low-poly stand-ins were rejected; where real models exist, find them
-- `in/models/originals/` holds files exactly as received; renamed working copies in `in/models/`; source and licence in `SOURCE.txt` or the README provenance section
+- `resources/models/originals/` holds files exactly as received; renamed working copies in `resources/models/`; source and licence in `SOURCE.txt` or the README provenance section
 - Licences: CC0 and CC BY first. Fan models labelled CC BY often remix CC BY-NC parts - check the remix sources. Skip files named like game-engine assets (likely rips). Sketchfab downloads need a login - list those for the Star Colonel to fetch
 - Normalise at load: face +Y, feet on z = 0, height per chassis (`CHASSIS` in `mech-design/src/mechrig.py`)
 - Look from above before rigging - sculpts come posed. The BattleMaster's lower body was turned 38.5° against its torso; `untwist()` turns it back at load (full turn below the waist, blended through a z band, a predicate keeps parts such as a hanging arm with the torso)
@@ -93,7 +93,7 @@ A picture turned into a 3D scene. Rules: `w40k-mechanicum/DESIGN.md` 5.13; tool 
 - A thing without support is a fault before the render - "something hanging in the air"
 - Second fault of one class → stop repairing; correct the list or the design, never a box over pixels
 - Check each thing whole in frames a quarter of a camera cycle apart: a part that slides, a bowl without a stand, a fire outside its bowl
-- Before a full render: list every region of four test frames that differs from the accepted render (`w40k-mechanicum/wip/muster/differ.py`), then a close view of each thing (`compare.py` beside it). A closed loop is no proof - one such render hid six faults
+- Before a full render: list every region of four test frames that differs from the accepted render (`w40k-mechanicum/src/muster/differ.py`), then a close view of each thing (`compare.py` beside it). A closed loop is no proof - one such render hid six faults
 
 ## API traps
 - `ShaderNodeMix` RGBA sockets by identifier - `Factor_Float`, `A_Color`, `B_Color`, `Result_Color`; `inputs["A"]` is the float socket

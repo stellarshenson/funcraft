@@ -1,7 +1,7 @@
 """The corridor of the saint scene, for the Warhound Titan that stands in it.
 
 The opening between the black column and the gilded frame of the sun-gear is the mouth of a corridor. The owner
-marked its outline (wip/preview/paste-20261016-092418.png): the column's right edge and the frame's left edge, both
+marked its outline (resources/assets/reference/paste-20261016-092418.png): the column's right edge and the frame's left edge, both
 leaning, as every vertical of the plate does. MoGe-2 measured the inside as a flat wall 11 to 12 m away, at the
 column's own depth: its 3D scene has no opening there. This script makes the opening in the 3D scene of the plate
 (wip/scene3d/saint_clean.npz and _bg.png, read by src/backdrop.py):

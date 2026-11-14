@@ -1,4 +1,4 @@
-"""The Warhound Titan of the saint scene: an assembly kit of 15 printable parts (in/models/warhound/, units mm, from
+"""The Warhound Titan of the saint scene: an assembly kit of 15 printable parts (resources/models/warhound/, units mm, from
 the owner's Wardog_titan_fix.zip), put together, painted and posed into one model. Blender 4.5.
 
 The kit holds each part as its own STL, laid out apart for printing: no part is in its place. The method is that of
@@ -47,7 +47,7 @@ import numpy as np
 from mathutils import Vector, Matrix
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PARTS = os.path.join(ROOT, "in", "models", "warhound")
+PARTS = os.path.join(ROOT, "resources", "models", "warhound")
 PREVIEW = os.path.join(ROOT, "wip", "preview")
 NAMES = ["body", "waist", "head", "top_cover", "leg_left", "leg_right", "leg_armour_left", "leg_armour_right",
          "foot_left", "foot_right", "plasma", "laser", "gigaflamer", "megabolter"]
@@ -157,7 +157,7 @@ RIGHT_FOOT = ((1.0, 0.0009, 0.0039), (0.0039, -0.0503, -0.9987), (-0.0007, 0.998
 SHOULDER = {"right": (-22.63, 49.68, 54.09), "left": (14.01, 49.68, 54.09)}
 GUNS = {"right": ("plasma", (82.05, 1.33, 38.24)), "left": ("megabolter", (66.42, 2.24, 42.73))}
 NECK, SOCKET = (31.79, -13.28, 41.0), (-4.28, 35.73, 54.22)
-# kit mm: the plate shifted along the leg (wip/warhound/fit_armour.py), then turned half round the line along the shin
+# kit mm: the plate shifted along the leg (src/warhound/fit_armour.py), then turned half round the line along the shin
 # (x, z) so its hollow side wraps the front of the shin: the kit lays it with its hollow side away from the leg
 ARMOUR = {"left": ((0.0, -6.5, -1.5), (9.18, 18.5)), "right": ((0.0, 0.5, -3.0), (-17.93, 16.25))}
 COVER = ((47.17, 32.2, 75.54), (-4.3, 36.0, 63.7))   # the cover's inner face at its front end -> the front of the spine
@@ -267,7 +267,7 @@ EYES = ((30.13, -15.0), (33.57, -15.0))   # head, kit mm: the lenses in the two 
 EYE = (0.55, 59.9, 61.0)                 # their radius and the z of the lens between the socket's floor and rim
 MID = 31.86                              # head, kit mm: x of its middle plane, the two sides mirror about it
 WINDOW = (28.11, -11.49, 52.35)          # head: a face in the oval window on its right side; the whole flat patch is glass
-# head: the grille behind the window, (y, z) outline of its opening on the side plate (wip/warhound/headpick.py); the
+# head: the grille behind the window, (y, z) outline of its opening on the side plate (src/warhound/headpick.py); the
 # slats and the wall behind them lie nearer than GRILLE_DEPTH to the middle plane, the side plate and its frame farther
 GRILLE = [(-9.45, 45.86), (-9.83, 47.39), (-10.6, 48.54), (-11.75, 49.31), (-12.89, 49.82), (-14.04, 49.95),
           (-15.07, 49.82), (-15.96, 49.44), (-16.6, 48.67), (-16.34, 47.39), (-15.83, 46.24), (-14.68, 45.48),

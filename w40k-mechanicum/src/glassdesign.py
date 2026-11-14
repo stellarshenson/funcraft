@@ -3,7 +3,7 @@ owner rejected war machines that the image model drew from a prompt alone ("stai
 gave pictures of the machines to use. src/repaint.py lays a design into a window's hole and the image model then
 works over it at a low strength, so the glass takes the window's light and grain while the shapes stay.
 
-- **Titan** - the Imperial Knight of the owner's picture (in/reference/imperial-knight.jpg), cut from its white
+- **Titan** - the Imperial Knight of the owner's picture (resources/assets/reference/imperial-knight.jpg), cut from its white
   ground, its colours sorted into eight glasses and every glass split into pieces about a tenth of the window's width;
   a gold halo of pieces stands behind it. The owner: "titan is too short": it stands as tall as `tall` of the window,
   its feet behind the candelabra before the window, and the window's sides cut what is wider than the window

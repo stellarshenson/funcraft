@@ -48,7 +48,7 @@ procession-marauder:
 	$(BLENDER) -b -P src/procession/scene.py -- livery=livery hips=4.5 rear=6 marauder=0 cloth=1 out=frames-procession-ten
 	$(PYTHON) src/assemble.py wip/frames-procession-ten out/10-banner-procession-marauder.avif
 
-# the fourth chassis: the Marauder, assembled from the kit in in/models/marauder/parts (PROCESSION.md, section 10)
+# the fourth chassis: the Marauder, assembled from the kit in resources/models/marauder/parts (PROCESSION.md, section 10)
 marauder:
 	$(BLENDER) -b -P src/marauder.py -- build
 

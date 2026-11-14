@@ -37,7 +37,7 @@ Working examples to copy from:
 ## Fonts
 - A font goes in the page as a data address and needs no script: `@font-face { font-family: "Name"; src: url("data:font/woff2;base64,...") format("woff2"); font-weight: 400 900; }`
 - Reduce it first with fontTools: `subset.Subsetter()`, `populate(unicodes=range(0x20, 0x7F))`, `subset(font)`, `font.flavor = "woff2"`. Orbitron with its weight axis: 51 kB as TTF, 12 kB in the page (`mech-design/src/welcome.py`)
-- The source file goes in `resources/fonts/`. Embed a font only when its licence allows it (Orbitron: SIL Open Font License 1.1)
+- The source file goes in `resources/assets/fonts/`. Embed a font only when its licence allows it (Orbitron: SIL Open Font License 1.1)
 - A wider font changes every box that holds it: measure the columns again
 
 ## Layout and type sizes

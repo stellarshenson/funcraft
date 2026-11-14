@@ -25,7 +25,7 @@ import bpy, bmesh, math, os
 from mathutils import Vector, Euler
 
 MODELS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                      "in", "models")
+                      "resources", "models")
 
 # ---------------------------------------------------------------- chassis ---
 # hip/knee/ankle are fractions of the model's own height, measured from the feet

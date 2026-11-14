@@ -11,7 +11,7 @@ import bpy, os, sys, math
 from mathutils import Vector
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-M = os.path.join(ROOT, "in", "models", "originals")
+M = os.path.join(ROOT, "resources", "models", "originals")
 OUT = os.path.join(ROOT, "wip", "preview", "models")
 
 SETS = {

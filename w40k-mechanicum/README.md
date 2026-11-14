@@ -1,6 +1,6 @@
 # w40k-mechanicum
 
-A looping 19:6 banner GIF of a machine cathedral in the style of the Warhammer 40k Adeptus Mechanicus: a gothic nave with stained glass, red banners, candles and incense, ending at a towering altar-machine that calculates, with the Sacred A5000 enshrined at its heart. It is rendered in Blender with Cycles on the GPU from downloaded models plus procedural geometry. `references/` holds the images the look follows.
+A looping 19:6 banner GIF of a machine cathedral in the style of the Warhammer 40k Adeptus Mechanicus: a gothic nave with stained glass, red banners, candles and incense, ending at a towering altar-machine that calculates, with the Sacred A5000 enshrined at its heart. It is rendered in Blender with Cycles on the GPU from downloaded models plus procedural geometry. `resources/assets/reference/` holds the images the look follows.
 
 ## Output
 
@@ -59,9 +59,10 @@ src/counter.py         prints a report of the prayers that the prayer counter ha
 calendar/              the Cult Mechanicus calendar, one file per month
 rewards.md             the reward sermons of the sermon page, one entry per holy number
 badges.md              what the service badge of every day shows, one line per day
-in/models/originals/   downloads exactly as received, each with SOURCE.txt
-resources/assets/      generated textures in use
-references/            the look to follow: reference images and links
+resources/models/originals/   downloads exactly as received, each with SOURCE.txt
+resources/assets/      received files (music, voice, reference pictures, owner pictures) and generated textures in use
+references/            the calendar brief and plan
+resources/assets/reference/  the look to follow: reference images and links
 wip/                   work in progress, not in git: drafts (gen/), plates and depth (scene3d/), frames, previews, logs
 out/                   finished GIFs
 ```
@@ -103,4 +104,4 @@ Everything that moves is a function of `phase` in [0, 1) and completes whole cyc
 > [!WARNING]
 > Most of the figures carry non-commercial licences, and the priests, servitors, servo-skulls, cherubs and medallion are fan-made Games Workshop designs. The GIF is fine for personal use; check before using it anywhere commercial. The A5000 card is modelled here; "RTX A5000" is an NVIDIA product name.
 
-The other downloads in `in/models/originals/` are not used yet; their `SOURCE.txt` files record author and licence.
+The other downloads in `resources/models/originals/` are not used yet; their `SOURCE.txt` files record author and licence.

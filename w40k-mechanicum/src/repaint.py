@@ -44,7 +44,7 @@ PARTS = {"saint": {
     "window-left": dict(box=(112, 0, 384, 576), scale=2, glass=((123, 0, 376, 566), 16, 70), before=[(13, 367, 358, 769)],
                         sides=((215.1, 144.7), (356.4, 325.5)),
                         pictures=("saint.png", "saint_clean.png", "saint_clean_bg.png"),
-                        design="titan", reference="in/reference/imperial-knight.jpg", tall=0.64,
+                        design="titan", reference="resources/assets/reference/imperial-knight.jpg", tall=0.64,
                         prompt=GLASS + "In the middle a giant walking war machine of red, gold and grey glass pieces with a gold "
                                "halo of glass behind it, every piece outlined by black lead, glowing with the light behind"),
     "window-right": dict(box=(1232, 0, 1440, 592), scale=2, glass=((1249, 2, 1421, 578), 11, 75),

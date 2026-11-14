@@ -89,7 +89,7 @@ A sculpt carries no joint data, and a guessed pivot shows: "forearm pivots aroun
 ## Order of work
 - Each numbered banner is the one before plus one change; a superseded number is not rendered again; a fix to a shared part is rendered into every current number
 - Check frames first, then the full render, then the seam check (`design-gif`)
-- Renders run detached from a queue script in `wip/logs/`. Never edit a running script. A script that waits with `pgrep -f <pattern>` hangs when the shell that launched it has the pattern in its own command line: wait for a line in a log instead
+- Renders run detached from a queue script in `src/queues/`. Never edit a running script. A script that waits with `pgrep -f <pattern>` hangs when the shell that launched it has the pattern in its own command line: wait for a line in a log instead
 - Never kill a process that is on a GPU; stop a queue by killing its wrapper shell
 - Stills for a check go to `wip/preview/`, a page of pictures to `out/`; animations are AVIF at 30 frames per second
 - No smoke from the mechs, no halos

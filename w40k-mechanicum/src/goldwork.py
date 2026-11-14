@@ -59,7 +59,7 @@ THREAD = {"mechanicum": 128, "stellars": 255}      # the value in the ink map of
 # object of its own), `box` (the part of the plate the image model sees when it clears the cloth: x0, y0, x1, y1, its
 # sides multiples of 16), `region` (the part that holds the cloth, which is measured and laid flat), `toward` (the
 # direction towards the light on the flat cloth: right, down), `seed` (of the image model, where another than the
-# default painted velvet that matched the velvet round it better: wip/muster/clearseeds.py), `strokes` (the
+# default painted velvet that matched the velvet round it better: src/muster/clearseeds.py), `strokes` (the
 # emblem's gold strokes are filled from the velvet beside them, without the image model, no nearer to the cloth's edge
 # than this many pixels), `edges` (the long edges
 # of a banner that give its own way down; an edge that a thing before it hides is left out) and the sigils: (name, x, y, radius in plate pixels

@@ -48,13 +48,15 @@ in their frames folder for this comparison; the GIF leaves it out.
 ```
 src/                  generators and the rig
 src/procession/       banners 07 to 10: backdrop, ground, livery, embers, chimney smoke, walk, hips, arms, cloth banners, scene
+src/queues/           queue scripts of long renders
 src/marauder.py       the fourth chassis: assembles the Marauder from its kit and enters it into the tables of the others
-in/models/            the three chassis, renamed; marauder.stl and marauder.json, written by src/marauder.py
-in/models/marauder/   the Marauder kit as supplied (a zip archive) and its 19 parts unpacked (parts/)
-in/models/originals/  the files exactly as supplied
-in/models/rigged/     painted and rigged Blender scenes, one per chassis
+resources/models/     the three chassis, renamed; marauder.stl and marauder.json, written by src/marauder.py
+resources/models/marauder/    the Marauder kit as supplied (a zip archive) and its 19 parts unpacked (parts/)
+resources/models/originals/   the files exactly as supplied
+resources/models/rigged/      painted and rigged Blender scenes, one per chassis
 resources/assets/     the Stellars Tech logo, the glyph of the sigil and the two badges of the welcome page, the pictures of the cloth banners
-resources/fonts/      Orbitron, the font of the title of the welcome page (SIL Open Font License 1.1)
+resources/assets/reference/web/  the Machina Opus picture (Lexicanum) with its SOURCE.txt
+resources/assets/fonts/          Orbitron, the font of the title of the welcome page (SIL Open Font License 1.1)
 wip/preview/          measurement sheets and cut checks - not deliverables
 wip/frames/           intermediate PNG frames
 wip/procession/       banners 07 to 10: ground piece, plate charts, ornament atlases, chimney smoke
@@ -77,7 +79,7 @@ make procession    # 07: render with the livery, then assemble (data of PROCESSI
 make procession-hips  # 08: banner 07 with rocking hips
 make procession-column  # 09: banner 08 with six more mechs behind the three
 make procession-marauder  # 10: banner 09 with the Marauder in the place of one rear BattleMaster
-make marauder      # assemble the Marauder from its kit: in/models/marauder.stl and marauder.json (PROCESSION.md, section 10)
+make marauder      # assemble the Marauder from its kit: resources/models/marauder.stl and marauder.json (PROCESSION.md, section 10)
 make lookdev       # painted stills of each chassis
 make rig           # pose tests and the rigged .blend scenes
 make rigcheck      # count over-stretched edges in the pose tests
@@ -134,7 +136,7 @@ is skinned to the bones through vertex groups.
   blended only at a joint
 
 `make rig` renders `wip/preview/rig/` - each chassis at rest, mid-stride and
-crouched - and saves the rigged scenes to `in/models/rigged/`. `make rigcheck`
+crouched - and saves the rigged scenes to `resources/models/rigged/`. `make rigcheck`
 counts mesh edges stretched past three times their length in those poses.
 `make weights` colours each part by the bone that owns it.
 

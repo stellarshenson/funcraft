@@ -21,9 +21,9 @@ The following workspace rules are STRICTLY ENFORCED for this project:
 
 ## Project Context
 
-`funcraft` contains two animation projects: `mech-design` builds walking-machine banners and a welcome page; `w40k-mechanicum` builds machine-cathedral banners, a 366-day calendar and a sermon page. Python scripts and Makefiles generate the scenes. Blender 4.5 renders the 3D work with Cycles on the GPU; Pillow, NumPy and SciPy support the image and animation pipelines. The project READMEs and design documents describe their current outputs and build commands.
+`funcraft` contains two animation projects and one speech project (`leftenant_voice` speaks a given text in a cloned voice with Ming-3.0-tts): `mech-design` builds walking-machine banners and a welcome page; `w40k-mechanicum` builds machine-cathedral banners, a 366-day calendar and a sermon page. Python scripts and Makefiles generate the scenes. Blender 4.5 renders the 3D work with Cycles on the GPU; Pillow, NumPy and SciPy support the image and animation pipelines. The project READMEs and design documents describe their current outputs and build commands.
 
-Source and documents are tracked in Git. Local meshes, generated assets, frames and finished media live in each project's `in/`, `resources/`, `wip/` and `out/` folders. Each animation must close its loop; the scene scripts render an extra frame at phase 1.0 for comparison with phase 0.0. Check the project design document and the relevant skill in `.claude/skills/` before changing a scene or page.
+Source and documents are tracked in Git. Local meshes, generated assets, frames and finished media live in each project's `resources/assets/`, `resources/models/`, `wip/` and `out/` folders. Each animation must close its loop; the scene scripts render an extra frame at phase 1.0 for comparison with phase 0.0. Check the project design document and the relevant skill in `.claude/skills/` before changing a scene or page.
 
 ## Journal Rules (Project-Specific)
 

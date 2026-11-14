@@ -62,7 +62,7 @@ The invocation above the sermon and the blessing below it are two lists of seven
 The build reads the scene animations each time, so a new render reaches the page on the next build.
 
 - **Scene rendered again** - `out/<name>.gif` or `out/<name>.avif` is replaced by the render pipeline (`DESIGN.md`). Run `make sermon`
-- **Banner added or removed** - edit the list `BANNERS` in `src/sermon.py`, then `make sermon`. A name is the file name in `out/` without `.gif` or `.avif`; the build takes the AVIF where both exist. Then run `wip/sermon/banners.py` (section 3)
+- **Banner added or removed** - edit the list `BANNERS` in `src/sermon.py`, then `make sermon`. A name is the file name in `out/` without `.gif` or `.avif`; the build takes the AVIF where both exist. Then run `src/sermon/banners.py` (section 3)
 - **First banner** - the first name of `BANNERS` is the banner shown where scripts are switched off
 - **Banner of the day** - the page draws the banner with a generator whose seed is the day number of the year. Every reader sees the same banner on the same day. A change of the number or of the order of `BANNERS` changes the banner of every day. With the 9 banners a banner is the banner of 32 to 48 days of a year of 366 days, and on 38 days the banner is the one of the day before
 - **Aspect ratio** - every animation of the list must have the same ratio of width to height, 19 to 6. The page reserves one box, with the ratio of the first banner
@@ -194,7 +194,7 @@ The page shows one thin button per radio in a row below the prayer buttons. A ra
 - **Player** - the player of YouTube, in a frame that the reader does not see. `design-sermons-html.md`, section 7.5, describes it
 - **Host** - the host that sends the page must allow the frame in its Content-Security-Policy: `frame-src https://www.youtube-nocookie.com`. Where it does not, as in the lab HTML viewer, the button goes out at once and the music plays on
 - **Lab viewer** - no radio plays in the HTML viewer of the lab, with any policy: the viewer shows the page from a `blob:` address, which sends no referrer, and YouTube refuses such a player. The radios need the page at an `http` or `https` address, as on the hub
-- **New video** - the owner of a video can forbid its use in a player on another page. Such a video leaves the button lit without sound. `wip/sermon/radio.py` checks that every radio plays and that the length in its row is the length of the video; add the new row to its list `RADIOS`
+- **New video** - the owner of a video can forbid its use in a player on another page. Such a video leaves the button lit without sound. `src/sermon/radio.py` checks that every radio plays and that the length in its row is the length of the video; add the new row to its list `RADIOS`
 - **Terms** - the rules of YouTube for embedded players ask for a visible player of at least 200 px width and height, and YouTube can play advertisements in the player
 
 ## 3. Check
@@ -202,7 +202,7 @@ The page shows one thin button per radio in a row below the prayer buttons. A ra
 This section lists the checks after a build.
 
 - **Build output** - the last line reads `wrote .../out/w40k-mechanicum-sermons and w40k-mechanicum-sermons.zip: 411 files, 10.6 MB, zip 10.5 MB, 366 sermons, 9 banners, 3 prayers, 13 rewards, 366 badges`
-- **Scripted checks** - `wip/sermon/test.py` runs 81 checks in headless Chrome against `wip/sermon/mock.py`, which serves the package and answers as the prayer counter. `wip/sermon/radio.py` runs 35 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. `wip/sermon/banners.py` runs 31 checks of the banners against the same stand-in: the page's own choice for each of the 366 day numbers, the file of every banner, and one day per banner opened by its date, with the banner shown and moving. The head of each script has its commands. `wip/` is not in git
+- **Scripted checks** - `src/sermon/test.py` runs 81 checks in headless Chrome against `src/sermon/mock.py`, which serves the package and answers as the prayer counter. `src/sermon/radio.py` runs 35 checks of the radio buttons against the same stand-in; it needs the network, because the radios play from YouTube. `src/sermon/banners.py` runs 31 checks of the banners against the same stand-in: the page's own choice for each of the 366 day numbers, the file of every banner, and one day per banner opened by its date, with the banner shown and moving. The head of each script has its commands. `wip/` is not in git
 - **Today** - open `out/w40k-mechanicum-sermons/index.html` in the HTML viewer of the lab or through a web server. It shows the date, the day number, the title, the sermon and the badge of today. Opened as a local file, the browser blocks the request for the sermons
 - **Any date** - add `#MM-DD` to the address, for example `index.html#02-29`. Reload the page after a change of the address
 - **Banner** - the banner moves. It is the same on every load of one day and differs between days, for example `#10-02` and `#10-03`

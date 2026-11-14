@@ -6,7 +6,7 @@ resources/assets/scenes/mechanicum.png.
                                      # wip/scene3d/muster_cloth.png: the cloth of every banner, wip/preview/muster-cloth.png
     ... src/muster.py clean          # wip/scene3d/muster_clean.png: the plate without the cloth of its banners
     ... src/img2geometry.py wip/scene3d/muster_clean.png      # its depth (MoGe-2)
-    python3 wip/muster/host.py export                         # the crowd in the camera's space, wip/scene3d/muster_crowd.npz
+    python3 src/muster/host.py export                         # the crowd in the camera's space, wip/scene3d/muster_crowd.npz
     python3 src/muster.py posts                               # wip/scene3d/muster_posts.npz: the post of every banner, measured; wip/preview/posts-muster.png
     python3 src/muster.py banners                             # wip/scene3d/muster_banners.npz and .png: the cloths as meshes
     blender -b -P src/muster.py -- wind                       # wip/scene3d/muster_wind.npz: every cloth through the loop
@@ -21,7 +21,7 @@ resources/assets/scenes/mechanicum.png.
     CUDA_VISIBLE_DEVICES=1 blender -b -P src/muster.py -- frames 0 30    # those frames, wip/frames-muster/f000.png ...
     CUDA_VISIBLE_DEVICES=1 blender -b -P src/muster.py -- frames         # all frames and seam-check.png
 
-The plate is designed in wip/muster/ (drafts.py, banners.py, figures.py, host.py; DESIGN.md section 5.11). This file
+The plate is designed in src/muster/ (drafts.py, banners.py, figures.py, host.py; DESIGN.md section 5.11). This file
 holds what moves in it. The owner reviews the motion map before anything is built (DESIGN.md section 5.1).
 
 - **Banners** - the user: "banners are made out of cloth and must be animated such with the help of physics model,
@@ -106,7 +106,7 @@ LOOP = FRAMES / RATE                       # seconds
 STEP, STEPS, SWAYS = (0.26, 0.34), (9, 10, 11, 12), (3, 4, 5, 6)
 RISE, SWAY = (0.03, 0.06), (0.02, 0.045)
 LEAST = 0.6                                # no figure rises or sways by less than this many plate pixels
-# the rule that sets the crowd on the plate (wip/muster/host.py): the size of the plate, the row of its horizon, its
+# the rule that sets the crowd on the plate (src/muster/host.py): the size of the plate, the row of its horizon, its
 # focal length in pixels; no figure stands nearer than NEAREST figure heights; a figure under SMALL rows is a stroke
 PLATE, HORIZON, FOCAL, NEAREST, SMALL = (2432, 768), 448, 2000.0, 10.0, 3
 # a lane of a walking crowd holds one of these numbers of different figures, RANK figure heights apart on average: it
@@ -126,9 +126,9 @@ DEEPER = 1.06                              # the nearest figures stand this many
 BODY, ROUND = (0.30, 0.10), (8, 8)
 MURK, REACH = 90.0, 6.0                    # the depth at which a figure has 63 % of the air's colour, over the camera's height; the reach of a fire's light in its sizes
 SHADOW = (0.65, 1.25)                      # the brightness of the crowd in the darkest and in the brightest place
-SHADE = 0.6                                # the brightness of a figure's feet against its head, as wip/muster/host.py has it
-FIRE = (1.5, 0.7, 0.25)                    # the light of a fire on a figure beside it, as wip/muster/host.py has it
-WARM = (1.276, 0.944, 0.740)               # the colour of dirt, as wip/muster/host.py has it
+SHADE = 0.6                                # the brightness of a figure's feet against its head, as src/muster/host.py has it
+FIRE = (1.5, 0.7, 0.25)                    # the light of a fire on a figure beside it, as src/muster/host.py has it
+WARM = (1.276, 0.944, 0.740)               # the colour of dirt, as src/muster/host.py has it
 GRID = 36                                  # a cloth is this many vertices wide, and at least 3 plate pixels between them
 WIND_TO = (0.72, 0.69, 0.0)                # where the wind blows to (x right, y into the picture, z up)
 BLOW = float(os.environ.get("MUSTER_BLOW", 55.0))     # its mean strength on a cloth of 100 vertices per square metre
@@ -227,7 +227,7 @@ ELEMENTS = [
 # 45 m deep and the fire behind it burns at 47 m, so its flames were drawn before them (the user: "posts are
 # missing"). Each is built as a rod at the depth of the wall under it (thing U1). As (column of its foot, row of its
 # tip, row of its foot in the wall, radius at the wall, columns it leans to the right per row down), measured by
-# wip/muster/pikes.py at the columns read from the enlarged picture. The radius is that of a straight taper that
+# src/muster/pikes.py at the columns read from the enlarged picture. The radius is that of a straight taper that
 # covers as much of each row as the picture shows: most pikes are thinner than a pixel. With radii of 0.7 to 1.6 px,
 # taken from the width of their dark trace, they stood as black wedges, heavier than in the picture
 PIKES = [(613.3, 443, 452, 0.8, -0.09), (638.2, 446, 452, 0.6, 0.0), (665.9, 444, 452, 0.81, -0.11), (700.1, 442, 453, 0.5, -0.06), (708.7, 446, 452, 0.6, 0.0),
@@ -322,7 +322,7 @@ THINGS = [
 # its rows (B1: the grey band of 5 pixels from row 200 to row 358 was cloth down to row 262 and no cloth below).
 # B2 to B6: the picture shows each post down to the upper edge of the far wall, where post and wall are equally dark
 # and the measure ends. The post stands on the floor of the walk at the depth of its cloth: `foot` is the row at
-# which it meets that floor (wip/muster/feet.py). With the posts of B2 to B4 set behind the whole crowd, so that the
+# which it meets that floor (src/muster/feet.py). With the posts of B2 to B4 set behind the whole crowd, so that the
 # crowd hid their open ends, they stood at the far wall, 6.5 to 7.1 m from the railing and not in the row of B1; the
 # user: "banner posts on the left are not put in the ground where they should"
 POSTS = {

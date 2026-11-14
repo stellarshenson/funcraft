@@ -33,10 +33,10 @@ them.
 
 | Chassis | Mesh | Height | Paint | Glass glow |
 |---|---|---|---|---|
-| Mad Cat (Timber Wolf) | `in/models/madcat-timberwolf.stl` | 12.0 | steel blue-grey armour, near-black limbs and feet, oxblood on the front faces of the missile racks | 0.45 |
-| Atlas AS7 | `in/models/atlas-as7-rs.stl` | 13.4 | charcoal hull, oxblood arms and shoulders, bone-white skull face | 0.9 |
-| BattleMaster | `in/models/battlemaster.stl` | 12.8 | sand armour, dark helmet and feet | 0.40 |
-| Marauder | `in/models/marauder.stl`, assembled from a kit by `src/marauder.py` | 12.4 | olive hull and legs, dark arms and feet, oxblood cockpit and cannon | 0.5 |
+| Mad Cat (Timber Wolf) | `resources/models/madcat-timberwolf.stl` | 12.0 | steel blue-grey armour, near-black limbs and feet, oxblood on the front faces of the missile racks | 0.45 |
+| Atlas AS7 | `resources/models/atlas-as7-rs.stl` | 13.4 | charcoal hull, oxblood arms and shoulders, bone-white skull face | 0.9 |
+| BattleMaster | `resources/models/battlemaster.stl` | 12.8 | sand armour, dark helmet and feet | 0.40 |
+| Marauder | `resources/models/marauder.stl`, assembled from a kit by `src/marauder.py` | 12.4 | olive hull and legs, dark arms and feet, oxblood cockpit and cannon | 0.5 |
 
 Heights are in scene units, with the feet on z = 0. The colours, as linear RGB,
 and the body regions that receive them are in `SCHEMES` in `src/paint.py`; the

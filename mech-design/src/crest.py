@@ -2,8 +2,8 @@
 Mechanicus, painted anew by Z-Image-Turbo from a reference glyph and given
 relief with MoGe-2.
 
-The reference is references/web/machina-opus.png (its source is in
-references/web/SOURCE.txt): a skull, its left half an iron machine with a
+The reference is resources/assets/reference/web/machina-opus.png (its source is in
+resources/assets/reference/web/SOURCE.txt): a skull, its left half an iron machine with a
 grilled eye and hoses, its right half bone, on a disc that is bone white on
 the left and black on the right, in a steel cog ring. `gen` lets the model
 paint the picture again from that start (ZImageImg2ImgPipeline), so the
@@ -37,7 +37,7 @@ PROMPT = ("The Machina Opus, emblem of the Adeptus Mechanicus of Warhammer 40,00
 
 def gen(seeds):
     from diffusers import ZImageImg2ImgPipeline
-    ref = Image.open(os.path.join(ROOT, "references", "web", "machina-opus.png")).convert("RGBA")
+    ref = Image.open(os.path.join(ROOT, "resources", "assets", "reference", "web", "machina-opus.png")).convert("RGBA")
     start = Image.new("RGB", ref.size)
     start.paste(ref, mask=ref.getchannel("A"))
     start = start.resize((SIDE, SIDE), Image.LANCZOS)

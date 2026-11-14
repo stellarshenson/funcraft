@@ -10,7 +10,7 @@ import bpy, os, math
 from mathutils import Vector
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC = os.path.join(ROOT, "in", "models", "originals", "ornament-mechanicus-symbol", "TP_Symbol_-_all.stl")
+SRC = os.path.join(ROOT, "resources", "models", "originals", "ornament-mechanicus-symbol", "TP_Symbol_-_all.stl")
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.wm.stl_import(filepath=SRC)

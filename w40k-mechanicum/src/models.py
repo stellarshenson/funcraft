@@ -11,7 +11,7 @@ import numpy as np
 from mathutils import Vector, Matrix
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-M = os.path.join(ROOT, "in", "models", "originals")
+M = os.path.join(ROOT, "resources", "models", "originals")
 
 # name: (files, turn in degrees (x, y, z)[, importer options])
 SOURCES = {

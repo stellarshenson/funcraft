@@ -67,7 +67,7 @@ def main(names):
                 bpy.ops.render.render(write_still=True)
             print("RIGTEST", name, pose, flush=True)
 
-        blend = os.path.join(ROOT, "in", "models", "rigged", f"{name}.blend")
+        blend = os.path.join(ROOT, "resources", "models", "rigged", f"{name}.blend")
         os.makedirs(os.path.dirname(blend), exist_ok=True)
         G.place(rig, "body", body0)
         for s in "LR":

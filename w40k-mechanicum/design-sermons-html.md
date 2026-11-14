@@ -239,7 +239,7 @@ A press of a radio button plays the sound of one YouTube video; a second press s
 - **State** - a button is lit while its player is in the page. The page does not read the state of the player: a video that YouTube refuses to play leaves the button lit without sound
 - **Referrer** - the frame sends the host of the page to YouTube (`referrerpolicy="strict-origin-when-cross-origin"`), because YouTube refuses a player that does not name its page
 - **Host without the frame rule** - where the content policy of the host forbids the frame (section 8), the button goes out at once, and music that the press stopped plays on. The HTML viewer of the lab is such a host
-- **Lab viewer** - no radio plays in the HTML viewer of the lab, also where the policy of the lab allows the frame. The viewer shows the page from a `blob:` address, a page with such an address sends no referrer, and YouTube answers `Video player configuration error`. Measured on 2026-10-07 in a test browser whose copy of the lab's policy header had the frame rule (`wip/sermon/lab-radio.py`). The button stays lit without sound there
+- **Lab viewer** - no radio plays in the HTML viewer of the lab, also where the policy of the lab allows the frame. The viewer shows the page from a `blob:` address, a page with such an address sends no referrer, and YouTube answers `Video player configuration error`. Measured on 2026-10-07 in a test browser whose copy of the lab's policy header had the frame rule (`src/sermon/lab-radio.py`). The button stays lit without sound there
 
 ## 8. Host requirements
 
@@ -295,7 +295,7 @@ This section describes how `make sermon`, which runs `src/sermon.py`, makes the 
 
 ## 10. Checks
 
-This section lists the checks that run after a build. Their scripts are in `wip/sermon/`, which is not in git.
+This section lists the checks that run after a build. Their scripts are in `src/sermon/`.
 
 - **Stand-in host** - `mock.py` serves the package folder on port 8793 as the hub does: whole files, no compression, content type by file name. It also answers as the prayer counter, so the real counter is never called
 - **Page checks** - `test.py` runs 81 checks in headless Chrome at 1440, 720 and 390 px width: the requested files, the badge, the row of radio buttons, the click on the banner that stops the music and plays it on, both download buttons, the answer strip with the reader's total over all prayers, a report that fails, every reward, a frame without downloads and a frame without scripts

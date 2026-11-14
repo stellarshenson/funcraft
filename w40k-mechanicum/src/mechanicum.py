@@ -7,7 +7,7 @@ Run (after src/emblem.py and src/textures.py):
 Renders wip/frames/f000.png .. f039.png, plus the frame at phase 1.0 as
 seam-check.png, which must match f000.png.
 
-The look follows references/: a gothic nave of detailed walls with stained
+The look follows resources/assets/reference/: a gothic nave of detailed walls with stained
 glass, red banners, candles and incense haze, and at its end a towering
 altar-machine - racks of cards, a crowned skull in a sunburst, the Sacred
 A5000 enshrined at its heart. Everything that moves is a function of `phase`
@@ -701,7 +701,7 @@ def materials():
     MAT["eye"] = lamp("eye", (1.0, 0.07, 0.03), 4.0)[0]
     MAT["conduit"] = with_ao("conduit", (0.05, 0.045, 0.04), 0.5, 0.7)
     if SHOT:
-        # the close-ups take Rogue Trader's grade (references/rogue-trader/):
+        # the close-ups take Rogue Trader's grade (resources/assets/reference/rogue-trader/):
         # dark old brass with the gilding worn to the edges, oxblood cloth
         # without a pale sheen, aged grimy bone, one cold accent in the coolant
         MAT["gold"] = distressed_gold("old_gold", (0.95, 0.66, 0.24), dirt=(0.012, 0.009, 0.005), polish=1.0)

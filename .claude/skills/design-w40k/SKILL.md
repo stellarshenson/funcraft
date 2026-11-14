@@ -8,8 +8,8 @@ description: Art direction and asset recipes for Warhammer 40,000 Adeptus Mechan
 Rules for the Adeptus Mechanicus look, each learned from a render the Star Colonel rejected. Paths are relative to `~/workspace/funcraft/w40k-mechanicum/`. Blender mechanics (running, rigs, volumes, API traps): `design-blender`. Loops and GIFs: `design-gif`.
 
 ## References
-- `references/*.png` - the Star Colonel's target images: altar shrine, priests offering the Sacred A5000, crimson drapery, banners, stained glass. Crop and compare against them before sending anything
-- `references/rogue-trader/` - Steam screenshots of Warhammer 40,000: Rogue Trader (Owlcat) and its DLC; `SOURCE.txt` lists URLs. Visual reference only
+- `resources/assets/reference/*.png` - the Star Colonel's target images: altar shrine, priests offering the Sacred A5000, crimson drapery, banners, stained glass. Crop and compare against them before sending anything
+- `resources/assets/reference/rogue-trader/` - Steam screenshots of Warhammer 40,000: Rogue Trader (Owlcat) and its DLC; `SOURCE.txt` lists URLs. Visual reference only
 - What they share: low key, rust-umber-black mass with one or two accents; blackened iron and pewter structure with gold trims; crimson velvet everywhere; every surface carved, embroidered or written on; hundreds of dripping candles; smoke; light shafts against candle warmth
 
 ## Grade

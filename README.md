@@ -9,12 +9,13 @@ Hobby animation projects: looping 19:6 banner animations rendered in Blender wit
 
 ## Projects
 
-The repository holds two scene projects with the same folder structure. Each has its own `README.md` (what it is and how to run it), `DESIGN.md` (how it is built) and `Makefile`.
+The repository holds two scene projects and one speech project with the same folder structure. Each has its own `README.md` (what it is and how to run it) and `Makefile`; the scene projects also have a `DESIGN.md` (how it is built).
 
 | Project | Contents | Output |
 |---|---|---|
 | [`mech-design/`](mech-design/) | walking-machine banners, from hand-drawn 2D silhouettes to rigged high-poly meshes; the BEHEMOTH welcome page | GIF and AVIF banners, 1 HTML page |
 | [`w40k-mechanicum/`](w40k-mechanicum/) | a machine cathedral built in 3D, generated scenes with rigged figures, flames and smoke; a calendar of 366 daily entries; the sermon of the day page | GIF and AVIF banners, 1 calendar, 1 HTML package |
+| [`leftenant_voice/`](leftenant_voice/) | speaks a given text in a voice cloned from a recording, with the Ming-3.0-tts model on the GPU | WAV audio |
 
 ### mech-design
 
@@ -42,37 +43,38 @@ A machine cathedral in the style of the Adeptus Mechanicus, made with two pipeli
 - **Calendar** - `calendar/` holds 366 short entries, one mock holy day per date, each teaching one point of machine learning, statistics or data science
 - **Sermon page** - `make sermon` builds `index.html` with a `resources` folder and the same files as a zip. It shows today's calendar entry and service badge under a scene banner, plays background music and has three prayer buttons with a tune each. A download button gives the sermon with its badge as one image. A reader whose prayer total reaches a holy number receives a seal and one of the 13 reward sermons of `rewards.md`; `SERMON.md` describes the rebuild and `design-sermons-html.md` the design
 
-## Structure
+## Project structure
 
-Every scene project uses the same folders, and work moves through them in one direction.
+Every subproject uses the same folders, and work moves through them in one direction: received material in `resources/` feeds the scripts in `src/`, the scripts write to `wip/`, and a finished animation is assembled into `out/`.
 
 ```
-funcraft/
-├─ README.md
-├─ .claude/              agent skills and the work journal
-├─ mech-design/
-│  ├─ README.md  DESIGN.md  Makefile
-│  └─ src/  in/  resources/  wip/  out/
-└─ w40k-mechanicum/
-   ├─ README.md  DESIGN.md  SERMON.md  design-sermons-html.md  rewards.md  badges.md  Makefile
-   ├─ calendar/
-   └─ src/  in/  resources/  references/  wip/  out/
+<project>/
+├─ README.md             what the project is and how to run it
+├─ DESIGN.md             how the scenes are built
+├─ Makefile              the build targets
+├─ src/                  every script: generate, build, render, assemble
+│  ├─ <area>/            scripts of one area, named after the matching wip/ folder
+│  └─ queues/            shell scripts that run a batch of renders in sequence
+├─ resources/
+│  ├─ assets/            received media and chosen textures: pictures, fonts, music, voice recordings
+│  └─ models/            received 3D models; originals/ keeps the files exactly as received
+├─ wip/                  work in progress: drafts, frames, simulations, previews, logs, saved Blender scenes
+├─ out/                  finished GIFs, AVIFs and pages, numbered in the order they were made
+├─ tmp/workflows/        workflow scripts and their checkpoints
+└─ .venv-*               Python environments of the project
 ```
 
-| Folder | Holds | In git |
+| Project | Adds | Leaves out |
 |---|---|---|
-| `src/` | the scripts that generate, build, render and assemble | yes |
-| `in/` | inputs the scripts load: source meshes in `in/models/`, the files as received in `in/models/originals/` | no |
-| `resources/` | material the scenes use: textures, logos and fonts | no |
-| `references/` | reference material: target images, links, papers | text files only |
-| `wip/` | work in progress: drafts, plates and depth, rendered frames, previews, logs, saved Blender scenes | no |
-| `out/` | finished GIFs and pages, numbered in the order they were made | no |
+| `mech-design/` | `PROCESSION.md` for the walking procession; `src/procession/`; `resources/models/rigged/` with the rigged Blender files; `graphify-out/` with the code graph written by `graphify update` | `tmp/`, `.venv-*` |
+| `w40k-mechanicum/` | `calendar/` with the 366 entries; `docs/` with the defects register; `SERMON.md`, `design-sermons-html.md`, `rewards.md`, `badges.md`; `references/` with the calendar brief and plan; `resources/assets/reference/` with target pictures; `src/` areas `calendar/`, `calendar-logic/`, `calendar-review/`, `muster/`, `sermon/`, `warhound/`; `.venv-moge` | - |
+| `leftenant_voice/` | `texts/` with the text to speak; `references/` with model notes; `resources/voices/` with the cloned voices; `.venv-ming`, `.venv-tools` | `DESIGN.md` |
 
-`in/` and `references/` feed the scripts in `src/`, the scripts write to `wip/`, and a finished animation is assembled into `out/`. A generated texture starts as a draft in `wip/gen/`; the chosen draft becomes a file in `resources/assets/`.
+Git tracks `src/`, the Makefiles, the Markdown documents, `calendar/`, `docs/`, `texts/`, `.claude/`, and the text and Markdown files in `references/`. The folders `resources/`, `wip/`, `out/`, `tmp/` and `.venv-*` stay on the workstation, as does every sound file, because together they hold several gigabytes of meshes, images and frames.
 
 ## Running a project
 
-Install Blender 4.5 and the Python packages listed in the chosen project's README. Place its required models in `in/models/` and its assets in `resources/`, then run a target from that project's Makefile. For example, `make -C mech-design banner` renders and assembles the model banner. The project READMEs list the other targets and their inputs.
+Install Blender 4.5 and the Python packages listed in the chosen project's README. Place its required models in `resources/models/` and its assets in `resources/assets/`, then run a target from that project's Makefile. For example, `make -C mech-design banner` renders and assembles the model banner. The project READMEs list the other targets and their inputs.
 
 ## What a clone contains
 
@@ -80,7 +82,7 @@ Git tracks source and documents only. Inputs, resources, work in progress and ou
 
 - **In the repository** - `src/`, the Makefiles, the Markdown documents, the calendar, `.claude/`, and the text files in `references/`
 - **Not in the repository** - the downloaded models, the generated textures and plates, the rendered frames and the finished GIFs
-- **To render a scene** - Blender 4.5 with a GPU for Cycles, Python with the packages named in the project README, and the models placed in `in/models/`
+- **To render a scene** - Blender 4.5 with a GPU for Cycles, Python with the packages named in the project README, and the models placed in `resources/models/`
 
 ## Agent skills
 
@@ -101,5 +103,5 @@ This is an unofficial fan project. It is not affiliated with Games Workshop or C
 
 - **Models** - the downloaded models are not in the repository. `w40k-mechanicum/README.md` lists every model with its author and licence; most carry non-commercial Creative Commons licences
 - **Mech meshes** - the three supplied meshes are fan-made models of existing chassis designs and are not in the repository. The 2D and procedural banners shown above use original geometry
-- **Music** - the sermon page embeds four audio files of `resources/`; the files and the built page are not in the repository
+- **Music** - the sermon page embeds four audio files of `resources/assets/`; the files and the built page are not in the repository
 - **Fonts** - the welcome page embeds Orbitron under the SIL Open Font License 1.1; the font file is not in the repository

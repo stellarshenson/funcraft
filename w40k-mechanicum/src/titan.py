@@ -6,7 +6,7 @@ titan leans as the column and the frame beside the opening lean in the picture (
 image's left), stands on a stone floor through its feet, faces the saint on the image's left, turned `turn` degrees
 towards the camera. It is placed by its head: the whole head comes out of the corridor's mouth, in front of the
 column and left of the frame, and the guns hang lowered from the shoulders so that they stay behind the walls; mainly
-its head shows (wip/warhound/fit.py measures what the plate hides, wip/warhound/plan.py draws the scene from above).
+its head shows (src/warhound/fit.py measures what the plate hides, src/warhound/plan.py draws the scene from above).
 It is lit by a warm
 light from the chapel's side and a weak cold light from behind; plate, actors and smoke neither light it nor shade it
 (as for the servo-skull, src/servoskull.py). It is never still: over the loop the torso sways, the head looks round

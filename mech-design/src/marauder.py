@@ -1,7 +1,7 @@
 """The Marauder: an assembly kit of 19 printable parts, put together into one
 model for the pipeline of the other chassis. Blender 4.5.
 
-The kit (in/models/marauder/parts/) holds each part of the mech as its own
+The kit (resources/models/marauder/parts/) holds each part of the mech as its own
 STL, laid flat and apart: no part is in its place. The parts join through
 ball joints and pins. Their centres are measured from the meshes (a sphere or
 a circle fitted to the triangles whose normals agree with it) and stand in
@@ -26,8 +26,8 @@ A ball joint leaves the angles free: THIGH_BACK, SHIN_FORWARD and
 ARM_FORWARD are chosen for the stance of a Marauder, and the first two add
 up to the angle at which the knee ball's stem leaves the middle of its cup.
 
-`build` writes in/models/marauder.stl, the whole model in the kit's units
-and facing -Y, and in/models/marauder.json: the leg joints for the rig and
+`build` writes resources/models/marauder.stl, the whole model in the kit's units
+and facing -Y, and resources/models/marauder.json: the leg joints for the rig and
 the centre of every part with the bone that holds it, in the frame of
 src/mechrig.py (metres, facing +Y, feet on z = 0, HEIGHT tall).
 
@@ -39,9 +39,9 @@ import bpy, os, sys, math, json, colorsys
 from mathutils import Vector, Matrix
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PARTS = os.path.join(ROOT, "in", "models", "marauder", "parts")
+PARTS = os.path.join(ROOT, "resources", "models", "marauder", "parts")
 PREVIEW = os.path.join(ROOT, "wip", "preview")
-MODELS = os.path.join(ROOT, "in", "models")
+MODELS = os.path.join(ROOT, "resources", "models")
 HEIGHT = 12.4                      # metres from the soles to the top of the cannon
 THIGH_BACK, SHIN_FORWARD, ARM_FORWARD = 30.0, 32.0, 35.0     # degrees from the plumb line
 # centres of the joints, kit units, left parts; cup and ball of one joint have the same radius within 0.1

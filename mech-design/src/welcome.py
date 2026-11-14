@@ -7,7 +7,7 @@ The banner is out/10-banner-procession-marauder.avif, encoded at quality 60 for 
 The crest on the hazard strip is resources/assets/cog-stellars.png, the wheel of src/sigil.py; the seal over the closing
 litany is resources/assets/cog-mechanicum.png, its sigil. Each is cut to the square round its visible part, with the same
 room on every side, and reduced to twice its size on the page. The page shows both at one size, so the two look equally large.
-The font of the title is resources/fonts/Orbitron-VF.ttf reduced to the Latin characters and stored as WOFF2 in base64.
+The font of the title is resources/assets/fonts/Orbitron-VF.ttf reduced to the Latin characters and stored as WOFF2 in base64.
 The page holds no script: the Welcome tab of GalaxaLab runs none.
 """
 import base64
@@ -55,7 +55,7 @@ seal = png(ROOT / "resources/assets/cog-mechanicum.png", BADGE)
 print(f"crest: {len(crest) / 1e3:.0f} kB, seal: {len(seal) / 1e3:.0f} kB")
 
 # the font keeps its weight axis; only the characters U+0020 to U+007E stay
-font = TTFont(ROOT / "resources/fonts/Orbitron-VF.ttf")
+font = TTFont(ROOT / "resources/assets/fonts/Orbitron-VF.ttf")
 subsetter = subset.Subsetter()
 subsetter.populate(unicodes=range(0x20, 0x7F))
 subsetter.subset(font)

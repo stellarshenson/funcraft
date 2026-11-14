@@ -1,6 +1,6 @@
 # Cult Mechanicus liturgical calendar - writing brief
 
-The calendar gives one entry for each of the 366 days of a leap year. Each entry is a feast, rite, vigil, observance or saint's day of the Cult Mechanicus of Warhammer 40,000, and it teaches one correct point of machine learning, statistics, data science, AI or the use of the workstation. It goes on the welcome page of the BEHEMOTH workstation, where a team of data scientists reads one entry a day. The model is `references/cult_mechanicus_calendar.pdf`: a title, a purpose, a context.
+The calendar gives one entry for each of the 366 days of a leap year. Each entry is a feast, rite, vigil, observance or saint's day of the Cult Mechanicus of Warhammer 40,000, and it teaches one correct point of machine learning, statistics, data science, AI or the use of the workstation. It goes on the welcome page of the BEHEMOTH workstation, where a team of data scientists reads one entry a day. The model is `resources/assets/reference/cult_mechanicus_calendar.pdf`: a title, a purpose, a context.
 
 ## 1. Reader
 
