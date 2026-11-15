@@ -10,6 +10,7 @@ import time
 
 import app
 import asr
+import engine_nemotron
 import models
 import numpy as np
 import pytest
@@ -209,10 +210,11 @@ def test_a_model_that_is_downloading_or_loading_is_503_with_retry_after(client, 
     assert transcriber.windows == []
 
 
-def test_a_down_state_starts_the_load_and_answers_503(client, transcriber, monkeypatch, tmp_path):
-    """After the cache is deleted the next request starts the load and answers 503; the load runs once."""
+@pytest.mark.parametrize("phase", ["down", "error"])
+def test_a_down_state_starts_the_load_and_answers_503(client, transcriber, monkeypatch, tmp_path, phase):
+    """After the cache is deleted or a load failed, the next request starts the load and answers 503; it runs once."""
     monkeypatch.setattr(models, "cache_dir", lambda name: tmp_path / name)
-    monkeypatch.setattr(app, "asr_state", "down")
+    monkeypatch.setattr(app, "asr_state", phase)
     response = upload(client)
     assert response.status_code == 503
     assert response.json()["detail"] == "the transcription model is downloading"
@@ -233,3 +235,27 @@ def test_no_auth_is_401(transcriber):
 def test_health_carries_the_transcriber_state(client, transcriber):
     assert client.get("/health").json()["asr"] == {
         "available": True, "loaded": False, "state": "ready", "error": None}
+
+
+@pytest.mark.parametrize("source, container, expected", [
+    (lambda: "hf_page", "hf_env", "hf_page"),
+    (lambda: None, "hf_env", "hf_env"),
+    (lambda: None, None, None),
+])
+def test_the_worker_env_carries_the_page_token_else_the_process_token(monkeypatch, source, container, expected):
+    seen = {}
+
+    def popen(command, env, **kwargs):
+        seen.update(env)
+        raise EngineError("stop")
+
+    monkeypatch.setattr(engine_nemotron.subprocess, "Popen", popen)
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    if container:
+        monkeypatch.setenv("HF_TOKEN", container)
+    engine = engine_nemotron.NemotronTranscriber(source)
+    monkeypatch.setattr(engine, "python_path", lambda: engine_nemotron.WORKER)
+    with pytest.raises(EngineError) as raised:
+        engine._start()
+    assert seen.get("HF_TOKEN") == expected
+    assert "hf_page" not in str(raised.value)

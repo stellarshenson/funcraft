@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 import numpy as np
 
@@ -26,8 +27,14 @@ STOP_SECONDS = 10
 class NemotronTranscriber:
     """Nemotron 3.5 Transcribe in a child process; one model load serves every window until `unload()`."""
 
-    def __init__(self) -> None:
-        """Nothing starts until `load()`."""
+    def __init__(self, token: Callable[[], str | None] = lambda: None) -> None:
+        """Nothing starts until `load()`.
+
+        Args:
+            token: returns the Hugging Face token or None; read when the worker starts, so a token set
+                through the page is used without a restart.
+        """
+        self.token = token
         self._process: subprocess.Popen | None = None
         self._folder: Path | None = None
         self._log = None
@@ -80,6 +87,9 @@ class NemotronTranscriber:
         # PCI bus order makes the index the nvidia-smi index, as src/transcribe.py measured on this workstation
         env = {**os.environ, "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
                "CUDA_VISIBLE_DEVICES": os.environ.get("ASR_GPU_INDEX", "1")}
+        token = self.token()
+        if token:  # None keeps a container HF_TOKEN from os.environ
+            env["HF_TOKEN"] = token
         self._process = subprocess.Popen(
             [str(self.python_path()), str(WORKER)], env=env,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self._log, text=True, bufsize=1)

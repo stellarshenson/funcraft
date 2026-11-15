@@ -112,12 +112,12 @@ def test_the_script_calls_the_transcription_and_model_endpoints(client):
 
 
 def test_the_page_carries_the_transcription_state_and_the_ready_gate(client):
-    """The status view shows the ASR state, and Transcribe stays disabled until that state is `ready`."""
+    """The status view shows the ASR state, and Transcribe is enabled only in `ready`, `down` and `error`, so a press can start the load."""
     page = client.get("/").text
     assert 'id="asr-state"' in page
     assert 'id="transcribe-state"' in page
     assert 'asrState = asr.state || "unknown"' in page
-    assert 'ui.transcribeButton.disabled = transcribing || asrState !== "ready"' in page
+    assert 'ui.transcribeButton.disabled = transcribing || !["ready", "down", "error"].includes(asrState)' in page
 
 
 def test_settings_start_without_a_token(client):

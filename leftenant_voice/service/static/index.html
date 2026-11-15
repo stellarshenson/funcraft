@@ -350,7 +350,7 @@
       </div>
     </form>
     <p id="transcribe-state" class="hint" aria-live="polite">transcription: checking</p>
-    <p id="transcribe-busy" class="hint" role="status" hidden>Transcribing. The model downloads when the container starts; its progress is in the status section above. This can take minutes.</p>
+    <p id="transcribe-busy" class="hint" role="status" hidden>Transcribing. This can take minutes.</p>
     <p id="transcribe-error" class="status-error" role="alert" hidden></p>
     <div id="transcribe-output" hidden>
       <h3>Transcript</h3>
@@ -714,7 +714,7 @@ function showTranscribeError(text) {
 }
 
 function updateTranscribePanel() {
-  ui.transcribeButton.disabled = transcribing || asrState !== "ready";
+  ui.transcribeButton.disabled = transcribing || !["ready", "down", "error"].includes(asrState);
   setText(ui.transcribeState, "transcription: " + asrState);
 }
 

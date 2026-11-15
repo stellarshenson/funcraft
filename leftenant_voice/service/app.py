@@ -22,20 +22,20 @@ loads it again. One lock covers load, unload and synthesis, so only one of them 
 the model is built, `ready` when the last load succeeded, and `error` with the message in `error` when it failed.
 
 `POST /transcribe` transcribes an uploaded recording with Nemotron 3.5 Transcribe, bf16 on GPU 2, in a child
-process of its own environment that loads in the background at start, as the default engine does. `/health`
+process that loads in the background at start, as the default engine does. `/health`
 reports it under `asr` as `available`, `loaded`, `state` and `error`; `state` is `downloading` while its 67.5 GB
 cache is absent, `loading` while the model is built, `ready` or `error`. A request during the download or the
-load answers 503 with `Retry-After: 30` instead of waiting, and a request that finds the state `down` starts the
+load answers 503 with `Retry-After: 30` instead of waiting, and a request that finds the state `down`, or `error` with no worker running, starts the
 load again and answers the same way. The upload may be any format ffmpeg decodes - mp3, m4a, wav, flac,
 ogg - up to one hour. The language is "as spoken" for automatic detection or one of the 40 languages with ASR
 support in the model card; the model receives it in the prompt, because its request has no language parameter.
 
 `GET /models` lists the S2 Pro and Nemotron caches under `HF_HOME` with their folder, size and whether the model
 is loaded. `DELETE /models/{name}` unloads the model when it is loaded and removes its cache, so the next use
-downloads the weights again. The page controls follow in a later change.
+downloads the weights again.
 
 `GET /` serves the page in `service/static`. The page sets the Hugging Face token with `POST /settings/hf-token`;
-the token lives in this process's memory for the session and reaches the weight download. The page also uploads
+the token lives in this process's memory for the session and reaches both weight downloads, S2 Pro and Nemotron. The page also uploads
 reference recordings as new voices into the writable `VOICES_DIR`, which starts as a copy of `SEED_VOICES_DIR`.
 """
 import hashlib
@@ -241,7 +241,7 @@ load_error: str | None = None
 last_request = time.monotonic()
 busy = False
 
-transcriber = engine_nemotron.NemotronTranscriber()
+transcriber = engine_nemotron.NemotronTranscriber(_hf_token)
 asr_lock = threading.Lock()
 asr_state = "down"
 asr_error: str | None = None
@@ -677,7 +677,7 @@ def transcribe(file: UploadFile = File(...), language: str = Form(asr.AUTO_LANGU
 
     The model loads in the background at start, so the first recording does not wait for its 67.5 GB
     download: a request during the download or the load answers 503 with `Retry-After`. A request that
-    finds the state `down` starts the load in the background and answers the same way.
+    finds the state `down`, or `error` with no worker running, starts the load in the background and answers the same way.
 
     Args:
         file: the recording; any format ffmpeg decodes, such as mp3, m4a, wav, flac or ogg.
@@ -709,7 +709,7 @@ def transcribe(file: UploadFile = File(...), language: str = Form(asr.AUTO_LANGU
         raise HTTPException(503, f"the transcription environment is missing: "
                                  f"{transcriber.python_path()}")
     phase = asr_state
-    if phase == "down":
+    if phase == "down" or (phase == "error" and not transcriber.is_loaded()):
         phase = _start_transcriber_load()
     if phase in ("downloading", "loading"):
         raise HTTPException(503, f"the transcription model is {phase}",

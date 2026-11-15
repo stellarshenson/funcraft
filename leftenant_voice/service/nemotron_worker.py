@@ -1,8 +1,7 @@
 """Child process of the transcription engine: load Nemotron 3.5 Transcribe once, then transcribe each request.
 
 Runs in the ASR interpreter (`/opt/venv/bin/python` in the image: Python 3.12, torch 2.8.0,
-Transformers 5.23.0.dev0, librosa; `.venv-asr` or `ASR_PYTHON` natively), so the service's own
-interpreter never imports torch or Transformers. `engine_nemotron.py` starts it. The device is fixed by
+Transformers 5.23.0.dev0, librosa; `.venv-asr` or `ASR_PYTHON` natively). `engine_nemotron.py` starts it. The device is fixed by
 `CUDA_VISIBLE_DEVICES`, which the parent sets before this process starts; the model runs in bf16 with the
 model card's request form.
 
