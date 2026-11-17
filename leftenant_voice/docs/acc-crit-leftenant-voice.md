@@ -335,9 +335,9 @@ code IMAGE: pm-tools caps a category code at six letters, so the brief's REGISTR
 - log: 2026-11-09T01:29:43Z @kj category created
 - log: 2026-11-09T01:30:44Z @kj added note "code IMAGE: pm-tools caps a category code at six letters, so the brief's REGISTRY is written IMAGE"
 
-- [x] `ACC-IMAGE-37-PUSH` **docker-push pushes both tags** - HIGH; make -f s2pro.mk docker-push pushes IMAGE:VERSION and IMAGE:latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts
-  - evidence: push run 2026-11-12: docker-push pushed 0.2.0 and latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts, both digest sha256:dd3a0d3936631048e21c721dab62f0df82a265f8890ea04c5114066bd8ab365b; docker pull reports both up to date with the same digest; the GitLab API lists both tags (wip/registry-push/logs/docker-push.log, registry-pull-check.log, registry-tags.json); project konrad.jelen/leftenant-voice-tts created (id 88)
-  - test: docker pull registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts:0.2.0 and :latest report digest sha256:dd3a0d3936631048e21c721dab62f0df82a265f8890ea04c5114066bd8ab365b
+- [x] `ACC-IMAGE-37-PUSH` **docker-push pushes latest only** - HIGH; make -f s2pro.mk docker-push pushes only IMAGE:latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts; make -f s2pro.mk docker-prune deletes every other tag, so the registry keeps only latest
+  - evidence: release 2026-11-15: docker-push pushed latest at sha256:37f7c8f2979de4789fa1b31d90f8ee164dba708483d7cc3cd1ec4bb592b18584; docker-prune deleted 0.2.0 and 0.3.0 (HTTP 200 each); docker pull latest reports that digest, Image is up to date; the GitLab API lists only latest (wip/release/logs/docker-push.log, docker-prune.log, pull-check.log)
+  - test: docker pull registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts:latest is up to date; the GitLab registry API lists only the tag latest
   - test-tags: MANUAL
   - log: 2026-11-09T01:29:43Z @kj added
   - log: 2026-11-09T20:04:33Z @kj closed: verified in 0.2.0
@@ -345,6 +345,8 @@ code IMAGE: pm-tools caps a category code at six letters, so the brief's REGISTR
   - log: 2026-11-11T23:00:49Z @kj edited evidence "docker push 0.2.0 printed digest sha256:d334ef340da3 (48 s) and latest the same digest (1 s); the private project konrad.jelen/leftenant-voice was created (lookup 404, create 201); release-push.log, gitlab-project.json" -> "the recorded push digest sha256:d334ef340da3 and the project konrad.jelen/leftenant-voice belong to the superseded project; make -n -f s2pro.mk docker-push names the two pushes to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts (wip/compose-rename/logs/docker-push-dryrun.txt) and they have not run; the push awaits the owner approval"; reason: the push evidence belongs to the superseded registry project, so the criterion now states the new path has not been pushed
   - log: 2026-11-11T23:00:54Z @kj edited evidence "the recorded push digest sha256:d334ef340da3 and the project konrad.jelen/leftenant-voice belong to the superseded project; make -n -f s2pro.mk docker-push names the two pushes to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts (wip/compose-rename/logs/docker-push-dryrun.txt) and they have not run; the push awaits the owner approval" -> "the recorded push digest sha256:d334ef340da3 and the project konrad.jelen/leftenant-voice belong to the superseded project; make -n -f s2pro.mk docker-push names the two pushes to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts (wip/compose-rename/logs/docker-push-dryrun.txt) and they have not run; the push awaits the owner's approval"; reason: write the plan wording exactly
   - log: 2026-11-12T08:50:01Z @kj edited test "make -n -f s2pro.mk docker-push shows both pushes; run it only with the owner's approval" -> "docker pull registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts:0.2.0 and :latest report digest sha256:dd3a0d3936631048e21c721dab62f0df82a265f8890ea04c5114066bd8ab365b"; evidence "the recorded push digest sha256:d334ef340da3 and the project konrad.jelen/leftenant-voice belong to the superseded project; make -n -f s2pro.mk docker-push names the two pushes to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts (wip/compose-rename/logs/docker-push-dryrun.txt) and they have not run; the push awaits the owner's approval" -> "push run 2026-11-12: docker-push pushed 0.2.0 and latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts, both digest sha256:dd3a0d3936631048e21c721dab62f0df82a265f8890ea04c5114066bd8ab365b; docker pull reports both up to date with the same digest; the GitLab API lists both tags (wip/registry-push/logs/docker-push.log, registry-pull-check.log, registry-tags.json); project konrad.jelen/leftenant-voice-tts created (id 88)"
+  - log: 2026-11-15T21:19:23Z @kj amended title "docker-push pushes both tags" -> "docker-push pushes latest only"; text "make -f s2pro.mk docker-push pushes IMAGE:VERSION and IMAGE:latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts" -> "HIGH; make -f s2pro.mk docker-push pushes only IMAGE:latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts; make -f s2pro.mk docker-prune deletes every other tag, so the registry keeps only latest"; reason: owner order 2026-11-15: releases push latest only and the registry keeps no other tag
+  - log: 2026-11-15T21:19:23Z @kj edited test "docker pull registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts:0.2.0 and :latest report digest sha256:dd3a0d3936631048e21c721dab62f0df82a265f8890ea04c5114066bd8ab365b" -> "docker pull registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts:latest is up to date; the GitLab registry API lists only the tag latest"; evidence "push run 2026-11-12: docker-push pushed 0.2.0 and latest to registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts, both digest sha256:dd3a0d3936631048e21c721dab62f0df82a265f8890ea04c5114066bd8ab365b; docker pull reports both up to date with the same digest; the GitLab API lists both tags (wip/registry-push/logs/docker-push.log, registry-pull-check.log, registry-tags.json); project konrad.jelen/leftenant-voice-tts created (id 88)" -> "release 2026-11-15: docker-push pushed latest at sha256:37f7c8f2979de4789fa1b31d90f8ee164dba708483d7cc3cd1ec4bb592b18584; docker-prune deleted 0.2.0 and 0.3.0 (HTTP 200 each); docker pull latest reports that digest, Image is up to date; the GitLab API lists only latest (wip/release/logs/docker-push.log, docker-prune.log, pull-check.log)"; reason: the criterion now states the latest-only release
 - [x] `ACC-IMAGE-38-PULL` **Pull-back serves an MP3** - HIGH; a docker pull of the pushed tag, run back on a fresh named volume, downloads from Hugging Face and serves an MP3
   - evidence: docker rmi then docker pull 0.2.0 returned Digest sha256:d334ef340da3 in 1 s and image id d334ef340da3; the fresh-volume run on GPU 0 was ready in 473 s and POST /speak returned 200 audio/mpeg 44413 bytes, ffprobe mp3 3.657 s, WER 0.0; pull-check.json, pull-measure.json
   - test: docker pull IMAGE:VERSION; docker run --gpus device=0 with a fresh named volume at /data/huggingface; /health reaches ready after the Hugging Face download; POST /speak; assert audio/mpeg
@@ -419,24 +421,27 @@ The page served at /, the session token, the writable voice folder and the uploa
 
 - log: 2026-11-10T16:41:24Z @kj category created
 
-- [x] `ACC-WEB-44-PAGE` **GET / serves the page** - HIGH; GET / returns the self-contained page as text/html with every element id the page script uses
+- [x] `ACC-WEB-44-PAGE` **GET / serves the page** - HIGH; GET / returns the page as text/html; its stylesheet and script come from /static (app.css, app.js); every element id the script uses is in the page
   - evidence: make test 2026-11-10: 63 passed in 17.66 s; tests/unit/test_webapp.py::test_the_page_is_served green (GET / 200 text/html, all 16 page ids present)
   - test: GET / is 200 text/html and contains the page ids; the functional suite checks the container page
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-10T16:41:24Z @kj added
   - log: 2026-11-10T16:41:38Z @kj closed
-- [x] `ACC-WEB-45-TOKEN` **Settings token in memory, never echoed, download uses it** - HIGH; POST /settings/hf-token stores the token in the service process's memory for the session; GET /settings reports only whether it is set; no response echoes it; the S2 Pro engine passes it to both Hugging Face calls at load time
+  - log: 2026-11-17T07:55:51Z @kj amended text "GET / returns the self-contained page as text/html with every element id the page script uses" -> "GET / returns the page as text/html; its stylesheet and script come from /static (app.css, app.js); every element id the script uses is in the page"
+- [x] `ACC-WEB-45-TOKEN` **Settings token in memory, never echoed, download uses it** - HIGH; POST /settings/hf-token keeps the token in the service process's memory only after Hugging Face whoami accepts it; GET /settings reports whether it is set and its account name; no response echoes it; the engines pass it to their Hugging Face downloads at load time
   - evidence: make test 2026-11-10: 63 passed in 17.66 s; test_the_token_is_set_cleared_and_never_echoed, test_the_engine_passes_the_token_to_both_downloads and test_available_engines_passes_the_token_through green
   - test: unit settings and engine-token tests
   - test-tags: UNIT
   - log: 2026-11-10T16:41:27Z @kj added
   - log: 2026-11-10T16:41:38Z @kj closed
-- [x] `ACC-WEB-46-STATUS` **The page shows /health state and refresh** - HIGH; the page shows the load state polled from GET /health every 2 s, the engine, busy and seconds_until_unload, a progress bar while the model downloads or loads, and the error text
+  - log: 2026-11-17T07:55:51Z @kj amended text "POST /settings/hf-token stores the token in the service process's memory for the session; GET /settings reports only whether it is set; no response echoes it; the S2 Pro engine passes it to both Hugging Face calls at load time" -> "POST /settings/hf-token keeps the token in the service process's memory only after Hugging Face whoami accepts it; GET /settings reports whether it is set and its account name; no response echoes it; the engines pass it to their Hugging Face downloads at load time"
+- [x] `ACC-WEB-46-STATUS` **The page shows /health state and refresh** - HIGH; the top bar shows the speech and transcription states polled from GET /health every 2 s as badges, with engine, busy, seconds_until_unload and the error text in the speech badge's tooltip; a load error also shows on the render page; a waiting transcription shows the load steps
   - evidence: make test 2026-11-10: 63 passed in 17.66 s; test_the_page_is_served finds service-status and the /health state tests test_health_reports_ready_after_a_load and test_health_reports_a_failed_load_and_speak_answers_500 pass
   - test: unit page ids and /health fields; the functional page test
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-10T16:41:27Z @kj added
   - log: 2026-11-10T16:41:38Z @kj closed
+  - log: 2026-11-17T12:09:32Z @kj amended text "the page shows the load state polled from GET /health every 2 s, the engine, busy and seconds_until_unload, a progress bar while the model downloads or loads, and the error text" -> "the top bar shows the speech and transcription states polled from GET /health every 2 s as badges, with engine, busy, seconds_until_unload and the error text in the speech badge's tooltip; a load error also shows on the render page; a waiting transcription shows the load steps"
 - [x] `ACC-WEB-47-PLAY` **The page generates an MP3 and plays it** - HIGH; the page posts text, voice and engine to POST /speak, plays the returned audio/mpeg in the page and offers it as speech.mp3
   - evidence: verifier 2026-11-10: Playwright at 1280x900 reached state ready; the page set and cleared the session token, uploaded verify-page and deleted it, then POST /speak gave #player a blob: source with duration 3.90 s and a speech.mp3 download link, zero console errors; screenshots wip/webapp/verify/page.png and wip/webapp/verify/page-generate.png
   - test: the verifier generates in a browser and reads the player's source and duration
@@ -477,6 +482,44 @@ The page served at /, the session token, the writable voice folder and the uploa
   - test-tags: UNIT, MANUAL
   - log: 2026-11-12T10:32:21Z @kj added
   - log: 2026-11-12T10:32:21Z @kj closed
+- [x] `ACC-WEB-75-PLATFORM-PAGES` **Separate Voice rendering, Transcription and Settings pages** - HIGH; one portal shell: a sidebar with Operations (Voice rendering, Transcription) and Settings apart, each page and Settings tab at its own address; logged out shows only the login box; a 401 returns to it with a message
+  - evidence: tests/functional/test_browser.py reaches every page and Settings tab by address and reload, login and 401 return; screens in wip/voice-portal-build/screens/; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - test: functional: each page reachable from the navigation; logged out sees only login
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T07:13:59Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj built and verified locally with stub engines, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; deployed container still serves the old page
+  - log: 2026-11-17T12:09:32Z @kj amended title "Separate Speak, Transcribe and Settings pages" -> "Separate Voice rendering, Transcription and Settings pages"; text "one app shell with navigation between Speak, Transcribe and Settings; logged out shows only the login box; a 401 returns to it with a message" -> "one portal shell: a sidebar with Operations (Voice rendering, Transcription) and Settings apart, each page and Settings tab at its own address; logged out shows only the login box; a 401 returns to it with a message"
+  - log: 2026-11-17T14:13:17Z @kj closed
+- [x] `ACC-WEB-76-DESIGN-SYSTEM` **Portal look of the approved mockup** - HIGH; colours and type use the extension design-system tokens; layout and shapes follow the mockup tmp/artefacts/voice-portal/voice-portal.html (sidebar, 6 px controls, 10 px cards, pill badges); light and dark themes; phone width with a bottom bar; text contrast at least 4.5:1
+  - evidence: verifier compared every page with the mockup screens: layout, colours, spacing match; lowest text contrast 4.6:1; 0 px overflow at 390 px light and dark; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - test: screenshots light, dark and 390 px wide
+  - test-tags: FUNCTIONAL, MANUAL
+  - log: 2026-11-17T07:13:59Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj built and verified locally with stub engines, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; deployed container still serves the old page
+  - log: 2026-11-17T12:09:32Z @kj amended title "Styled on the extension design system" -> "Portal look of the approved mockup"; text "colours, type, sections, buttons, inputs, badges and banners follow ~/.claude/skills/jupyterlab-extension/design-system; light and dark themes; works at phone width" -> "colours and type use the extension design-system tokens; layout and shapes follow the mockup tmp/artefacts/voice-portal/voice-portal.html (sidebar, 6 px controls, 10 px cards, pill badges); light and dark themes; phone width with a bottom bar; text contrast at least 4.5:1"
+  - log: 2026-11-17T14:13:17Z @kj closed
+- [x] `ACC-WEB-77-ACTION-RESULT` **Every action shows its result** - HIGH; each action shows running, done or the server's reason beside its control (a refused login in the banner above the password field); nothing fails silently
+  - evidence: verifier drove every action against the stub service: running, done or the server's detail beside each control; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - test: functional: a refused save shows the server's detail text
+  - test-tags: UNIT, FUNCTIONAL
+  - log: 2026-11-17T07:13:59Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj built and verified locally with stub engines, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; deployed container still serves the old page
+  - log: 2026-11-17T12:09:32Z @kj amended text "each button shows done or the server's reason next to it; nothing fails silently" -> "each action shows running, done or the server's reason beside its control (a refused login in the banner above the password field); nothing fails silently"
+  - log: 2026-11-17T14:13:17Z @kj closed
+- [x] `ACC-WEB-78-HF-CHECK` **Hugging Face token checked on save** - HIGH; Save asks Hugging Face whoami with the token; kept only when valid; the page shows the account name or the error
+  - evidence: whoami unit tests (Bearer header, 10 s timeout, valid, refused, timeout, 5xx) and the functional token test green; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - test: unit: whoami stubbed valid and invalid
+  - test-tags: UNIT
+  - log: 2026-11-17T07:13:59Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj built and verified locally with stub engines, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; deployed container still serves the old page
+  - log: 2026-11-17T14:13:18Z @kj closed
+- [x] `ACC-WEB-79-TOKEN-CREATE` **API token shown once with copy** - MEDIUM; Create token shows the new token once with a copy button; existing tokens listed by name with delete
+  - evidence: tests/functional/test_browser.py: create shows the token once, Copy, Bearer use on /voices, delete then 401; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - test: functional: create, copy shown, listed, delete
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T07:14:00Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj built and verified locally with stub engines, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; deployed container still serves the old page
+  - log: 2026-11-17T14:13:18Z @kj closed
 
 ## Authentication `AUTH`
 
@@ -506,12 +549,13 @@ Password login for the page, API tokens for clients, and the password supplied b
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-10T22:41:11Z @kj added
   - log: 2026-11-10T23:44:03Z @kj closed: verified
-- [x] `ACC-AUTH-57-PROTECTED` **Endpoints require credentials** - CRITICAL; Every endpoint except GET /health, POST /login and the static page requires a valid session cookie or a Bearer token; missing or invalid credentials are 401. /health stays public for the healthcheck.
+- [x] `ACC-AUTH-57-PROTECTED` **Endpoints require credentials** - CRITICAL; Every endpoint except GET /health, POST /login, the page and its /static files requires a valid session cookie or a Bearer token; missing or invalid credentials are 401. /health stays public for the healthcheck
   - evidence: unit test_every_protected_endpoint_is_401_without_credentials (9 endpoints), test_the_voice_upload_is_401_without_credentials, test_a_forged_session_and_an_unknown_token_are_401 and test_the_public_endpoints_answer_without_credentials green in 90 passed; functional test_no_credentials_is_401 and the container test_container_serves_the_page_and_the_settings (GET /voices 401 without login, 200 with, /health public) green in 26 passed, EXIT=0 (tmp/workflows/auth/logs/functional-full.log)
   - test: call each endpoint with no credentials, a forged session and an unknown token
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-10T22:41:11Z @kj added
   - log: 2026-11-10T23:44:05Z @kj closed: verified
+  - log: 2026-11-17T07:55:51Z @kj amended text "Every endpoint except GET /health, POST /login and the static page requires a valid session cookie or a Bearer token; missing or invalid credentials are 401. /health stays public for the healthcheck." -> "Every endpoint except GET /health, POST /login, the page and its /static files requires a valid session cookie or a Bearer token; missing or invalid credentials are 401. /health stays public for the healthcheck"
 - [x] `ACC-AUTH-58-TOKENS` **API tokens live encrypted in the data volume** - HIGH; With a session, Settings creates a named token shown once, lists names with prefix and date, and revokes by name. /data/tokens.json is encrypted with an AES-GCM key derived from the password by salted scrypt; a wrong password stops the service at start.
   - evidence: unit test_a_created_token_is_shown_once_listed_and_stored_encrypted (the store bytes contain neither token, prefix nor password), test_tokens_survive_a_reload and test_a_store_written_with_one_password_does_not_load_with_another green in 90 passed (tmp/workflows/auth/logs/unit.log); functional test_api_token_round_trip and the container cold and warm starts green in 26 passed, EXIT=0 (tmp/workflows/auth/logs/functional-full.log); the store is /data/tokens.json
   - test: create a token, restart, list it; start with a wrong password and assert the refusal
@@ -524,12 +568,14 @@ Password login for the page, API tokens for clients, and the password supplied b
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-10T22:41:12Z @kj added
   - log: 2026-11-10T23:44:09Z @kj closed: verified
-- [x] `ACC-AUTH-60-WEBLOGIN` **The page logs in with the password** - HIGH; The page opens on a password form; after login it shows status, settings with token create and revoke, voices and generate; a wrong password shows an error and logout returns to the form.
+- [x] `ACC-AUTH-60-WEBLOGIN` **The page logs in with the password** - HIGH; The page opens on a password form; after login it shows the Voice rendering, Transcription and Settings pages, Settings holding the Hugging Face token, API token create and delete, voices and models; a wrong password shows an error and logout returns to the form
   - evidence: functional test_page_is_served (every PAGE_IDS id including login-form, app-section and api-token-*), test_the_page_starts_on_the_login_form (form first, wrong password 401, the sections after login) and test_api_token_round_trip green; 26 passed in 940.63 s, EXIT=0 (tmp/workflows/auth/logs/functional-full.log); logout ends the session per the unit logout test
   - test: open the page without a session, log in, use each section, log out
   - test-tags: FUNCTIONAL
   - log: 2026-11-10T22:41:12Z @kj added
   - log: 2026-11-10T23:44:09Z @kj closed: verified
+  - log: 2026-11-17T07:55:52Z @kj amended text "The page opens on a password form; after login it shows status, settings with token create and revoke, voices and generate; a wrong password shows an error and logout returns to the form." -> "The page opens on a password form; after login it shows the Speak, Transcribe and Settings pages, Settings holding the Hugging Face token, API token create and delete, voices and models; a wrong password shows an error and logout returns to the form"
+  - log: 2026-11-17T12:09:32Z @kj amended text "The page opens on a password form; after login it shows the Speak, Transcribe and Settings pages, Settings holding the Hugging Face token, API token create and delete, voices and models; a wrong password shows an error and logout returns to the form" -> "The page opens on a password form; after login it shows the Voice rendering, Transcription and Settings pages, Settings holding the Hugging Face token, API token create and delete, voices and models; a wrong password shows an error and logout returns to the form"
 - [x] `ACC-AUTH-61-TESTING` **Auth tests and no secret leakage** - MEDIUM; Unit and functional tests cover startup with no password, passfile reading, login success and failure, 401 on each protected endpoint, logout, and token create, use, list, revoke and persistence; no password or token appears in a response or log.
   - evidence: make -f s2pro.mk test 2026-11-11: 90 passed in 20.16 s (tmp/workflows/auth/logs/unit.log); make -f s2pro.mk test-functional 2026-11-11: 26 passed in 940.63 s, EXIT=0 (tmp/workflows/auth/logs/functional-full.log); grep of both logs, the goal-trackers logs and the token store found no test password, token or vtts_ value
   - test: make test and make test-functional green; grep responses and logs for the test password and token
@@ -549,12 +595,14 @@ Speech-to-text and model cache management: the /transcribe endpoint with languag
   - test-tags: UNIT
   - log: 2026-11-13T18:03:04Z @kj added
   - log: 2026-11-13T18:28:21Z @kj closed
+  - log: 2026-11-15T21:02:14Z @kj review round 1: a request in error with no worker running starts the background load and answers 503 Retry-After 30, as in down; patch-2, test parametrized over down and error
 - [x] `ACC-ASR-67-PAGE` **Transcribe panel** - MEDIUM; the page has a transcribe panel: choose an audio file (mp3, m4a, wav), the language from as spoken plus the 40, verbatim or readable, optional context terms, submit, read the transcript; errors shown
   - evidence: wf_347ba7ab-2dc: the page has the Transcribe section (file input mp3/m4a/wav/flac/ogg, 41 language options equal to asr.LANGUAGES plus as spoken, readable/verbatim wording, context, FormData to /transcribe, transcript shown, 67.5 GB busy note); 3 tests in test_webapp.py; 117 unit green; verifier pass
   - test: unit: page contains the form; functional: upload a wav and read the text
   - test-tags: UNIT, FUNCTIONAL
   - log: 2026-11-13T18:03:04Z @kj added
   - log: 2026-11-13T18:37:31Z @kj closed
+  - log: 2026-11-15T21:02:14Z @kj review round 1-2: Transcribe button enabled in ready, down and error (a press in down or error starts the load); busy text now 'Transcribing. This can take minutes.'; patch-1 and patch-5
 - [x] `ACC-ASR-68-LANGUAGE` **Language in the prompt** - MEDIUM; the model has no language parameter: the prompt carries Language: as spoken (auto) or the chosen language; the list is the 40 languages with ASR support in the model card
   - evidence: the 40 ASR languages from the model card matrix in service/asr.py in card order; build_prompt matches the card byte for byte; a named language replaces only the language clause; an unknown language is 422; unit tested in wf_c18fa67c-0cb
   - test: unit: every language value builds its prompt; an unknown language is refused
@@ -593,4 +641,10 @@ Speech-to-text and model cache management: the /transcribe endpoint with languag
   - test-tags: MANUAL
   - log: 2026-11-13T18:03:05Z @kj added
   - log: 2026-11-13T21:25:54Z @kj closed
+- [x] `ACC-ASR-74-PAGE-TOKEN` **Page token reaches the transcription download** - MEDIUM; a Hugging Face token saved on the page reaches the Nemotron download as HF_TOKEN in the worker environment, read when the worker starts; with no page token the container HF_TOKEN is used
+  - evidence: owner decision 2026-11-15 on review round 1; tmp/workflows/asr-token/patch-4.diff; unit suite 129 passed; review SHIP at round 3 wf_27075147-de9
+  - test: tests/unit/test_transcribe.py parametrized worker-env test: page token, container token, no token
+  - test-tags: UNIT
+  - log: 2026-11-15T21:02:13Z @kj added
+  - log: 2026-11-15T21:02:14Z @kj closed
 

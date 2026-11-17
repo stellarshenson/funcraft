@@ -100,3 +100,91 @@ Nemotron transcription service, page and model cache
   - log: 2026-11-13T20:35:58Z @kj added
   - log: 2026-11-13T20:56:22Z @kj closed
 
+## Web page `WEB`
+
+Faults of the service's browser page
+
+- log: 2026-11-17T07:13:50Z @kj category created
+
+- [x] `DEF-WEB-9-LOGIN-LOST` **Login not kept** - MAJOR; POST /login answers 200, then every request is 401: the browser does not send the sid cookie back; seen 2026-11-17 in the lab tab frame; cause unknown
+  - evidence: live login against the deployed service, wf_26062601-8da verified: framed from galaxalabs.com /settings 200, framed cross-site from stellars-tech.eu 401, top-level 200; lab tab now frames voice-tts.behemoth.galaxalabs.com
+  - root-cause: 2026-11-17T10:23:36Z @kj the lab runs at workbench.behemoth.galaxalabs.com but the lab tab framed https://voice-tts.lab.stellars-tech.eu, a cross-site frame, so the browser refused the SameSite=Strict sid cookie; same failure reproduced in the cross-site variant of wf_65bb7f94-0d7; the service also answers at voice-tts.behemoth.galaxalabs.com, same site as the lab
+  - repro: log in on the page in the lab tab, press Save on the Hugging Face token, read the service log
+  - test-tags: FUNCTIONAL, MANUAL
+  - log: 2026-11-17T07:13:50Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj not reproduced, wf_65bb7f94-0d7: same-site framing with the Lumino sandbox flags keeps the cookie, only a cross-site frame drops it; page now re-checks /session after login and says when the browser dropped the cookie; cookie unchanged
+  - log: 2026-11-17T10:23:36Z @kj lab-tab wrapper now frames https://voice-tts.behemoth.galaxalabs.com/; lab host read from the vault passkey record and /var/log/jupyterlab.log; awaiting a live login in the lab tab
+  - log: 2026-11-17T11:25:41Z @kj closed
+- [x] `DEF-WEB-10-SILENT-ERRORS` **Errors hidden on the page** - MAJOR; the page shows no refusal: Save leaves 'no token' after a 401, Create token does nothing; only Models says 'log in first'
+  - evidence: every action shows running, done or the server's detail (verifier browser run of all pages and states); wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - root-cause: 2026-11-17T14:13:17Z @kj the old page's handlers ignored non-OK responses and wrote no outcome; every fetch now goes through one helper that shows running, done or the server's detail beside its control
+  - repro: log out, press Save or Create token, see no message
+  - test-tags: UNIT, FUNCTIONAL
+  - log: 2026-11-17T07:13:50Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj fixed in the tree, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; not yet in the deployed image
+  - log: 2026-11-17T14:13:17Z @kj closed
+- [x] `DEF-WEB-11-HF-UNCHECKED` **Hugging Face token not checked** - MEDIUM; Save stores any text as the Hugging Face token; a wrong token shows only when a model download fails
+  - evidence: whoami unit tests: valid 200 with account, refused 422, timeout and 5xx 502; functional token test against Hugging Face green; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - root-cause: 2026-11-17T14:13:17Z @kj POST /settings/hf-token stored any text without asking Hugging Face; it now calls the whoami-v2 endpoint first
+  - repro: save a wrong token, page reports nothing
+  - test-tags: UNIT
+  - log: 2026-11-17T07:13:50Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj fixed in the tree, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; not yet in the deployed image
+  - log: 2026-11-17T14:13:17Z @kj closed
+- [x] `DEF-WEB-12-LOGGEDOUT-FORMS` **Settings forms shown while logged out** - MEDIUM; logged out, the page shows the token, API token and model forms, which can only fail
+  - evidence: tests/functional/test_browser.py: logged out shows only the login box, a 401 returns to it; wf_594fe8f6-a22 verifier pass, review SHIP wf_aca86707-e16, make test 134 green, make test-functional 30 passed wf_e1e4629c-166
+  - root-cause: 2026-11-17T14:13:17Z @kj the old page drew every section before the session check; the portal shows only the login box until /session says authenticated
+  - repro: open the page logged out
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T07:13:59Z @kj added
+  - log: 2026-11-17T07:55:52Z @kj fixed in the tree, wf_65bb7f94-0d7: 134 unit green, verifier browser run 23/23; not yet in the deployed image
+  - log: 2026-11-17T14:13:17Z @kj closed
+- [x] `DEF-WEB-13-DROP-OUTSIDE` **File drop outside the drop area opens the file** - MINOR; a file dropped on another page, in the main column gutters or below the Transcription cards is not cancelled; Chrome opens it in place of the portal
+  - evidence: document dragover/drop cancel file drags; headless Chrome: file drags on body, header, form and the render page cancelled, portal stays; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: drag an mp3 onto the Voice rendering page or the gutter beside the Transcription cards
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T14:20:34Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-14-DROP-TAP` **Drop box not a tap target** - MINOR; on a 390 px phone tapping the dashed drop box does nothing; only the 99x21 px 'choose a file' link opens the picker
+  - evidence: click on the drop box opens the file chooser once, inner button once; browser test case; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: on a phone tap the dashed box on Transcription
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T14:20:35Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-15-TEXT-DROP` **Text drop into names and terms cancelled** - MINOR; the Transcription page drop handler cancels every drag, so text dragged into the names-and-terms field is dropped silently
+  - evidence: page drag handlers act only on file drags; a real text drag inserted text into names and terms; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: drag selected text into the names-and-terms field
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T14:20:35Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-16-DROP-HIGHLIGHT` **No drop highlight while a recording is chosen** - MINOR; once a recording is chosen the drop box is hidden, so a file dragged over the page shows no highlight although the drop replaces the recording
+  - evidence: highlight on #transcribe-form before and after a recording is chosen; browser test case; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: choose a recording, then drag another file over the Transcription page
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T14:20:35Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-17-STALE-DOCS` **Page descriptions inexact** - MINOR; app.py module docstring omits the public GET /static/*, and README and the app.css header cite the untracked tmp/ mockup
+  - evidence: app.py docstring lists GET /static/* and the content-hash links (patch-17, patch-21); README and app.css cite no tmp file; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: read app.py lines 1-40, README page section, app.css line 1
+  - test-tags: UNIT
+  - log: 2026-11-17T14:20:35Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-18-MP3-NAME` **Every render downloads as speech.mp3** - MINOR; renders of one session cannot be told apart on disk; owner chose voice plus clock time, for example grimaldus-1259.mp3
+  - evidence: result card and session list download as <voice>-<HHMM>.mp3 (grimaldus-1525.mp3 at 15:25); browser test case; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: render twice and download both
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T14:20:35Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-19-HF-RATELIMIT` **Functional token test fails on hub 429 or 5xx** - MINOR; tests/functional/test_webapp.py accepts only the refused and saved answers, not 'Hugging Face did not check', which the service sends for a 429 or 5xx
+  - evidence: test_webapp.py token test accepts the 'Hugging Face did not check' 502 answer; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: run make test-functional while Hugging Face rate-limits
+  - test-tags: FUNCTIONAL
+  - log: 2026-11-17T14:20:43Z @kj added
+  - log: 2026-11-17T15:04:35Z @kj closed
+- [x] `DEF-WEB-20-TIMEOUT-DOCS` **Hugging Face timeout stated as 10 s total** - MINOR; README and docstrings promise a 10 s check, but the timeout applies per connection attempt and per read, so a hub that drops packets takes about 40 s; owner chose the wording fix
+  - evidence: README, app.py and whoami docstrings say 10 s per connection attempt and per read; wf_e4889bf0-ca3 verifier pass; make test 134 green; test_browser.py 10 passed; make test-functional 36 passed wf_d3353c9e-0de; review confirm rounds wf_d8b729f5-900 and wf_30e53ddc-aaa, SHIP
+  - repro: read the README token section and the app.py whoami docstring
+  - test-tags: UNIT
+  - log: 2026-11-17T14:20:43Z @kj added
+  - log: 2026-11-17T15:04:36Z @kj closed
+
