@@ -27,7 +27,7 @@ speak:
 # Service (service/README.md): an HTTP API over the engine registry. The GPU defaults to 0.
 #   make -f s2pro.mk install-service   (adds fastapi, uvicorn, python-multipart and cryptography to .venv-fish)
 #   make -f s2pro.mk serve             (native run; PORT, GPU, ENGINE, IDLE_UNLOAD_SECONDS, S2PRO_PASSWORD)
-#   make -f s2pro.mk docker-build | docker-run | docker-tag | docker-push
+#   make -f s2pro.mk docker-build | docker-run | docker-tag | docker-push | docker-prune
 #   make -f s2pro.mk install-test      (adds pytest and httpx to .venv-fish)
 #   make -f s2pro.mk test              (unit suite, no GPU and no model)
 REGISTRY ?= registry.nas.stellars-tech.eu:8443
@@ -38,7 +38,7 @@ PORT     ?= 8000
 ENGINE   ?= s2pro
 IDLE_UNLOAD_SECONDS ?= 3600
 
-.PHONY: install-service install-test check-ffmpeg serve test test-functional docker-build docker-run docker-tag docker-push
+.PHONY: install-service install-test check-ffmpeg serve test test-functional docker-build docker-run docker-tag docker-push docker-prune
 install-service:
 	uv pip install --python .venv-fish/bin/python fastapi uvicorn python-multipart cryptography
 
@@ -81,10 +81,21 @@ docker-run:
 docker-tag:
 	docker tag $(IMAGE):$(VERSION) $(IMAGE):latest
 
-# The token goes to docker login on stdin, never on argv; a temporary DOCKER_CONFIG keeps it out of ~/.docker/config.json
+# Only latest is pushed. The token goes to docker login on stdin, never on argv; a temporary DOCKER_CONFIG keeps it out of ~/.docker/config.json
 docker-push: docker-tag
 	@D=$$(mktemp -d); trap 'rm -rf "$$D"' EXIT; \
 	jupyterlab-passkey vault get gitlab/api | DOCKER_CONFIG=$$D docker login $(REGISTRY) -u konrad.jelen --password-stdin && \
-	DOCKER_CONFIG=$$D docker push $(IMAGE):$(VERSION) && \
 	DOCKER_CONFIG=$$D docker push $(IMAGE):latest && \
 	DOCKER_CONFIG=$$D docker logout $(REGISTRY)
+
+# Deletes every tag except latest in the GitLab registry. The token reaches curl only through a temporary config file.
+GITLAB_API := https://gitlab.nas.stellars-tech.eu:8443/api/v4
+REGISTRY_PROJECT := $(GITLAB_API)/projects/konrad.jelen%2Fleftenant-voice-tts/registry/repositories
+docker-prune:
+	@C=$$(mktemp); trap 'shred -u "$$C"' EXIT; T=$$(jupyterlab-passkey vault get gitlab/api); \
+	printf 'header = "PRIVATE-TOKEN: %s"\ninsecure\nsilent\n' "$$T" > "$$C"; \
+	for R in $$(curl -K "$$C" "$(REGISTRY_PROJECT)" | python3 -c 'import json,sys; print(*[r["id"] for r in json.load(sys.stdin)])'); do \
+	  for N in $$(curl -K "$$C" "$(REGISTRY_PROJECT)/$$R/tags?per_page=100" | python3 -c 'import json,sys; print(*[t["name"] for t in json.load(sys.stdin) if t["name"] != "latest"])'); do \
+	    echo "$$N $$(curl -K "$$C" -o /dev/null -w '%{http_code}' -X DELETE "$(REGISTRY_PROJECT)/$$R/tags/$$N")"; \
+	  done; \
+	done

@@ -211,10 +211,12 @@ curl -s "http://127.0.0.1:$PORT/health"
 ## Registry
 
 ```bash
-make -f s2pro.mk docker-tag        # $(IMAGE):$(VERSION) and :latest
-make -f s2pro.mk docker-push       # token from the vault on stdin, both tags, logout
+make -f s2pro.mk docker-tag        # $(IMAGE):$(VERSION) and :latest, local tags
+make -f s2pro.mk docker-push       # token from the vault on stdin, pushes latest only, logout
+make -f s2pro.mk docker-prune      # deletes every tag except latest in the GitLab registry
 ```
 
+- `docker-prune` keeps only `latest` in the registry repository; `service/VERSION` names the local build tag only
 - `docker-push` uses a temporary `DOCKER_CONFIG`, so the token is never written to `~/.docker/config.json`
 - `REGISTRY` defaults to `registry.nas.stellars-tech.eu:8443`
 - `IMAGE` defaults to `registry.nas.stellars-tech.eu:8443/konrad.jelen/leftenant-voice-tts`
