@@ -11,7 +11,8 @@ PASSWORD = "test-password"
 
 @pytest.fixture(autouse=True)
 def auth(tmp_path, monkeypatch):
-    """Every unit test runs with the same password, a fresh session store, no tokens and no token file."""
+    """Every unit test runs with the same password, a fresh session store, no tokens, no token file and no
+    Hugging Face token; `whoami` is a stub."""
     monkeypatch.setenv("S2PRO_PASSWORD", PASSWORD)
     monkeypatch.delenv("S2PRO_PASSWORD_FILE", raising=False)
     monkeypatch.setattr(app, "password", PASSWORD.encode())
@@ -19,6 +20,15 @@ def auth(tmp_path, monkeypatch):
     monkeypatch.setattr(app, "tokens", [])
     monkeypatch.setattr(app, "token_salt", None)
     monkeypatch.setattr(app, "TOKENS_FILE", tmp_path / "tokens.json")
+    monkeypatch.setattr(app, "hf_token", None)
+    monkeypatch.setattr(app, "hf_account", None)
+    monkeypatch.setattr(app, "whoami", no_hub)
+
+
+def no_hub(token: str) -> dict:
+    """Stand-in for Hugging Face `whoami`: the unit suite never reaches the network; a test that needs an
+    answer replaces it."""
+    raise AssertionError("a unit test reached Hugging Face whoami")
 
 
 @pytest.fixture

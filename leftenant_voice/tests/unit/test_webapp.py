@@ -1,5 +1,7 @@
 """The page's endpoints: the session token, the writable voice folder, upload, delete and the token's path
-to the weight download. Stub engines and generated WAVs; no GPU, no model, no network."""
+to the weight download. Stub engines, generated WAVs and a stubbed Hugging Face `whoami`; no GPU, no model,
+no network."""
+import hashlib
 import io
 import os
 import re
@@ -8,6 +10,7 @@ import wave
 import app
 import asr
 import engine_s2pro
+import httpx
 import numpy as np
 import pytest
 import registry
@@ -18,14 +21,8 @@ from conftest import PASSWORD
 from fastapi.testclient import TestClient
 from stubs import StubEngine
 
-PAGE_IDS = ("service-status", "asr-state", "token-form", "token-input", "token-state", "engine-select",
-            "voice-select", "upload-form", "upload-name", "upload-text", "upload-file", "uploaded-list",
-            "speak-form", "speak-text", "speak-button", "player", "message", "login-form", "login-password",
-            "login-button", "logout-button", "app-section", "api-token-form", "api-token-name",
-            "api-token-create", "api-token-list", "model-list", "models-status", "models-error",
-            "transcribe-form", "transcribe-file", "transcribe-language", "transcribe-wording",
-            "transcribe-context", "transcribe-button", "transcribe-state", "transcribe-busy",
-            "transcribe-error", "transcribe-output", "transcribe-result")
+WHOAMI_URL = "https://huggingface.co/api/whoami-v2"
+REAL_WHOAMI = app.whoami  # conftest replaces app.whoami in every test; the timeout tests call the real one
 
 
 def wav_bytes(seconds: float, channels: int = 1, rate: int = 16000) -> bytes:
@@ -63,6 +60,36 @@ def seed_folder(tmp_path, name: str) -> "os.PathLike":
     return seed
 
 
+def page_ids() -> list[str]:
+    """Every element id the page script looks up, read from the script itself: `$("...")`, the step ids it passes
+    to `setStep`, and the page and Settings tab sections it builds from PAGES and TABS."""
+    script = (app.STATIC_DIR / "app.js").read_text()
+    found = set(re.findall(r'\$\("([a-z-]+)"\)', script)) | set(re.findall(r'setStep\("([a-z-]+)"', script))
+    found |= {f"page-{name}" for name in ("render", "transcribe", "settings")}
+    found |= {f"set-{name}" for name in ("hf", "api", "voices", "models")}
+    return sorted(found)
+
+
+def whoami_account(token: str) -> dict:
+    """`whoami` for a token Hugging Face accepts."""
+    return {"name": "konrad", "type": "user"}
+
+
+def hub_answer(status: int, body: dict) -> httpx.Response:
+    """An answer of Hugging Face's whoami-v2 endpoint."""
+    return httpx.Response(status, json=body, request=httpx.Request("GET", WHOAMI_URL))
+
+
+def whoami_refused(token: str) -> dict:
+    """`whoami` for a token Hugging Face refuses: its 401 answer raised by `raise_for_status`."""
+    hub_answer(401, {"error": "Invalid credentials in Authorization header"}).raise_for_status()
+
+
+def whoami_unreachable(token: str) -> dict:
+    """`whoami` when Hugging Face cannot be reached."""
+    raise httpx.ConnectError("[Errno -3] Temporary failure in name resolution")
+
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     """The app on an empty writable voice folder, one stub engine and no token, logged in."""
@@ -71,7 +98,6 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(app, "VOICES_DIR", voices)
     monkeypatch.setattr(app, "SEED_VOICES_DIR", None)
     monkeypatch.setattr(app, "ENGINES", {"alpha": StubEngine("alpha")})
-    monkeypatch.setattr(app, "hf_token", None)
     client = TestClient(app.app)
     assert client.post("/login", json={"password": PASSWORD}).status_code == 200
     return client
@@ -82,60 +108,152 @@ def test_the_page_is_served(client):
     response = client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
-    for element in PAGE_IDS:
+    ids = page_ids()
+    assert len(ids) > 40
+    for element in ids:
         assert f'id="{element}"' in response.text, element
+
+
+def test_the_stylesheet_and_the_script_are_public_and_carry_a_content_hash():
+    """The page links /static/app.css and /static/app.js with a hash of their content, so a deploy is never served
+    an old script, and both answer without a login."""
+    anonymous = TestClient(app.app)
+    page = anonymous.get("/").text
+    content = (app.STATIC_DIR / "app.js").read_bytes() + (app.STATIC_DIR / "app.css").read_bytes()
+    key = hashlib.sha256(content).hexdigest()[:12]
+    assert f'href="/static/app.css?v={key}"' in page and f'src="/static/app.js?v={key}"' in page
+    assert "__ASSET_KEY__" not in page
+    css = anonymous.get("/static/app.css")
+    assert css.status_code == 200 and css.headers["content-type"].startswith("text/css")
+    script = anonymous.get("/static/app.js")
+    assert script.status_code == 200 and "javascript" in script.headers["content-type"]
+
+
+def test_the_page_has_its_pages_and_settings_tabs_behind_the_login(client):
+    """Logged out only the login box can show: the app shell starts hidden and holds Voice rendering, Transcription
+    and Settings, with Settings' four tabs, each at its own hash address. tests/functional/test_browser.py drives
+    them in a browser."""
+    page = client.get("/").text
+    assert '<div id="app-section" class="p-app" hidden>' in page
+    for name in ("render", "transcribe", "settings"):
+        assert f'<a href="#/{name}" data-nav="{name}">' in page
+        assert f'<section id="page-{name}" hidden>' in page
+    for tab in ("hf", "api", "voices", "models"):
+        assert f'<a href="#/settings/{tab}" data-tab="{tab}">' in page
+        assert f'id="set-{tab}"' in page
 
 
 def test_the_page_contains_the_transcription_form_and_the_models_section(client):
     """The page has the transcription form over the five formats and the Settings models list."""
     page = client.get("/").text
-    assert '<form id="transcribe-form">' in page
+    assert '<form class="p-card" id="transcribe-form">' in page
     assert 'accept=".mp3,.m4a,.wav,.flac,.ogg"' in page
-    assert '<h3>Models</h3>' in page
+    assert "<h2>Models</h2>" in page
     assert 'id="model-list"' in page
 
 
 def test_the_language_options_equal_the_servers_languages(client):
-    """The select's values are 'as spoken' plus asr.LANGUAGES, so a drift in either fails here."""
+    """The select offers 'as spoken' first, then asr.LANGUAGES in alphabetical order, so a drift in either fails
+    here."""
     page = client.get("/").text
     select = page.split('id="transcribe-language"', 1)[1].split("</select>", 1)[0]
-    values = re.findall(r'<option value="([^"]*)">', select)
-    assert values == ["as spoken", *asr.LANGUAGES]
-
-
-def test_the_script_calls_the_transcription_and_model_endpoints(client):
-    """The page script posts to /transcribe, lists /models and deletes /models/<name>."""
-    page = client.get("/").text
-    assert 'fetch("/transcribe"' in page
-    assert 'fetch("/models"' in page
-    assert 'fetch("/models/" + encodeURIComponent(name)' in page
-
-
-def test_the_page_carries_the_transcription_state_and_the_ready_gate(client):
-    """The status view shows the ASR state, and Transcribe is enabled only in `ready`, `down` and `error`, so a press can start the load."""
-    page = client.get("/").text
-    assert 'id="asr-state"' in page
-    assert 'id="transcribe-state"' in page
-    assert 'asrState = asr.state || "unknown"' in page
-    assert 'ui.transcribeButton.disabled = transcribing || !["ready", "down", "error"].includes(asrState)' in page
+    values = [value or text for value, text in re.findall(r'<option(?: value="([^"]*)")?>([^<]*)</option>', select)]
+    assert values == ["as spoken", *sorted(asr.LANGUAGES)]
 
 
 def test_settings_start_without_a_token(client):
-    assert client.get("/settings").json() == {"hf_token_set": False, "default_engine": app.DEFAULT_ENGINE,
+    assert client.get("/settings").json() == {"hf_token_set": False, "hf_account": None,
+                                              "default_engine": app.DEFAULT_ENGINE,
                                               "max_text_chars": app.MAX_TEXT_CHARS}
 
 
-def test_the_token_is_set_cleared_and_never_echoed(client):
-    response = client.post("/settings/hf-token", json={"token": "hf_secret_value"})
+def test_the_token_is_set_cleared_and_never_echoed(client, monkeypatch):
+    """A token whoami accepts is kept and its account named; an empty token clears it; nothing echoes it."""
+    asked = []
+    monkeypatch.setattr(app, "whoami", lambda token: asked.append(token) or whoami_account(token))
+    response = client.post("/settings/hf-token", json={"token": " hf_secret_value "})
     assert response.status_code == 200
-    assert response.json() == {"hf_token_set": True}
+    assert response.json() == {"hf_token_set": True, "hf_account": "konrad"}
+    assert asked == ["hf_secret_value"]
     assert "hf_secret_value" not in response.text
-    assert client.get("/settings").json()["hf_token_set"] is True
-    assert "hf_secret_value" not in client.get("/settings").text
+    settings = client.get("/settings")
+    assert settings.json()["hf_token_set"] is True and settings.json()["hf_account"] == "konrad"
+    assert "hf_secret_value" not in settings.text
     assert app._hf_token() == "hf_secret_value"
     cleared = client.post("/settings/hf-token", json={"token": "  "})
-    assert cleared.json() == {"hf_token_set": False}
+    assert cleared.json() == {"hf_token_set": False, "hf_account": None}
+    assert asked == ["hf_secret_value"]
     assert app._hf_token() is None
+
+
+def test_a_refused_token_is_422_with_the_hubs_reason_and_the_saved_token_stays(client, monkeypatch):
+    """whoami refusing the token answers 422 with Hugging Face's words; the token saved before is kept."""
+    monkeypatch.setattr(app, "whoami", whoami_account)
+    assert client.post("/settings/hf-token", json={"token": "hf_good"}).status_code == 200
+    monkeypatch.setattr(app, "whoami", whoami_refused)
+    response = client.post("/settings/hf-token", json={"token": "hf_wrong_value"})
+    assert response.status_code == 422
+    assert response.json()["detail"] == ("Hugging Face refused the token: HTTP 401 Unauthorized "
+                                         "(Invalid credentials in Authorization header)")
+    assert "hf_wrong_value" not in response.text
+    assert app._hf_token() == "hf_good"
+    assert client.get("/settings").json()["hf_account"] == "konrad"
+
+
+def test_a_token_the_hub_cannot_check_is_502_and_not_kept(client, monkeypatch):
+    """Hugging Face out of reach answers 502 naming the network error; no token is stored."""
+    monkeypatch.setattr(app, "whoami", whoami_unreachable)
+    response = client.post("/settings/hf-token", json={"token": "hf_unchecked"})
+    assert response.status_code == 502
+    assert response.json()["detail"].startswith("Hugging Face could not be reached: ")
+    assert app._hf_token() is None
+    assert client.get("/settings").json()["hf_token_set"] is False
+
+
+def test_whoami_asks_the_hub_with_the_bearer_token_and_a_ten_second_timeout(client, monkeypatch):
+    """The real `whoami` sends the token as Bearer to whoami-v2 with a 10 s timeout; a valid answer names the
+    account and a 401 answer is the 422 with the hub's words."""
+    asked = []
+
+    def hub(url, headers, timeout):
+        asked.append((url, headers, timeout))
+        if headers["Authorization"] == "Bearer hf_good":
+            return hub_answer(200, {"name": "konrad", "type": "user"})
+        return hub_answer(401, {"error": "Invalid credentials in Authorization header"})
+
+    monkeypatch.setattr(app, "whoami", REAL_WHOAMI)
+    monkeypatch.setattr(httpx, "get", hub)
+    assert client.post("/settings/hf-token", json={"token": "hf_good"}).json() == {"hf_token_set": True,
+                                                                                 "hf_account": "konrad"}
+    refused = client.post("/settings/hf-token", json={"token": "hf_bad"})
+    assert refused.status_code == 422
+    assert "(Invalid credentials in Authorization header)" in refused.json()["detail"]
+    assert asked == [(WHOAMI_URL, {"Authorization": "Bearer hf_good"}, 10.0),
+                     (WHOAMI_URL, {"Authorization": "Bearer hf_bad"}, 10.0)]
+    assert app._hf_token() == "hf_good"
+
+
+def test_a_hub_that_does_not_answer_in_time_is_502_and_the_token_is_not_kept(client, monkeypatch):
+    """A timeout of the whoami request answers 502 naming it; no token is stored."""
+
+    def silent_hub(url, headers, timeout):
+        raise httpx.ConnectTimeout("")
+
+    monkeypatch.setattr(app, "whoami", REAL_WHOAMI)
+    monkeypatch.setattr(httpx, "get", silent_hub)
+    response = client.post("/settings/hf-token", json={"token": "hf_unchecked"})
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Hugging Face could not be reached: ConnectTimeout"
+    assert app._hf_token() is None
+
+
+def test_a_hub_error_other_than_a_refusal_is_502(client, monkeypatch):
+    """A 5xx answer of the hub says Hugging Face did not check the token."""
+    monkeypatch.setattr(app, "whoami", lambda token: hub_answer(503, {"error": "Service unavailable"}).raise_for_status())
+    response = client.post("/settings/hf-token", json={"token": "hf_later"})
+    assert response.status_code == 502
+    assert response.json()["detail"] == ("Hugging Face did not check the token: HTTP 503 Service Unavailable "
+                                         "(Service unavailable)")
 
 
 def test_upload_writes_both_files_and_lists_the_voice(client):

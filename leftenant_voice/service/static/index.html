@@ -4,905 +4,433 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
-<title>Voice TTS</title>
-<style>
-  :root {
-    color-scheme: light dark;
-    --bg: #f2efe9;
-    --panel: #fffdf9;
-    --field: #ffffff;
-    --ink: #1b1a17;
-    --muted: #57534c;
-    --line: #d3cec4;
-    --control-line: #8f897e;
-    --accent: #7a1f1f;
-    --accent-ink: #ffffff;
-    --link: #7a1f1f;
-    --ok: #1e6b3c;
-    --warn: #7a5200;
-    --bad: #a31c1c;
-    --focus: #1d5fa8;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #131312;
-      --panel: #1d1c1a;
-      --field: #141413;
-      --ink: #ebe8e1;
-      --muted: #b8b2a7;
-      --line: #3b3833;
-      --control-line: #6b665d;
-      --accent: #9c3a33;
-      --accent-ink: #ffffff;
-      --link: #e8a59d;
-      --ok: #74d69a;
-      --warn: #e0b45c;
-      --bad: #ff9a90;
-      --focus: #8dc1ff;
-    }
-  }
-
-  * { box-sizing: border-box; }
-  [hidden] { display: none !important; }
-  html { font-size: 100%; }
-
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    line-height: 1.5;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  main { max-width: 54rem; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
-
-  header h1 { margin: 0; font-size: 1.6rem; }
-  header p { margin: .25rem 0 1.5rem; color: var(--muted); }
-
-  section {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: .55rem;
-    padding: 1rem 1.25rem;
-    margin: 0 0 1rem;
-  }
-
-  h2 { margin: 0 0 .75rem; font-size: 1.15rem; }
-  h3 { margin: 1.5rem 0 .35rem; font-size: 1rem; }
-
-  label { display: block; margin: .75rem 0 .3rem; font-weight: 600; }
-  input, textarea, select, button { font: inherit; }
-
-  input[type="text"],
-  input[type="password"],
-  textarea,
-  select {
-    width: 100%;
-    padding: .5rem .6rem;
-    background: var(--field);
-    color: var(--ink);
-    border: 1px solid var(--control-line);
-    border-radius: .35rem;
-  }
-
-  textarea { min-height: 5rem; resize: vertical; }
-  input[type="file"] { max-width: 100%; color: var(--muted); }
-
-  button {
-    padding: .5rem 1rem;
-    border: 1px solid var(--control-line);
-    border-radius: .35rem;
-    background: var(--panel);
-    color: var(--ink);
-    cursor: pointer;
-  }
-
-  button[type="submit"] {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-ink);
-  }
-
-  button:hover:not(:disabled) { filter: brightness(1.08); }
-  button:disabled { opacity: .55; cursor: not-allowed; }
-
-  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-  a { color: var(--link); }
-
-  .actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
-  .hint { margin: .25rem 0 0; color: var(--muted); font-size: .875rem; }
-
-  .notice {
-    margin: 0 0 1rem;
-    padding: .75rem 1rem;
-    border: 1px solid var(--control-line);
-    border-radius: .35rem;
-    background: var(--panel);
-  }
-
-  .picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 .75rem; }
-  .picker label { margin-top: 0; }
-
-  .state-line { margin: 0; font-size: 1.1rem; }
-  .state { font-weight: 700; }
-  #service-status[data-state="ready"] .state { color: var(--ok); }
-  #service-status[data-state="error"] .state,
-  #service-status[data-state="unreachable"] .state { color: var(--bad); }
-  #service-status[data-state="downloading"] .state,
-  #service-status[data-state="loading"] .state { color: var(--warn); }
-
-  .facts { margin: .3rem 0 0; color: var(--muted); }
-  .status-error { margin: .5rem 0 0; color: var(--bad); overflow-wrap: anywhere; }
-  .load-progress { width: 100%; height: .7rem; margin-top: .75rem; accent-color: var(--accent); }
-
-  #token-state { margin: .75rem 0 0; font-weight: 600; }
-
-  #uploaded-list, #api-token-list, #model-list { list-style: none; margin: .25rem 0 0; padding: 0; }
-  #uploaded-list li,
-  #api-token-list li,
-  #model-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .75rem;
-    padding: .45rem 0;
-    border-top: 1px solid var(--line);
-  }
-  #uploaded-list li:first-child,
-  #api-token-list li:first-child,
-  #model-list li:first-child { border-top: 0; }
-  #uploaded-list li.empty,
-  #api-token-list li.empty { display: block; color: var(--muted); }
-  #uploaded-list button,
-  #api-token-list button,
-  #model-list button { padding: .3rem .8rem; }
-  #uploaded-list li span,
-  #api-token-list li span,
-  #model-list li span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-  #api-token-new code { display: block; margin-top: .35rem; overflow-wrap: anywhere; }
-  #login-form { max-width: 24rem; }
-
-  #player { display: block; width: 100%; margin-top: 1rem; }
-  .download { display: inline-block; margin-top: .6rem; }
-  #message { margin: .75rem 0 0; min-height: 1.5rem; color: var(--bad); overflow-wrap: anywhere; }
-</style>
+<title>Leftenant Voice</title>
+<link rel="stylesheet" href="/static/app.css?v=__ASSET_KEY__">
+<script src="/static/app.js?v=__ASSET_KEY__" defer></script>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Voice TTS</h1>
-    <p>Log in, set the Hugging Face token, choose a voice, play the generated MP3, and transcribe a recording.</p>
-    <button id="logout-button" type="button" hidden>Log out</button>
-  </header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6.5 4h4v16h-4zM13.5 4h4v16h-4z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 24 24"><rect x="3" y="9" width="2.6" height="6" rx="1.3"/><rect x="8" y="5" width="2.6" height="14" rx="1.3"/><rect x="13" y="7" width="2.6" height="10" rx="1.3"/><rect x="18" y="10" width="2.6" height="4" rx="1.3"/></symbol>
+</svg>
+<noscript><p class="p-noscript">This page needs JavaScript.</p></noscript>
 
-  <noscript>
-    <p class="notice">JavaScript is required for this page.</p>
-  </noscript>
-
-  <section id="login-section">
-    <h2>Log in</h2>
-    <form id="login-form">
-      <label for="login-password">Password</label>
-      <input id="login-password" type="password" autocomplete="off" spellcheck="false">
-      <div class="actions">
-        <button id="login-button" type="submit">Log in</button>
-      </div>
-    </form>
-  </section>
-
-  <div id="app-section" hidden>
-  <section>
-    <h2>Status</h2>
-    <div id="service-status" data-state="checking">
-      <p class="state-line" role="status" aria-live="polite"><span class="state">state: checking</span></p>
-      <p class="facts">engine: none · busy: no</p>
-      <p class="facts" id="asr-state">transcription: checking</p>
-      <p class="status-error" hidden></p>
-      <progress class="load-progress" aria-label="Model load in progress" hidden></progress>
+<div id="login-section" class="p-login" hidden>
+  <form id="login-form" class="p-login-card">
+    <span class="p-mark" aria-hidden="true"><svg><use href="#i-mark"/></svg></span>
+    <h1>Leftenant Voice</h1>
+    <p class="p-sub">Speak text in a cloned voice and transcribe recordings.</p>
+    <div id="login-banner" class="p-banner" data-kind="error" role="alert" hidden>
+      <svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg>
+      <div id="login-banner-text"></div>
     </div>
-  </section>
+    <label class="p-label" for="login-password">Password</label>
+    <input id="login-password" class="p-input" type="password" autocomplete="current-password" spellcheck="false">
+    <button id="login-button" class="p-btn p-btn-primary p-btn-block" type="submit"><span>Log in</span></button>
+    <p class="p-login-foot">Scripts use API tokens from Settings instead of the password.</p>
+  </form>
+</div>
 
-  <section>
-    <h2>Settings</h2>
-    <form id="token-form">
-      <label for="token-input">Hugging Face token</label>
-      <input id="token-input" type="password" autocomplete="off" spellcheck="false">
-      <div class="actions">
-        <button type="submit">Save</button>
-        <button type="button" class="clear-token">Clear</button>
-      </div>
-    </form>
-    <p id="token-state" aria-live="polite">no token</p>
-    <p class="hint">The token is kept in memory by the service for this container session only. It is never written to disk. Enter it again after the container restarts.</p>
-
-    <h3>API tokens</h3>
-    <form id="api-token-form">
-      <label for="api-token-name">Token name</label>
-      <input id="api-token-name" type="text" pattern="[a-z0-9][a-z0-9_\-]{0,39}" autocomplete="off" spellcheck="false">
-      <p class="hint">Lowercase letters, digits, hyphen and underscore. Up to 40 characters.</p>
-      <div class="actions">
-        <button id="api-token-create" type="submit">Create token</button>
-      </div>
-    </form>
-    <p id="api-token-new" class="notice" hidden>New token, shown once: <code></code></p>
-    <ul id="api-token-list"></ul>
-
-    <h3>Models</h3>
-    <p class="hint">Each model's cache under the Hugging Face folder. Deleting one frees its size; the next use downloads it again.</p>
-    <ul id="model-list"></ul>
-    <p id="models-status" class="hint" aria-live="polite"></p>
-    <p id="models-error" class="status-error" role="alert" hidden></p>
-  </section>
-
-  <section>
-    <h2>Voice</h2>
-    <div class="picker">
-      <div>
-        <label for="engine-select">Engine</label>
-        <select id="engine-select"></select>
-      </div>
-      <div>
-        <label for="voice-select">Voice</label>
-        <select id="voice-select"></select>
-      </div>
+<div id="app-section" class="p-app" hidden>
+  <aside class="p-side"><div class="p-side-inner">
+    <div class="p-brand">
+      <span class="p-mark" aria-hidden="true"><svg><use href="#i-mark"/></svg></span>
+      <span class="p-brand-name">Leftenant Voice</span>
     </div>
+    <div class="p-group" id="ops-label">Operations</div>
+    <nav class="p-nav" aria-labelledby="ops-label">
+      <a href="#/render" data-nav="render"><svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg>Voice rendering</a>
+      <a href="#/transcribe" data-nav="transcribe"><svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg>Transcription</a>
+    </nav>
+    <nav class="p-nav p-side-foot" aria-label="Settings">
+      <a href="#/settings" data-nav="settings"><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg>Settings</a>
+    </nav>
+  </div></aside>
 
-    <h3>Clone a voice from a reference recording</h3>
-    <form id="upload-form">
-      <label for="upload-name">Name</label>
-      <input id="upload-name" type="text" pattern="[a-z0-9][a-z0-9_\-]{0,39}" autocomplete="off" spellcheck="false">
-      <p class="hint">Lowercase letters, digits, hyphen and underscore. Up to 40 characters.</p>
-      <label for="upload-text">Transcript</label>
-      <textarea id="upload-text" maxlength="1000"></textarea>
-      <label for="upload-file">Reference WAV</label>
-      <input id="upload-file" type="file" accept=".wav,audio/wav">
-      <p class="hint">Mono or stereo WAV, 3 to 30 seconds, at most 25 MB.</p>
-      <div class="actions">
-        <button type="submit">Upload and clone</button>
+  <div class="p-main">
+    <header class="p-top">
+      <span class="p-top-brand">
+        <span class="p-mark" aria-hidden="true"><svg><use href="#i-mark"/></svg></span>
+        <span class="p-brand-name">Leftenant Voice</span>
+      </span>
+      <div class="p-crumb">
+        <span id="crumb-group">Operations</span><span id="crumb-sep" aria-hidden="true">/</span><b id="crumb-title">Voice rendering</b>
       </div>
-    </form>
-
-    <h3>Cloned voices</h3>
-    <ul id="uploaded-list"></ul>
-  </section>
-
-  <section>
-    <h2>Generate</h2>
-    <form id="speak-form">
-      <label for="speak-text">Text to speak</label>
-      <textarea id="speak-text"></textarea>
-      <div class="actions">
-        <button id="speak-button" type="submit" disabled>Generate MP3</button>
-      </div>
-    </form>
-    <audio id="player" controls hidden></audio>
-    <a class="download" download="speech.mp3" hidden>Download speech.mp3</a>
-  </section>
-
-  <section>
-    <h2>Transcribe</h2>
-    <form id="transcribe-form">
-      <label for="transcribe-file">Recording</label>
-      <input id="transcribe-file" type="file" accept=".mp3,.m4a,.wav,.flac,.ogg">
-      <p class="hint">MP3, M4A, WAV, FLAC or OGG, at most 250 MB and one hour.</p>
-      <div class="picker">
-        <div>
-          <label for="transcribe-language">Language</label>
-          <select id="transcribe-language">
-            <option value="as spoken">as spoken</option>
-            <option value="Czech">Czech</option>
-            <option value="Dutch">Dutch</option>
-            <option value="English">English</option>
-            <option value="French">French</option>
-            <option value="German">German</option>
-            <option value="Hindi">Hindi</option>
-            <option value="Italian">Italian</option>
-            <option value="Korean">Korean</option>
-            <option value="Polish">Polish</option>
-            <option value="Portuguese">Portuguese</option>
-            <option value="Russian">Russian</option>
-            <option value="Slovak">Slovak</option>
-            <option value="Spanish">Spanish</option>
-            <option value="Bulgarian">Bulgarian</option>
-            <option value="Croatian">Croatian</option>
-            <option value="Danish">Danish</option>
-            <option value="Estonian">Estonian</option>
-            <option value="Finnish">Finnish</option>
-            <option value="Hungarian">Hungarian</option>
-            <option value="Japanese">Japanese</option>
-            <option value="Latvian">Latvian</option>
-            <option value="Lithuanian">Lithuanian</option>
-            <option value="Romanian">Romanian</option>
-            <option value="Slovenian">Slovenian</option>
-            <option value="Swedish">Swedish</option>
-            <option value="Thai">Thai</option>
-            <option value="Turkish">Turkish</option>
-            <option value="Ukrainian">Ukrainian</option>
-            <option value="Arabic">Arabic</option>
-            <option value="Bengali">Bengali</option>
-            <option value="Chinese Mandarin">Chinese Mandarin</option>
-            <option value="Greek">Greek</option>
-            <option value="Hebrew">Hebrew</option>
-            <option value="Indonesian">Indonesian</option>
-            <option value="Maltese">Maltese</option>
-            <option value="Marathi">Marathi</option>
-            <option value="Tagalog">Tagalog</option>
-            <option value="Tamil">Tamil</option>
-            <option value="Telugu">Telugu</option>
-            <option value="Vietnamese">Vietnamese</option>
-          </select>
+      <div class="p-top-right">
+        <div class="p-badges">
+          <span class="p-badge" id="engine-badge" data-badge="speech" data-status="idle"><i></i><span>Speech</span><b>checking</b></span>
+          <span class="p-badge" id="asr-badge" data-badge="asr" data-status="idle"><i></i><span>Transcription</span><b>checking</b></span>
         </div>
-        <div>
-          <label for="transcribe-wording">Wording</label>
-          <select id="transcribe-wording">
-            <option value="readable">readable</option>
-            <option value="verbatim">verbatim</option>
-          </select>
+        <div class="p-account-wrap">
+          <button class="p-account" id="account-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" aria-label="Account">
+            <span class="p-avatar"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-user"/></svg></span>
+            <span class="p-account-name">Owner</span>
+            <svg class="ic ic-sm" aria-hidden="true"><use href="#i-chev"/></svg>
+          </button>
+          <div class="p-menu" id="account-menu" role="menu" aria-label="Account" hidden>
+            <div class="p-menu-head"><b>Owner</b><span>Signed in with the service password</span></div>
+            <button class="p-menu-item" id="logout-button" type="button" role="menuitem"><svg class="ic" aria-hidden="true"><use href="#i-logout"/></svg>Log out</button>
+          </div>
         </div>
       </div>
-      <label for="transcribe-context">Context terms</label>
-      <input id="transcribe-context" type="text" maxlength="500" autocomplete="off" spellcheck="false">
-      <p class="hint">Names and terms the recording uses. Optional.</p>
-      <div class="actions">
-        <button id="transcribe-button" type="submit" disabled>Transcribe</button>
+    </header>
+
+    <main class="p-content">
+      <div class="p-badges p-badges-phone">
+        <span class="p-badge" data-badge="speech" data-status="idle"><i></i><span>Speech</span><b>checking</b></span>
+        <span class="p-badge" data-badge="asr" data-status="idle"><i></i><span>Transcription</span><b>checking</b></span>
       </div>
-    </form>
-    <p id="transcribe-state" class="hint" aria-live="polite">transcription: checking</p>
-    <p id="transcribe-busy" class="hint" role="status" hidden>Transcribing. This can take minutes.</p>
-    <p id="transcribe-error" class="status-error" role="alert" hidden></p>
-    <div id="transcribe-output" hidden>
-      <h3>Transcript</h3>
-      <textarea id="transcribe-result" readonly aria-label="Transcript"></textarea>
-    </div>
-  </section>
+
+      <section id="page-render" hidden>
+        <header class="p-head">
+          <h1>Voice rendering</h1>
+          <p>Write a text, choose a cloned voice and get it back as an MP3.</p>
+        </header>
+        <div class="p-grid">
+          <form class="p-card" id="speak-form">
+            <div class="p-card-body">
+              <div class="p-field-head">
+                <label class="p-label" for="speak-text">Text</label>
+                <span class="p-count" id="speak-count">0 characters</span>
+              </div>
+              <textarea id="speak-text" class="p-textarea" placeholder="Brothers, we stand upon the wall and we do not yield."></textarea>
+              <div class="p-block">
+                <div class="p-label" id="voice-label">Voice</div>
+                <div class="p-voices" id="voice-cards" role="radiogroup" aria-labelledby="voice-label"></div>
+              </div>
+              <div class="p-block">
+                <div class="p-label" id="engine-label">Engine</div>
+                <div class="p-seg" id="engine-seg" role="radiogroup" aria-labelledby="engine-label"></div>
+                <p class="p-hint" id="engine-hint" hidden></p>
+              </div>
+            </div>
+            <div class="p-card-foot">
+              <p class="p-out" id="speak-outcome" role="status" aria-live="polite"></p>
+              <button class="p-btn p-btn-primary" id="speak-button" type="submit" data-busy="Rendering…" disabled>
+                <svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg><span>Render</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="p-col">
+            <div class="p-card" id="render-result" data-state="empty">
+              <div class="p-card-body">
+                <div class="p-card-head">
+                  <h2 class="p-card-title" tabindex="-1">Result</h2>
+                  <span class="p-chip" data-when="done">speech.mp3</span>
+                </div>
+                <div class="p-empty" data-when="empty">
+                  <span class="p-empty-tile"><svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg></span>
+                  <strong>Your MP3 appears here</strong>
+                  <span>Render a text to hear it in the chosen voice.</span>
+                </div>
+                <div class="p-running" data-when="running">
+                  <div class="p-run-line"><strong id="render-running-voice"></strong><span class="p-muted" id="render-running-engine"></span></div>
+                  <div class="p-progress" role="progressbar" aria-label="Rendering"></div>
+                  <p class="p-muted">The MP3 plays here when it is ready; a longer text takes longer.</p>
+                </div>
+                <div data-when="done">
+                  <div class="p-player">
+                    <button class="p-play" id="play-button" type="button" aria-label="Play">
+                      <svg class="i-play" aria-hidden="true"><use href="#i-play"/></svg><svg class="i-pause" aria-hidden="true"><use href="#i-pause"/></svg>
+                    </button>
+                    <div class="p-wave" id="wave" aria-hidden="true"></div>
+                    <span class="p-time" id="play-time">0:00 / 0:00</span>
+                    <audio id="player" preload="auto"></audio>
+                  </div>
+                  <div class="p-result-foot">
+                    <span class="p-muted" id="result-facts"></span>
+                    <a class="p-btn" id="download" download="speech.mp3"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>Download MP3</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-card" id="recent">
+              <div class="p-card-body">
+                <div class="p-card-head">
+                  <h2 class="p-card-title">This session</h2>
+                  <span class="p-muted" id="recent-count" hidden></span>
+                </div>
+                <p class="p-muted" id="recent-empty">Renders from this session appear here to play again or download.</p>
+                <ul class="p-list" id="recent-list" aria-label="Renders of this session" hidden></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-transcribe" hidden>
+        <header class="p-head">
+          <h1>Transcription</h1>
+          <p>Turn a recording into text, in the language it is spoken in or one you choose.</p>
+        </header>
+        <div class="p-stack">
+          <form class="p-card" id="transcribe-form">
+            <div class="p-card-body">
+              <div class="p-label" id="recording-label">Recording</div>
+              <div class="p-drop" id="drop">
+                <span class="p-drop-icon"><svg class="ic" aria-hidden="true"><use href="#i-up"/></svg></span>
+                <strong>Drop an MP3 or M4A recording here</strong>
+                <span>or <button type="button" class="p-link" data-pick="transcribe-file">choose a file</button></span>
+                <span class="p-hint">WAV, FLAC and OGG work too · up to 250 MB and one hour</span>
+              </div>
+              <input id="transcribe-file" class="p-file-input" type="file" accept=".mp3,.m4a,.wav,.flac,.ogg" aria-labelledby="recording-label">
+              <div class="p-file" id="transcribe-chosen" hidden>
+                <span class="p-file-icon"><svg class="ic" aria-hidden="true"><use href="#i-note"/></svg></span>
+                <div class="p-li-main"><div class="p-li-title" id="transcribe-file-name"></div><div class="p-li-meta" id="transcribe-file-facts"></div></div>
+                <button type="button" class="p-link" data-pick="transcribe-file">Replace file</button>
+                <button class="p-icon-btn" type="button" id="transcribe-unpick" aria-label="Remove the recording"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+              </div>
+              <div class="p-two">
+                <div>
+                  <label class="p-label" for="transcribe-language">Language</label>
+                  <div class="p-select-wrap">
+                    <select id="transcribe-language" class="p-select">
+                    <option value="as spoken">As spoken (detect)</option>
+                    <option>Arabic</option>
+                    <option>Bengali</option>
+                    <option>Bulgarian</option>
+                    <option>Chinese Mandarin</option>
+                    <option>Croatian</option>
+                    <option>Czech</option>
+                    <option>Danish</option>
+                    <option>Dutch</option>
+                    <option>English</option>
+                    <option>Estonian</option>
+                    <option>Finnish</option>
+                    <option>French</option>
+                    <option>German</option>
+                    <option>Greek</option>
+                    <option>Hebrew</option>
+                    <option>Hindi</option>
+                    <option>Hungarian</option>
+                    <option>Indonesian</option>
+                    <option>Italian</option>
+                    <option>Japanese</option>
+                    <option>Korean</option>
+                    <option>Latvian</option>
+                    <option>Lithuanian</option>
+                    <option>Maltese</option>
+                    <option>Marathi</option>
+                    <option>Polish</option>
+                    <option>Portuguese</option>
+                    <option>Romanian</option>
+                    <option>Russian</option>
+                    <option>Slovak</option>
+                    <option>Slovenian</option>
+                    <option>Spanish</option>
+                    <option>Swedish</option>
+                    <option>Tagalog</option>
+                    <option>Tamil</option>
+                    <option>Telugu</option>
+                    <option>Thai</option>
+                    <option>Turkish</option>
+                    <option>Ukrainian</option>
+                    <option>Vietnamese</option>
+                    </select>
+                    <svg class="ic ic-sm" aria-hidden="true"><use href="#i-chev"/></svg>
+                  </div>
+                  <p class="p-hint">40 languages, or detected from the speech.</p>
+                </div>
+                <div>
+                  <div class="p-label" id="wording-label">Wording</div>
+                  <div class="p-seg" role="radiogroup" aria-labelledby="wording-label">
+                    <label><input type="radio" name="wording" value="readable" checked>Readable</label>
+                    <label><input type="radio" name="wording" value="verbatim">Verbatim</label>
+                  </div>
+                  <p class="p-hint">Readable leaves out fillers and repeated words.</p>
+                </div>
+              </div>
+              <div class="p-block">
+                <label class="p-label" for="transcribe-context">Names and terms<span class="p-optional">optional</span></label>
+                <input id="transcribe-context" class="p-input" maxlength="500" autocomplete="off" spellcheck="false" placeholder="Helsreach, Grimaldus, Armageddon">
+                <p class="p-hint">Helps the model spell the names the recording uses. Up to 500 characters.</p>
+              </div>
+            </div>
+            <div class="p-card-foot">
+              <p class="p-out" id="transcribe-outcome" role="status" aria-live="polite" data-idle="The first transcription after a restart waits for the model to load."></p>
+              <button class="p-btn p-btn-primary" id="transcribe-button" type="submit" data-busy="Transcribing…" disabled>
+                <svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg><span>Transcribe</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="p-card" id="transcript" data-state="empty">
+            <div class="p-card-body">
+              <div class="p-card-head p-wrap">
+                <div class="p-title-group">
+                  <h2 class="p-card-title" tabindex="-1">Transcript</h2>
+                  <div class="p-chips" id="transcript-chips" data-when="done"></div>
+                </div>
+                <div class="p-actions" data-when="done">
+                  <button class="p-btn" type="button" id="transcript-copy"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                  <a class="p-btn" id="transcript-download"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>Download .txt</a>
+                </div>
+              </div>
+              <p class="p-muted" data-when="empty">The transcript appears here when a recording is transcribed; an hour of speech takes a few minutes.</p>
+              <div data-when="running">
+                <ol class="p-steps" id="asr-steps">
+                  <li id="step-upload"><span class="p-step-dot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Uploaded</strong><span id="step-upload-facts"></span></div></li>
+                  <li id="step-download" hidden><span class="p-step-dot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Downloading the model weights</strong><span>The weights are not in the cache; the download happens once.</span></div></li>
+                  <li id="step-load" hidden><span class="p-step-dot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Loading the transcription model</strong><span>Its first use after a restart takes a few minutes.</span></div></li>
+                  <li id="step-transcribe"><span class="p-step-dot"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><div><strong>Transcribing</strong><span>The text appears here when it is done.</span></div></li>
+                </ol>
+                <div class="p-progress" role="progressbar" aria-label="Transcribing"></div>
+              </div>
+              <div class="p-transcript" id="transcribe-result" data-when="done"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-settings" hidden>
+        <header class="p-head">
+          <h1>Settings</h1>
+          <p>Access, voices and model storage for this service.</p>
+        </header>
+        <nav class="p-tabs" aria-label="Settings sections">
+          <a href="#/settings/hf" data-tab="hf">Hugging Face</a>
+          <a href="#/settings/api" data-tab="api">API tokens</a>
+          <a href="#/settings/voices" data-tab="voices">Voices</a>
+          <a href="#/settings/models" data-tab="models">Models</a>
+        </nav>
+
+        <section class="p-set" id="set-hf">
+          <div class="p-set-desc">
+            <h2>Hugging Face token</h2>
+            <p>Lets the service download the model weights. Save checks the token with Hugging Face; the service keeps it in memory until it restarts and never writes it to disk.</p>
+          </div>
+          <form class="p-card" id="token-form">
+            <div class="p-card-body">
+              <div class="p-kv">
+                <span>Status</span>
+                <span class="p-badge" id="token-state" data-status="idle"><i></i>Not set</span>
+              </div>
+              <label class="p-label" for="token-input">Token</label>
+              <input id="token-input" class="p-input p-mono" type="password" autocomplete="off" spellcheck="false" placeholder="hf_…">
+            </div>
+            <div class="p-card-foot">
+              <p class="p-out" id="token-outcome" role="status" aria-live="polite" data-idle="A token with read access is enough."></p>
+              <button class="p-btn p-btn-ghost" id="token-clear" type="button">Clear</button>
+              <button class="p-btn" id="token-save" type="submit">Save</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="p-set" id="set-api" hidden>
+          <div class="p-set-desc">
+            <h2>API tokens</h2>
+            <p>For scripts and other services: send <code>Authorization: Bearer vtts_…</code> to <code>/speak</code>, <code>/transcribe</code> and <code>/voices</code>.</p>
+          </div>
+          <form class="p-card" id="api-token-form">
+            <div class="p-card-body">
+              <div class="p-banner" id="api-token-new" hidden>
+                <svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>
+                <div class="p-banner-body">
+                  <div><b id="api-token-new-name"></b> Copy it now: it is shown only once.</div>
+                  <div class="p-inline">
+                    <input id="api-token-value" class="p-input p-mono" type="text" readonly aria-label="New API token">
+                    <button class="p-btn" type="button" id="api-token-copy"><svg class="ic" aria-hidden="true"><use href="#i-copy"/></svg><span>Copy</span></button>
+                  </div>
+                </div>
+              </div>
+              <div class="p-empty" id="api-token-empty">
+                <strong>No API tokens yet</strong>
+                <span>Create one for each script or service, so each can be revoked alone.</span>
+              </div>
+              <div class="p-table" role="table" aria-label="API tokens" id="api-token-table" hidden>
+                <div class="p-tr p-th" role="row"><span role="columnheader">Name</span><span role="columnheader">Prefix</span><span role="columnheader">Created</span><span role="columnheader"><span class="p-sr">Actions</span></span></div>
+                <div id="api-token-list" role="rowgroup"></div>
+              </div>
+              <p class="p-out" id="api-token-list-outcome" role="status" aria-live="polite"></p>
+            </div>
+            <div class="p-card-foot">
+              <div class="p-inline p-grow">
+                <label class="p-sr" for="api-token-name">Token name</label>
+                <input id="api-token-name" class="p-input" autocomplete="off" spellcheck="false" placeholder="New token name">
+                <button class="p-btn" id="api-token-create" type="submit">Create token</button>
+              </div>
+              <p class="p-out" id="api-token-outcome" role="status" aria-live="polite" data-idle="Lowercase letters, digits, hyphen and underscore; up to 40 characters."></p>
+            </div>
+          </form>
+        </section>
+
+        <section class="p-set" id="set-voices" hidden>
+          <div class="p-set-desc">
+            <h2>Voices</h2>
+            <p>Clone a voice from a clean WAV recording of 3 to 30 seconds and its exact transcript. The bundled voice cannot be deleted.</p>
+          </div>
+          <form class="p-card" id="upload-form">
+            <div class="p-card-body">
+              <ul class="p-list p-voice-list" id="voice-list" aria-label="Voices"></ul>
+              <p class="p-out" id="voice-list-outcome" role="status" aria-live="polite"></p>
+            </div>
+            <div class="p-card-section">
+              <h3 class="p-subhead">Clone a voice</h3>
+              <div class="p-form-grid">
+                <div>
+                  <label class="p-label" for="upload-name">Name</label>
+                  <input id="upload-name" class="p-input" autocomplete="off" spellcheck="false" placeholder="kingdurin">
+                </div>
+                <div>
+                  <span class="p-label" id="upload-file-label">Reference WAV</span>
+                  <div class="p-wav">
+                    <button class="p-btn p-btn-sm" type="button" data-pick="upload-file"><svg class="ic ic-sm" aria-hidden="true"><use href="#i-up"/></svg>Choose WAV</button>
+                    <span class="p-wav-name" id="upload-file-name">No file chosen</span>
+                  </div>
+                  <input id="upload-file" class="p-file-input" type="file" accept=".wav,audio/wav" aria-labelledby="upload-file-label">
+                </div>
+              </div>
+              <label class="p-label p-label-gap" for="upload-text">Transcript of the reference</label>
+              <textarea id="upload-text" class="p-input" rows="3" maxlength="1000" placeholder="What the recording says, word for word"></textarea>
+              <p class="p-hint">WAV, 3 to 30 seconds, at most 25 MB. The name takes lowercase letters, digits, hyphen and underscore.</p>
+            </div>
+            <div class="p-card-foot">
+              <p class="p-out" id="upload-outcome" role="status" aria-live="polite" data-idle="The voice is ready to use as soon as it is cloned."></p>
+              <button class="p-btn" id="upload-button" type="submit">Clone voice</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="p-set" id="set-models" hidden>
+          <div class="p-set-desc">
+            <h2>Models</h2>
+            <p>Each model's cache in the Hugging Face folder. Delete frees the disk; the next use downloads the weights again.</p>
+          </div>
+          <div class="p-card">
+            <div class="p-card-body">
+              <ul class="p-list" id="model-list" aria-label="Models"></ul>
+              <p class="p-out" id="model-list-outcome" role="status" aria-live="polite"></p>
+            </div>
+            <div class="p-card-foot">
+              <p class="p-out" id="models-total"></p>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <nav class="p-bottom" aria-label="Pages">
+      <a href="#/render" data-nav="render"><span><svg class="ic" aria-hidden="true"><use href="#i-wave"/></svg></span><span>Voice rendering</span></a>
+      <a href="#/transcribe" data-nav="transcribe"><span><svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg></span><span>Transcription</span></a>
+      <a href="#/settings" data-nav="settings"><span><svg class="ic" aria-hidden="true"><use href="#i-gear"/></svg></span><span>Settings</span></a>
+    </nav>
   </div>
-
-  <p id="message" role="alert"></p>
-</main>
-
-<script>
-const ui = {
-  status: document.getElementById("service-status"),
-  statusState: document.querySelector("#service-status .state"),
-  statusFacts: document.querySelector("#service-status .facts"),
-  statusAsr: document.getElementById("asr-state"),
-  statusError: document.querySelector("#service-status .status-error"),
-  statusProgress: document.querySelector("#service-status .load-progress"),
-  tokenForm: document.getElementById("token-form"),
-  tokenClear: document.querySelector("#token-form .clear-token"),
-  tokenInput: document.getElementById("token-input"),
-  tokenState: document.getElementById("token-state"),
-  engineSelect: document.getElementById("engine-select"),
-  voiceSelect: document.getElementById("voice-select"),
-  uploadForm: document.getElementById("upload-form"),
-  uploadName: document.getElementById("upload-name"),
-  uploadText: document.getElementById("upload-text"),
-  uploadFile: document.getElementById("upload-file"),
-  uploadedList: document.getElementById("uploaded-list"),
-  speakForm: document.getElementById("speak-form"),
-  speakText: document.getElementById("speak-text"),
-  speakButton: document.getElementById("speak-button"),
-  player: document.getElementById("player"),
-  download: document.querySelector(".download"),
-  loginSection: document.getElementById("login-section"),
-  loginForm: document.getElementById("login-form"),
-  loginPassword: document.getElementById("login-password"),
-  loginButton: document.getElementById("login-button"),
-  logoutButton: document.getElementById("logout-button"),
-  appSection: document.getElementById("app-section"),
-  apiTokenForm: document.getElementById("api-token-form"),
-  apiTokenName: document.getElementById("api-token-name"),
-  apiTokenCreate: document.getElementById("api-token-create"),
-  apiTokenNew: document.getElementById("api-token-new"),
-  apiTokenList: document.getElementById("api-token-list"),
-  modelList: document.getElementById("model-list"),
-  modelsStatus: document.getElementById("models-status"),
-  modelsError: document.getElementById("models-error"),
-  transcribeForm: document.getElementById("transcribe-form"),
-  transcribeFile: document.getElementById("transcribe-file"),
-  transcribeLanguage: document.getElementById("transcribe-language"),
-  transcribeWording: document.getElementById("transcribe-wording"),
-  transcribeContext: document.getElementById("transcribe-context"),
-  transcribeButton: document.getElementById("transcribe-button"),
-  transcribeState: document.getElementById("transcribe-state"),
-  transcribeBusy: document.getElementById("transcribe-busy"),
-  transcribeError: document.getElementById("transcribe-error"),
-  transcribeOutput: document.getElementById("transcribe-output"),
-  transcribeResult: document.getElementById("transcribe-result"),
-  message: document.getElementById("message"),
-};
-
-let voices = {};
-let uploaded = [];
-let defaultEngine = null;
-let serverBusy = false;
-let speaking = false;
-let transcribing = false;
-let asrState = "checking";
-let audioUrl = null;
-let healthTimer = null;
-
-function setText(element, text) {
-  if (element.textContent !== text) element.textContent = text;
-}
-
-function showMessage(text) {
-  ui.message.textContent = text;
-}
-
-function clearMessage() {
-  ui.message.textContent = "";
-}
-
-function stopPolling() {
-  if (healthTimer !== null) {
-    clearInterval(healthTimer);
-    healthTimer = null;
-  }
-}
-
-function showLogin() {
-  stopPolling();
-  ui.loginSection.hidden = false;
-  ui.appSection.hidden = true;
-  ui.logoutButton.hidden = true;
-  ui.apiTokenNew.hidden = true;
-  ui.apiTokenNew.querySelector("code").textContent = "";
-}
-
-function showApp() {
-  ui.loginSection.hidden = true;
-  ui.appSection.hidden = false;
-  ui.logoutButton.hidden = false;
-  loadSettings();
-  loadVoices();
-  loadTokens();
-  loadModels();
-  pollHealth();
-  if (healthTimer === null) healthTimer = setInterval(pollHealth, 2000);
-}
-
-async function checkSession() {
-  try {
-    const response = await fetch("/session");
-    if (response.ok && (await response.json()).authenticated) {
-      showApp();
-      return;
-    }
-  } catch {
-    // the service is not reachable; the login form is the screen to show
-  }
-  showLogin();
-}
-
-async function loadTokens() {
-  try {
-    const response = await fetch("/tokens");
-    if (!response.ok) throw new Error(await errorDetail(response));
-    fillTokens((await response.json()).tokens || []);
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
-
-function fillTokens(list) {
-  ui.apiTokenList.replaceChildren();
-  if (list.length === 0) {
-    const item = document.createElement("li");
-    item.className = "empty";
-    item.textContent = "No API tokens yet.";
-    ui.apiTokenList.append(item);
-    return;
-  }
-  for (const token of list) {
-    const item = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = token.name + " · " + token.prefix + " · " + token.created;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Revoke";
-    button.addEventListener("click", () => revokeToken(token.name));
-    item.append(label, button);
-    ui.apiTokenList.append(item);
-  }
-}
-
-async function revokeToken(name) {
-  clearMessage();
-  try {
-    const response = await fetch("/tokens/" + encodeURIComponent(name), { method: "DELETE" });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    await loadTokens();
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
-
-function formatBytes(bytes) {
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return (unit === 0 ? String(value) : value.toFixed(1)) + " " + units[unit];
-}
-
-function fillModels(list) {
-  ui.modelList.replaceChildren();
-  for (const model of list) {
-    const item = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = model.name + " · " + model.model + " · " + formatBytes(model.bytes) +
-      " · " + (model.loaded ? "loaded" : "not loaded");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Delete";
-    button.addEventListener("click", () => confirmDeleteModel(model.name, button));
-    item.append(label, button);
-    ui.modelList.append(item);
-  }
-}
-
-async function loadModels() {
-  try {
-    const response = await fetch("/models");
-    if (!response.ok) throw new Error(await errorDetail(response));
-    fillModels((await response.json()).models || []);
-  } catch (error) {
-    showModelsError(error.message);
-  }
-}
-
-function showModelsError(text) {
-  ui.modelsError.textContent = text;
-  ui.modelsError.hidden = !text;
-}
-
-function confirmDeleteModel(name, button) {
-  if (button.dataset.armed !== "yes") {
-    button.dataset.armed = "yes";
-    button.textContent = "Confirm delete";
-    setTimeout(() => {
-      delete button.dataset.armed;
-      button.textContent = "Delete";
-    }, 5000);
-    return;
-  }
-  deleteModel(name, button);
-}
-
-async function deleteModel(name, button) {
-  button.disabled = true;
-  showModelsError("");
-  try {
-    const response = await fetch("/models/" + encodeURIComponent(name), { method: "DELETE" });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    const result = await response.json();
-    ui.modelsStatus.textContent = "Deleted " + result.deleted + "; " + formatBytes(result.freed_bytes) +
-      " freed. The next use downloads the model again.";
-    await loadModels();
-  } catch (error) {
-    button.disabled = false;
-    button.textContent = "Delete";
-    delete button.dataset.armed;
-    showModelsError(error.message);
-  }
-}
-
-async function errorDetail(response) {
-  let body = null;
-  try {
-    body = await response.json();
-  } catch {
-    // the body is not JSON; the status code is all there is
-  }
-  const detail = body && body.detail;
-  if (typeof detail === "string") return detail;
-  if (Array.isArray(detail)) {
-    return detail.map((item) => (item && item.msg ? item.msg : JSON.stringify(item))).join("; ");
-  }
-  return "the request failed with HTTP " + response.status;
-}
-
-function updateSpeakButton() {
-  ui.speakButton.disabled = serverBusy || speaking || ui.speakText.value.trim() === "";
-}
-
-function fillVoices() {
-  const names = voices[ui.engineSelect.value] || [];
-  const previous = ui.voiceSelect.value;
-  ui.voiceSelect.replaceChildren(...names.map((name) => new Option(name, name)));
-  if (names.includes(previous)) ui.voiceSelect.value = previous;
-}
-
-function fillEngines() {
-  const names = Object.keys(voices);
-  const previous = ui.engineSelect.value;
-  ui.engineSelect.replaceChildren(...names.map((name) => new Option(name, name)));
-  if (names.includes(previous)) ui.engineSelect.value = previous;
-  else if (defaultEngine && names.includes(defaultEngine)) ui.engineSelect.value = defaultEngine;
-  fillVoices();
-}
-
-function fillUploaded() {
-  ui.uploadedList.replaceChildren();
-  if (uploaded.length === 0) {
-    const item = document.createElement("li");
-    item.className = "empty";
-    item.textContent = "No cloned voices yet.";
-    ui.uploadedList.append(item);
-    return;
-  }
-  for (const name of uploaded) {
-    const item = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = name;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Delete";
-    button.addEventListener("click", () => deleteVoice(name));
-    item.append(label, button);
-    ui.uploadedList.append(item);
-  }
-}
-
-async function loadVoices() {
-  try {
-    const response = await fetch("/voices");
-    if (!response.ok) throw new Error(await errorDetail(response));
-    const data = await response.json();
-    voices = data.voices || {};
-    uploaded = data.uploaded || [];
-    fillEngines();
-    fillUploaded();
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
-
-async function loadSettings() {
-  try {
-    const response = await fetch("/settings");
-    if (!response.ok) throw new Error(await errorDetail(response));
-    const settings = await response.json();
-    defaultEngine = settings.default_engine || null;
-    ui.tokenState.textContent = settings.hf_token_set ? "token is set" : "no token";
-    if (settings.max_text_chars) ui.speakText.maxLength = settings.max_text_chars;
-    if (defaultEngine && voices[defaultEngine]) {
-      ui.engineSelect.value = defaultEngine;
-      fillVoices();
-    }
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
-
-async function setToken(token) {
-  try {
-    const response = await fetch("/settings/hf-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    const result = await response.json();
-    ui.tokenState.textContent = result.hf_token_set ? "token is set" : "no token";
-    ui.tokenInput.value = "";
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
-
-async function deleteVoice(name) {
-  clearMessage();
-  try {
-    const response = await fetch("/voices/" + encodeURIComponent(name), { method: "DELETE" });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    await loadVoices();
-  } catch (error) {
-    showMessage(error.message);
-  }
-}
-
-function showTranscribeError(text) {
-  ui.transcribeError.textContent = text;
-  ui.transcribeError.hidden = !text;
-}
-
-function updateTranscribePanel() {
-  ui.transcribeButton.disabled = transcribing || !["ready", "down", "error"].includes(asrState);
-  setText(ui.transcribeState, "transcription: " + asrState);
-}
-
-function renderHealth(data) {
-  const state = data.state || "unknown";
-  ui.status.dataset.state = state;
-  setText(ui.statusState, "state: " + state);
-  const asr = data.asr || {};
-  asrState = asr.state || "unknown";
-  setText(ui.statusAsr, "transcription: " + asrState);
-  const facts = ["engine: " + (data.engine || "none"), "busy: " + (data.busy ? "yes" : "no")];
-  if (data.seconds_until_unload !== null && data.seconds_until_unload !== undefined) {
-    facts.push("unload in " + data.seconds_until_unload + " s");
-  }
-  setText(ui.statusFacts, facts.join(" · "));
-  const errors = [data.error, asr.error].filter(Boolean);
-  ui.statusError.hidden = errors.length === 0;
-  setText(ui.statusError, errors.join(" "));
-  ui.statusProgress.hidden = !(state === "downloading" || state === "loading" ||
-    asrState === "downloading" || asrState === "loading");
-  serverBusy = Boolean(data.busy);
-  updateSpeakButton();
-  updateTranscribePanel();
-}
-
-async function pollHealth() {
-  try {
-    const response = await fetch("/health", { cache: "no-store" });
-    if (!response.ok) throw new Error("health request failed");
-    renderHealth(await response.json());
-  } catch {
-    ui.status.dataset.state = "unreachable";
-    setText(ui.statusState, "service not reachable");
-    setText(ui.statusFacts, "");
-    asrState = "unknown";
-    setText(ui.statusAsr, "transcription: unknown");
-    ui.statusError.hidden = true;
-    ui.statusProgress.hidden = true;
-    updateTranscribePanel();
-  }
-}
-
-ui.tokenForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  clearMessage();
-  await setToken(ui.tokenInput.value);
-});
-
-ui.tokenClear.addEventListener("click", async () => {
-  clearMessage();
-  await setToken("");
-});
-
-ui.engineSelect.addEventListener("change", fillVoices);
-
-ui.uploadForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  clearMessage();
-  const body = new FormData();
-  body.append("name", ui.uploadName.value.trim());
-  body.append("text", ui.uploadText.value.trim());
-  if (ui.uploadFile.files[0]) body.append("file", ui.uploadFile.files[0]);
-  try {
-    const response = await fetch("/voices", { method: "POST", body });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    ui.uploadForm.reset();
-    await loadVoices();
-  } catch (error) {
-    showMessage(error.message);
-  }
-});
-
-ui.speakForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  clearMessage();
-  const text = ui.speakText.value.trim();
-  if (!text) return;
-  speaking = true;
-  updateSpeakButton();
-  try {
-    const response = await fetch("/speak", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice: ui.voiceSelect.value, engine: ui.engineSelect.value }),
-    });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    const blob = new Blob([await response.arrayBuffer()], { type: "audio/mpeg" });
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    audioUrl = URL.createObjectURL(blob);
-    ui.player.src = audioUrl;
-    ui.player.hidden = false;
-    ui.download.href = audioUrl;
-    ui.download.hidden = false;
-    ui.player.play().catch(() => {});
-  } catch (error) {
-    showMessage(error.message);
-  } finally {
-    speaking = false;
-    updateSpeakButton();
-  }
-});
-
-ui.transcribeForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  showTranscribeError("");
-  ui.transcribeOutput.hidden = true;
-  ui.transcribeResult.value = "";
-  const file = ui.transcribeFile.files[0];
-  if (!file) {
-    showTranscribeError("Choose a recording first.");
-    return;
-  }
-  const body = new FormData();
-  body.append("file", file);
-  body.append("language", ui.transcribeLanguage.value);
-  body.append("wording", ui.transcribeWording.value);
-  const context = ui.transcribeContext.value.trim();
-  if (context) body.append("context", context);
-  transcribing = true;
-  updateTranscribePanel();
-  ui.transcribeBusy.hidden = false;
-  try {
-    const response = await fetch("/transcribe", { method: "POST", body });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    ui.transcribeResult.value = (await response.json()).text || "";
-    ui.transcribeOutput.hidden = false;
-  } catch (error) {
-    showTranscribeError(error.message);
-  } finally {
-    transcribing = false;
-    ui.transcribeBusy.hidden = true;
-    updateTranscribePanel();
-  }
-});
-
-ui.loginForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  clearMessage();
-  try {
-    const response = await fetch("/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: ui.loginPassword.value }),
-    });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    ui.loginPassword.value = "";
-    showApp();
-  } catch (error) {
-    showMessage(error.message);
-  }
-});
-
-ui.logoutButton.addEventListener("click", async () => {
-  clearMessage();
-  try {
-    await fetch("/logout", { method: "POST" });
-  } catch {
-    // the cookie is gone with the service; the login form is still the screen to show
-  }
-  showLogin();
-});
-
-ui.apiTokenForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  clearMessage();
-  ui.apiTokenNew.hidden = true;
-  try {
-    const response = await fetch("/tokens", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: ui.apiTokenName.value.trim() }),
-    });
-    if (!response.ok) throw new Error(await errorDetail(response));
-    const created = await response.json();
-    ui.apiTokenNew.querySelector("code").textContent = created.token;
-    ui.apiTokenNew.hidden = false;
-    ui.apiTokenForm.reset();
-    await loadTokens();
-  } catch (error) {
-    showMessage(error.message);
-  }
-});
-
-ui.speakText.addEventListener("input", updateSpeakButton);
-
-updateSpeakButton();
-updateTranscribePanel();
-checkSession();
-</script>
+</div>
 </body>
 </html>

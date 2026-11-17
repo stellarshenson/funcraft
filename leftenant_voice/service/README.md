@@ -8,7 +8,8 @@ The service is `leftenant-voice-tts-service` and the image is `leftenant-voice-t
 
 | Request | Body | Result |
 |---|---|---|
-| `GET /` | - | the web page, `text/html` |
+| `GET /` | - | the web page, `text/html`; it links its stylesheet and script with `?v=<12 hex digits of the SHA-256 of app.js and app.css>` |
+| `GET /static/app.css`, `GET /static/app.js` | - | the page's stylesheet and script |
 | `POST /login` | `{"password": "..."}` | 200 sets the `sid` cookie; 401 for a wrong or empty password |
 | `POST /logout` | - | `{"authenticated": false}`; ends the session and clears the cookie |
 | `GET /session` | - | `{"authenticated": bool}` |
@@ -21,8 +22,8 @@ The service is `leftenant-voice-tts-service` and the image is `leftenant-voice-t
 | `GET /models` | - | `{"models": [{"name", "model", "path", "cached", "bytes", "loaded"}]}` |
 | `DELETE /models/{name}` | - | `{"deleted": name, "freed_bytes": n}`; the model is unloaded first when it is loaded; 404 unknown, 500 when the delete fails |
 | `GET /voices` | - | `{"voices": {"s2pro": ["grimaldus"], "auk-flash": ["grimaldus"]}, "uploaded": [...]}` |
-| `GET /settings` | - | `{"hf_token_set", "default_engine", "max_text_chars"}`; never the token |
-| `POST /settings/hf-token` | `{"token": "..."}` | `{"hf_token_set"}`; an empty token clears it |
+| `GET /settings` | - | `{"hf_token_set", "hf_account", "default_engine", "max_text_chars"}`; never the token |
+| `POST /settings/hf-token` | `{"token": "..."}` | `{"hf_token_set", "hf_account"}`; asks Hugging Face `whoami` (`/api/whoami-v2`, 10 s timeout per connection attempt and per read, not 10 s in total) and keeps the token only when it is valid; 422 with Hugging Face's reason when it refuses the token, 502 when Hugging Face cannot check it or does not answer within 10 s of a connection attempt or a read, and the saved token stays; an empty token clears it |
 | `POST /voices` | multipart: `name`, `text`, `file` | 201 `{"name"}`; the new voice is usable at once |
 | `DELETE /voices/{name}` | - | `{"deleted": name}`; 404 unknown, 409 bundled |
 
@@ -44,7 +45,7 @@ The service is `leftenant-voice-tts-service` and the image is `leftenant-voice-t
 - `/health` reports the transcriber under `asr`: `available` (its interpreter is installed), `loaded` (its worker runs), `state` (`down`, `downloading`, `loading`, `ready` or `error`) and the error message. A request while the state is `downloading` or `loading` answers 503 with `Retry-After: 30` and never waits for the download; a request that finds `down`, or `error` with no worker running, starts the load again and answers the same way; 503 when the interpreter is missing, 500 when the model cannot load or transcribe
 - The hub stores each weight once as a blob in the shared store `hub/blobs` and links it from `snapshots/<rev>/`; `GET /models` and the freed size resolve those links, so the reported bytes are the real weights - 11.0 GB for S2 Pro and 67.5 GB for the transcription model - not the small links
 - `DELETE /models/{name}` unloads the model first when it is loaded - `s2pro` under the synthesis lock, `nemotron` under the transcription lock - then removes the model directory and every blob in the shared store that no other model links to; a blob both models link to stays until the second is deleted; a failed unload stops before the delete, and an absent cache frees 0 bytes
-- The next use of a deleted model downloads the weights from Hugging Face again, since its blobs are gone with it; the page's Settings section lists the caches and deletes one after a confirmation
+- The next use of a deleted model downloads the weights from Hugging Face again, since its blobs are gone with it; the page's Settings Models tab lists the caches and deletes one after a confirmation
 
 ## Authentication
 
@@ -66,7 +67,7 @@ The service starts only with a password. Without one it exits at start with `no 
 
 | Access | Endpoints |
 |---|---|
-| public | `GET /`, `GET /health`, `POST /login`, `GET /session` |
+| public | `GET /`, `GET /static/*`, `GET /health`, `POST /login`, `GET /session` |
 | session only | `GET /settings`, `POST /settings/hf-token`, `GET/POST /tokens`, `DELETE /tokens/{name}`, `GET /models`, `DELETE /models/{name}`, `POST /logout` |
 | session or Bearer | `POST /speak`, `POST /transcribe`, `GET /voices`, `POST /voices`, `DELETE /voices/{name}` |
 
@@ -74,15 +75,25 @@ The service starts only with a password. Without one it exits at start with `no 
 
 ## Web page
 
-`http://127.0.0.1:8000/` serves one self-contained page that opens on a password form; after login it shows five sections:
+`http://127.0.0.1:8000/` serves the page, titled Leftenant Voice; its stylesheet and script are `/static/app.css` and `/static/app.js`, public like the page, and the page links them with a hash of their content, so a browser never runs an old script after a deploy. Logged out it shows only a password box. After login a sidebar lists the two operations, Voice rendering and Transcription, with Settings apart at its foot; a top bar shows the page title, the speech and transcription states from `GET /health` as badges, polled every 2 s, and the Owner menu with Log out. The speech badge's tooltip names the loaded engine, whether it is busy, the seconds to the idle unload and the load error. On a phone the sidebar becomes a bottom bar of the same three entries and the badges move under the top bar. Each page and Settings tab has its own address, so a reload stays on it:
 
-- Status: polls `GET /health` every 2 s and shows the load state, the resident engine, whether a synthesis is busy, the seconds to the idle unload and the error text, and the transcription model's state with its error; a progress bar without a percentage while either model downloads or loads. It reports only and never starts a load, a download or a wipe
-- Settings: sets or clears the Hugging Face token, and lists the API tokens with their name, prefix and creation date beside a Revoke button and a create form. A new token is displayed once in a `<code>` block and not again. The Hugging Face token is held in the service process's memory for the container session, is never written to disk and is never returned by any endpoint; a restart forgets it. A models list shows each cache's name, Hugging Face id, size and loaded state; Delete asks for a confirmation, reports the freed size, refreshes the list and notes that the next use downloads the model again
-- Voice: engine and voice selection, a reference upload that clones a voice on the spot, and the uploaded voices with a Delete button
-- Generate: speaks the text, plays the MP3 in the page and offers it as `speech.mp3`
-- Transcribe: uploads an MP3, M4A, WAV, FLAC or OGG recording of at most 250 MB and one hour, picks the language (`as spoken` for automatic detection or one of the 40 ASR languages), the wording (`readable` or `verbatim`) and optional context terms, and shows the returned transcript. The button is disabled with its state shown while the model is downloading or loading, and a press when the state is `down` or `error` starts the load
+- `#/render` - Voice rendering: the text with its character count against `MAX_TEXT_CHARS`, the voices of the chosen engine as cards (`GET /voices`, bundled or cloned), the engine switch with a line when the chosen engine is not loaded, is loading or failed, and Render. The result card plays the MP3 in a drawn player and offers it as `speech.mp3`; This session lists the renders since login to play again or download, until a reload or Log out
+- `#/transcribe` - Transcription: a drop zone or file choice for a recording of MP3, M4A, WAV, FLAC or OGG of at most 250 MB and one hour, the language (`as spoken` for automatic detection or one of the 40 ASR languages), the wording (`readable` or `verbatim`), optional names and terms, and the full-width transcript with Copy and Download .txt. Transcribe is enabled once a recording is chosen. While the model is `down`, `downloading` or `loading`, `POST /transcribe` answers 503 with `Retry-After` and starts the load; the page then shows the steps from `/health` - upload, download, load, transcribe - and sends the recording again by itself when the state is `ready`
+- `#/settings/hf`, `#/settings/api`, `#/settings/voices`, `#/settings/models` - Settings, one tab at a time: the Hugging Face token, the API tokens, the voices with Clone a voice, and the model caches
 
-The page keeps neither the password nor a token in browser storage. A wrong password shows the service's message and no section; logout returns to the form.
+The pages behave alike:
+
+- Every button shows its outcome beside it: while the request runs the button is disabled beside a running line, then a short done message or the service's `detail` text appears
+- Any 401 returns to the password box with the service's message; after login the page returns to the page of its address, and no outcome of the old session stays beside a button
+- A login whose session cookie the browser drops, as a browser does when a page of another site frames this one, says so: it asks to open the page from the same site as the page that frames it and links the service in its own tab
+- Hugging Face token: Save asks Hugging Face `whoami` and keeps the token only when it is valid, and the saved state names the account; a refused token shows Hugging Face's reason; Clear removes the token. The token is held in the service process's memory for the container session, is never written to disk and is never returned by any endpoint; a restart forgets it
+- API tokens: Create token shows the new token once, with Copy; the list shows each token's name, prefix and creation date with Delete
+- Voices: the bundled and cloned voices, with Delete on the cloned ones; Clone a voice uploads a reference and clones it on the spot
+- Models: each cache's name, Hugging Face id, size and state (`Loaded`, `Cached` or `Not downloaded`) and the total on disk; Delete reports the freed size and that the next use downloads the model again
+- Delete arms on the first click and acts on a second, separate click within 5 s
+- Light and dark themes follow the system setting; colours and type follow the JupyterLab extension design system, the layout follows the portal mockup approved on 2026-11-17
+
+The page keeps neither the password nor a token in browser storage.
 
 ### Upload limits
 
@@ -150,7 +161,8 @@ curl -s -b cookies.txt -X POST http://127.0.0.1:8000/speak -H 'Content-Type: app
 ```bash
 make -f s2pro.mk install-test   # once: pytest and httpx in .venv-fish
 make test                       # unit suite: engine selection, stubs only; no GPU, no model
-make test-functional            # real service on the GPU queue, then the image; downloads on a fresh volume
+make test-functional            # the page in headless google-chrome against stub engines (tests/functional/test_browser.py),
+                                # then the real service on the GPU queue, then the image; downloads on a fresh volume
 ```
 
 ## GPU memory and speed

@@ -22,11 +22,12 @@ EMPTY_VOLUME = "s2pro-hf-functional-empty"
 # The password the test services boot with; the same value reaches the service and the login helper
 PASSWORD = os.environ.get("S2PRO_PASSWORD", "functional-test-password")
 # The element ids the page must carry; both the native and the container checks read this one list.
-PAGE_IDS = ("service-status", "token-form", "token-input", "token-state", "engine-select",
-            "voice-select", "upload-form", "upload-name", "upload-text", "upload-file",
-            "uploaded-list", "speak-form", "speak-text", "speak-button", "player", "message",
+PAGE_IDS = ("engine-badge", "asr-badge", "token-form", "token-input", "token-state", "engine-seg",
+            "voice-cards", "upload-form", "upload-name", "upload-text", "upload-file",
+            "voice-list", "speak-form", "speak-text", "speak-button", "player",
             "login-form", "login-password", "login-button", "logout-button", "app-section",
-            "api-token-form", "api-token-name", "api-token-create", "api-token-list")
+            "api-token-form", "api-token-name", "api-token-create", "api-token-list",
+            "page-render", "page-transcribe", "page-settings", "transcribe-form", "model-list")
 
 
 def _ffmpeg_dir() -> str | None:

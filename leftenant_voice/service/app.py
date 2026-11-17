@@ -9,7 +9,7 @@ The service starts only with a password. `POST /login` opens an in-memory sessio
 the session opens the page and manages API tokens. The token store is encrypted with the password, so a
 service without it cannot read the tokens.
 
-Access: `GET /`, `GET /health`, `POST /login` and `GET /session` are public; settings, token management and
+Access: `GET /`, `GET /static/*`, `GET /health`, `POST /login` and `GET /session` are public; settings, token management and
 model management need the session cookie; `/speak`, `/transcribe` and `/voices` accept the cookie or
 `Authorization: Bearer <token>`. Every refusal is 401.
 
@@ -34,7 +34,9 @@ support in the model card; the model receives it in the prompt, because its requ
 is loaded. `DELETE /models/{name}` unloads the model when it is loaded and removes its cache, so the next use
 downloads the weights again.
 
-`GET /` serves the page in `service/static`. The page sets the Hugging Face token with `POST /settings/hf-token`;
+`GET /` serves the page in `service/static`, with its stylesheet and script under `/static`, linked with a hash of
+app.js and app.css. The page sets the Hugging Face token with `POST /settings/hf-token`, which asks Hugging Face `whoami` with a
+timeout of 10 s per connection attempt and per read, not 10 s in total, and keeps only a valid token;
 the token lives in this process's memory for the session and reaches both weight downloads, S2 Pro and Nemotron. The page also uploads
 reference recordings as new voices into the writable `VOICES_DIR`, which starts as a copy of `SEED_VOICES_DIR`.
 """
@@ -56,6 +58,7 @@ from pathlib import Path
 
 import asr
 import engine_nemotron
+import httpx
 import models
 import soundfile
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -71,8 +74,9 @@ from fastapi import (
     Security,
     UploadFile,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.security import APIKeyCookie, HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from registry import UnknownEngineError, available_engines, get_engine
 from starlette.background import BackgroundTask
@@ -80,6 +84,9 @@ from starlette.background import BackgroundTask
 from audio_out import write_render
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+ASSET_KEY = hashlib.sha256((STATIC_DIR / "app.js").read_bytes() + (STATIC_DIR / "app.css").read_bytes()).hexdigest()[:12]
+WHOAMI_URL = "https://huggingface.co/api/whoami-v2"
+WHOAMI_SECONDS = 10.0
 VOICES_DIR = Path(os.environ.get("VOICES_DIR", Path(__file__).resolve().parent / "voices"))
 SEED_VOICES_DIR = Path(os.environ["SEED_VOICES_DIR"]) if os.environ.get("SEED_VOICES_DIR") else None
 DEFAULT_ENGINE = os.environ.get("ENGINE", "s2pro")
@@ -104,11 +111,25 @@ token_salt: bytes | None = None
 token_lock = threading.Lock()
 
 hf_token = os.environ.get("HF_TOKEN") or None
+hf_account: str | None = None  # the account `whoami` named for the page's token; None for HF_TOKEN from the environment
 
 
 def _hf_token() -> str | None:
     """The Hugging Face token set through the page, read when an engine loads so a new token is used."""
     return hf_token
+
+
+def whoami(token: str) -> dict:
+    """Hugging Face's account record for `token`, asked with a `WHOAMI_SECONDS` timeout
+    per connection attempt and per read, not in total.
+
+    Raises:
+        httpx.HTTPStatusError: when Hugging Face answers with an error status.
+        httpx.HTTPError: when Hugging Face cannot be reached or does not answer in time.
+    """
+    response = httpx.get(WHOAMI_URL, headers={"Authorization": f"Bearer {token}"}, timeout=WHOAMI_SECONDS)
+    response.raise_for_status()
+    return response.json()
 
 
 def load_password() -> bytes:
@@ -412,6 +433,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Voice TTS", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.post("/login")
@@ -488,24 +510,51 @@ def delete_token(name: str, _: None = Depends(require_session)) -> dict:
 
 
 @app.get("/")
-def index() -> FileResponse:
-    """The web page."""
-    return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
+def index() -> HTMLResponse:
+    """The web page; its stylesheet and script links carry a hash of their content, so a deploy is never served an old
+    script from the browser cache."""
+    return HTMLResponse((STATIC_DIR / "index.html").read_text().replace("__ASSET_KEY__", ASSET_KEY))
 
 
 @app.get("/settings")
 def settings(_: None = Depends(require_session)) -> dict:
-    """The page's settings: whether a token is set, the default engine and the text limit; never the token."""
-    return {"hf_token_set": hf_token is not None, "default_engine": DEFAULT_ENGINE,
+    """The page's settings: whether a token is set and its account, the default engine and the text limit;
+    never the token."""
+    return {"hf_token_set": hf_token is not None, "hf_account": hf_account, "default_engine": DEFAULT_ENGINE,
             "max_text_chars": MAX_TEXT_CHARS}
 
 
 @app.post("/settings/hf-token")
 def set_hf_token(request: TokenRequest, _: None = Depends(require_session)) -> dict:
-    """Set the Hugging Face token for this process's session; an empty token clears it. Never returns it."""
-    global hf_token
-    hf_token = request.token.strip() or None
-    return {"hf_token_set": hf_token is not None}
+    """Check the Hugging Face token with `whoami` and keep it for this process's session when it is valid; an
+    empty token clears it. Never returns it.
+
+    Raises:
+        HTTPException: 422 when Hugging Face refuses the token, 502 when Hugging Face cannot check it; the
+        stored token stays as it was.
+    """
+    global hf_token, hf_account
+    token = request.token.strip()
+    if not token:
+        hf_token = hf_account = None
+        return {"hf_token_set": False, "hf_account": None}
+    try:
+        account = whoami(token)["name"]
+    except httpx.HTTPStatusError as error:
+        answer = error.response
+        try:
+            hub = answer.json().get("error")
+        except ValueError:
+            hub = None
+        reason = f"HTTP {answer.status_code} {answer.reason_phrase}" + (f" ({hub})" if hub else "")
+        if answer.status_code in (401, 403):
+            raise HTTPException(422, f"Hugging Face refused the token: {reason}") from error
+        raise HTTPException(502, f"Hugging Face did not check the token: {reason}") from error
+    except (httpx.HTTPError, OSError) as error:
+        # a timeout's message can be empty; its class name says what happened
+        raise HTTPException(502, f"Hugging Face could not be reached: {str(error) or type(error).__name__}") from error
+    hf_token, hf_account = token, account
+    return {"hf_token_set": True, "hf_account": account}
 
 
 @app.get("/models")

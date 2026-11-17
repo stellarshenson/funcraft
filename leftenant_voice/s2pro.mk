@@ -48,9 +48,14 @@ install-test:
 test:
 	PYTHONPATH=service:src/fish:src .venv-fish/bin/python -m pytest tests/unit -q
 
-# The functional suite: the real service on the GPU the queue gives it, then the image where the daemon allows
-# GPU containers. Takes minutes; stops at the first failure and leaves no process or container behind. Needs ffprobe.
+# The functional suite: first the page in headless google-chrome against the service with stub engines (no GPU;
+# BROWSER_PYTHON needs playwright and pytest, which the system python3 carries), then the real service on the GPU the
+# queue gives it, then the image where the daemon allows GPU containers. Takes minutes; stops at the first failure
+# and leaves no process or container behind. Needs ffprobe.
+BROWSER_PYTHON ?= python3
+
 test-functional:
+	$(BROWSER_PYTHON) -m pytest tests/functional/test_browser.py -q -x
 	PYTHONPATH=service:src/fish:src tmp/workflows/gpu-queue.sh 20000 .venv-fish/bin/python -m pytest \
 	  tests/functional/test_native.py tests/functional/test_webapp.py tests/functional/test_container.py \
 	  tests/functional/test_leftover.py -q -x

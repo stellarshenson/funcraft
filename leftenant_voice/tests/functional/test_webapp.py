@@ -87,7 +87,7 @@ def test_the_page_starts_on_the_login_form(service):
     """Without a session the app section is hidden; a wrong password is 401 and the right one opens it."""
     page = httpx.get(f"{service.base}/", timeout=30).text
     assert 'id="login-form"' in page
-    assert '<div id="app-section" hidden>' in page
+    assert '<div id="app-section" class="p-app" hidden>' in page
     anonymous = httpx.Client(timeout=30)
     assert anonymous.get(f"{service.base}/session").json() == {"authenticated": False}
     assert anonymous.post(f"{service.base}/login", json={"password": "wrong"}).status_code == 401
@@ -98,18 +98,20 @@ def test_the_page_starts_on_the_login_form(service):
     assert anonymous.get(f"{service.base}/settings").status_code == 200
 
 
-def test_settings_token_stays_in_memory(service):
-    """The token starts unset, a POST sets it, an empty POST clears it, and no response carries it."""
+def test_settings_token_is_checked_and_stays_in_memory(service):
+    """The token starts unset; a made-up token is not kept, an empty POST clears, and no response carries it."""
     token = f"hf_{uuid.uuid4().hex}"
     assert support.get_json(f"{service.base}/settings", client=service.client)["hf_token_set"] is False
-    set_response = service.client.post(f"{service.base}/settings/hf-token", json={"token": token}, timeout=30)
-    assert set_response.status_code == 200
-    assert set_response.json() == {"hf_token_set": True}
-    assert token not in set_response.text
-    assert support.get_json(f"{service.base}/settings", client=service.client)["hf_token_set"] is True
+    refused = service.client.post(f"{service.base}/settings/hf-token", json={"token": token}, timeout=150)
+    # 422 when Hugging Face refuses the token, 502 when this host cannot reach Hugging Face or the hub answers 429 or 5xx
+    assert refused.status_code in (422, 502), refused.text
+    assert refused.json()["detail"].startswith(
+        ("Hugging Face refused the token", "Hugging Face could not", "Hugging Face did not check"))
+    assert token not in refused.text
+    assert support.get_json(f"{service.base}/settings", client=service.client)["hf_token_set"] is False
     clear_response = service.client.post(f"{service.base}/settings/hf-token", json={"token": ""}, timeout=30)
     assert clear_response.status_code == 200
-    assert clear_response.json() == {"hf_token_set": False}
+    assert clear_response.json() == {"hf_token_set": False, "hf_account": None}
     assert token not in clear_response.text
     assert support.get_json(f"{service.base}/settings", client=service.client)["hf_token_set"] is False
 
